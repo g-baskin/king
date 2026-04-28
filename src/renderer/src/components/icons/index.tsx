@@ -276,6 +276,18 @@ export const RefreshIcon = ({ className = 'h-4 w-4' }: { className?: string }) =
   </svg>
 );
 
+export const EntityIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 16 16"
+    fill="currentColor"
+    className="h-4 w-4"
+  >
+    <circle cx="8" cy="5" r="2.5" />
+    <path d="M3 13c0-2.761 2.239-5 5-5s5 2.239 5 5H3z" />
+  </svg>
+);
+
 export const aspectRatioIcons: Record<string, React.ReactNode> = {
   auto: <AutoIcon />,
   '1:1': <AspectRatioIcon1x1 />,

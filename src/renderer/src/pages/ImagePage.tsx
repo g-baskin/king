@@ -188,7 +188,10 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
 
   return (
     <>
-      <div className="relative min-h-0 flex-1 px-4 pt-4">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {/* Scrollable image gallery — flex-1 so the form below always stays
+            on screen regardless of window height. */}
+        <div className="relative min-h-0 flex-1 px-4 pt-4">
         {/* Selection toolbar — slides down from the top-right of the image
             grid whenever at least one image is selected. Contains a count,
             a delete action, and a clear-selection button. */}
@@ -256,9 +259,10 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
             <ImageEmptyState />
           )}
         </div>
-      </div>
+        </div>{/* end scrollable gallery */}
 
-      <ImagePromptForm onSubmit={handleGenerate} recreateData={recreateData} editData={editData} />
+        <ImagePromptForm onSubmit={handleGenerate} recreateData={recreateData} editData={editData} />
+      </div>{/* end flex-col wrapper */}
 
       {selectedImage && (
         <ImageDetailOverlay

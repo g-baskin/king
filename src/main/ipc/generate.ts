@@ -1,5 +1,7 @@
 import { readFileSync } from 'fs';
 import { extname } from 'path';
+import log from 'electron-log/main';
+import { getApiKey } from '../services/apiKeyStore';
 import { resolveLocalFileUrl } from '../services/paths';
 import { secureHandle } from './validateSender';
 
@@ -204,15 +206,17 @@ function buildGptImage2Input(
 
 export function registerGenerateHandlers(): void {
   secureHandle('generate:image', async (_event, data: GenerateImageData) => {
-    // Surface a friendly error up-front rather than letting the SDK throw a
-    // cryptic `Unauthorized` from fal's servers. Every caller (Image page,
-    // Create Ads, future pages) goes through this handler, so fixing it here
-    // covers everything.
-    if (!process.env.FAL_KEY) {
+    // Read the key fresh from the encrypted store on every call — this
+    // ensures we always use the current key even if process.env was set
+    // before the user saved a different one, and avoids relying on the
+    // fal singleton's one-time env snapshot.
+    const falKey = getApiKey('fal') ?? process.env.FAL_KEY;
+    if (!falKey) {
       throw new Error(MISSING_KEY_MESSAGE);
     }
 
     const { fal } = await import('@fal-ai/client');
+    fal.config({ credentials: falKey });
 
     const resolvedUrls = (data.imageUrls || [])
       .map(resolveImageUrl)
@@ -244,12 +248,12 @@ export function registerGenerateHandlers(): void {
 
       // Log the full fal error body once so we can diagnose new error shapes
       // without the user needing to DevTools the renderer.
-      console.error(
+      log.error(
         '[generate:image] fal error — status:',
         e?.status,
-        '\nmessage:',
+        'message:',
         e?.message,
-        '\nbody:',
+        'body:',
         JSON.stringify(e?.body, null, 2),
       );
 
@@ -265,14 +269,14 @@ export function registerGenerateHandlers(): void {
       }
 
       if (e?.status === 422) {
-        console.error(
+        log.error(
           '[generate:image] 422 ValidationError — fal detail:',
           JSON.stringify(e.body, null, 2),
-          '\nmodel:',
+          'model:',
           model,
-          '\ninput keys:',
+          'input keys:',
           Object.keys(input),
-          '\nimage_urls count:',
+          'image_urls count:',
           hasReferenceImages ? resolvedUrls.length : 0,
         );
 
@@ -289,7 +293,7 @@ export function registerGenerateHandlers(): void {
         const msg = details
           .map((d) => `${(d.loc ?? []).join('.')}: ${d.msg ?? d.type ?? 'invalid'}`)
           .join('; ');
-        console.error('[generate:image] validation detail:', msg);
+        log.error('[generate:image] validation detail:', msg);
         throw new Error(VALIDATION_MESSAGE);
       }
       throw err;

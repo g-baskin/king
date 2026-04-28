@@ -11,6 +11,7 @@ import {
   AutoIcon,
   aspectRatioIcons,
   ImageAddIcon,
+  EntityIcon,
 } from '@/components/icons';
 import {
   nanoBananaAspectRatioOptions,
@@ -288,9 +289,9 @@ export default function ImagePromptForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="fixed inset-x-1/2 bottom-4 z-20 hidden w-full -translate-x-1/2 rounded-[2rem] border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-[22px] shadow-[0_12px_40px_-12px_rgba(51,32,26,0.25)] md:block lg:max-w-[65rem] lg:min-w-[1000px]"
+      className="mx-auto w-full shrink-0 rounded-none border-t border-[var(--base-color-brand--umber)]/20 bg-[var(--base-color-brand--champagne)] px-6 py-4 shadow-[0_-8px_32px_-8px_rgba(51,32,26,0.12)]"
     >
-      <fieldset className="relative z-20 flex gap-3">
+      <fieldset className="flex gap-3">
         {/* Left section */}
         <div className="min-h-0 min-w-0 flex-1 space-y-3">
           {/* Reference images preview */}
@@ -388,6 +389,7 @@ export default function ImagePromptForm({
               options={entityOptions}
               value={selectedEntity}
               onChange={handleEntityChange}
+              icon={<EntityIcon />}
             />
 
             {/* Image count selector */}
