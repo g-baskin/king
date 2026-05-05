@@ -58,3 +58,10 @@ scripts/generate-prompt-thumbnails.js
 
 # Loopback agent API state file (port + bearer token)
 **/agent-api.json
+
+# Local assistant/tooling state
+.claude-plugin/
+.cursor/
+.legion/
+.legionignore
+library/
