@@ -4,6 +4,7 @@ import type { GeneratedImage } from './types';
 
 interface ImageDetailOverlayProps {
   image: GeneratedImage;
+  images?: GeneratedImage[];
   onClose: () => void;
   onDelete: (id: string) => void;
   onDownload: (url: string, prompt: string) => void;
@@ -12,6 +13,7 @@ interface ImageDetailOverlayProps {
 
 export default function ImageDetailOverlay({
   image,
+  images,
   onClose,
   onDelete,
   onDownload,
@@ -19,6 +21,31 @@ export default function ImageDetailOverlay({
 }: ImageDetailOverlayProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [activeImage, setActiveImage] = useState(image);
+
+  useEffect(() => {
+    setActiveImage(image);
+  }, [image]);
+
+  const imageList = images ?? [activeImage];
+  const currentIndex = Math.max(
+    0,
+    imageList.findIndex((img) => img.id === activeImage.id),
+  );
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < imageList.length - 1;
+
+  const goPrev = useCallback(() => {
+    if (!hasPrev) return;
+    const prev = imageList[currentIndex - 1];
+    if (prev) setActiveImage(prev);
+  }, [currentIndex, hasPrev, imageList]);
+
+  const goNext = useCallback(() => {
+    if (!hasNext) return;
+    const next = imageList[currentIndex + 1];
+    if (next) setActiveImage(next);
+  }, [currentIndex, hasNext, imageList]);
 
   const handleClose = useCallback(() => {
     setIsVisible(false);
@@ -58,11 +85,13 @@ export default function ImageDetailOverlay({
           handleClose();
         }
       }
+      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === 'ArrowRight') goNext();
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleClose, isExpanded]);
+  }, [goNext, goPrev, handleClose, isExpanded]);
 
   return (
     <div
@@ -90,8 +119,8 @@ export default function ImageDetailOverlay({
           }}
         >
           <img
-            src={image.url}
-            alt={image.prompt}
+            src={activeImage.url}
+            alt={activeImage.prompt}
             loading="eager"
             className="pointer-events-none absolute inset-0 size-full rounded-xl object-contain"
           />
@@ -106,13 +135,36 @@ export default function ImageDetailOverlay({
         style={{ pointerEvents: isExpanded ? 'none' : 'auto' }}
       >
         <ImageDetailPanel
-          image={image}
+          image={activeImage}
           onClose={handleClose}
           onDelete={onDelete}
           onDownload={onDownload}
           onRecreate={onRecreate}
         />
       </div>
+
+      {(hasPrev || hasNext) && (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            disabled={!hasPrev}
+            className="absolute top-1/2 left-4 z-[60] -translate-y-1/2 rounded-full bg-black/45 px-3 py-2 text-white disabled:opacity-30"
+            aria-label="Previous image"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={!hasNext}
+            className="absolute top-1/2 right-[396px] z-[60] -translate-y-1/2 rounded-full bg-black/45 px-3 py-2 text-white disabled:opacity-30"
+            aria-label="Next image"
+          >
+            ›
+          </button>
+        </>
+      )}
     </div>
   );
 }

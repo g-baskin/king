@@ -791,6 +791,9 @@ export default function CreateAdsPage() {
       {selectedImage && (
         <ImageDetailOverlay
           image={selectedImage}
+          images={results
+            .filter((slot) => slot.status === 'success' && slot.image)
+            .map((slot) => slot.image as GeneratedImage)}
           onClose={() => setSelectedImage(null)}
           onDownload={handleDownload}
           onDelete={(id) => {
@@ -1358,6 +1361,9 @@ function ResultsStep({
   onRetry,
   compareIds,
   onToggleCompare,
+  // #region agent log
+  workspaceId,
+  // #endregion
 }: {
   results: ResultSlot[];
   aspectRatio: string;
@@ -1375,6 +1381,10 @@ function ResultsStep({
 }) {
   const [editableShots, setEditableShots] = useState<NonNullable<ResultSlot['talkShot']>[]>([]);
   const [isGeneratingAdSet, setIsGeneratingAdSet] = useState(false);
+
+  // #region agent log
+  fetch('http://127.0.0.1:7930/ingest/21662fbc-5082-4ca7-be36-52d64c92ad71',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3f328c'},body:JSON.stringify({sessionId:'3f328c',location:'CreateAdsPage.tsx:ResultsStep-mount',message:'ResultsStep rendered',data:{workspaceId,workspaceIdType:typeof workspaceId},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+  // #endregion
 
   useEffect(() => {
     setEditableShots(
@@ -1571,6 +1581,9 @@ function AnimateStep({
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7930/ingest/21662fbc-5082-4ca7-be36-52d64c92ad71',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3f328c'},body:JSON.stringify({sessionId:'3f328c',location:'CreateAdsPage.tsx:useEffect-images-list',message:'about to call images.list',data:{workspaceId,workspaceIdType:typeof workspaceId},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+      // #endregion
       try {
         const page = await window.api.images.list(undefined, 24, workspaceId);
         if (!cancelled) setLibraryImages(extractImageList(page));

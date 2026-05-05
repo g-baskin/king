@@ -505,6 +505,7 @@ export default function ImagePage({
       {selectedImage && (
         <ImageDetailOverlay
           image={selectedImage}
+          images={generatedImages}
           onClose={() => setSelectedImage(null)}
           onDelete={(id) => {
             handleDelete(id);
