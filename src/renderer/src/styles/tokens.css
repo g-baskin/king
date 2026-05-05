@@ -137,37 +137,37 @@
 }
 
 :root[data-theme='dark'] {
-  --base-color-brand--shell: #1f140f;
-  --base-color-brand--champagne: #2a1a14;
-  --base-color-brand--light-pink: #3a2528;
-  --base-color-brand--dark-pink: #7d4655;
-  --base-color-brand--safron: #8e7a3e;
+  --base-color-brand--shell: #000000;
+  --base-color-brand--champagne: #03070a;
+  --base-color-brand--light-pink: #061018;
+  --base-color-brand--dark-pink: #0b1d2a;
+  --base-color-brand--safron: #123247;
 
-  --base-color-brand--bean: #f5e4cb;
-  --base-color-brand--umber: #d2a98f;
-  --base-color-brand--text-darker: #f8ecd9;
+  --base-color-brand--bean: #ffffff;
+  --base-color-brand--umber: #2f7ea3;
+  --base-color-brand--text-darker: #ffffff;
 
-  --base-color-brand--cinamon: #e06b8d;
-  --base-color-brand--red: #d4577f;
-  --base-color-brand--dark-red: #9f2d55;
+  --base-color-brand--cinamon: #2f7ea3;
+  --base-color-brand--red: #256b8b;
+  --base-color-brand--dark-red: #1b526c;
 
-  --status--success: #87b45f;
-  --status--warning: #f0b45f;
-  --status--error: #ff7d9c;
-  --status--muted: #d2a98f;
+  --status--success: #2f7ea3;
+  --status--warning: #2f7ea3;
+  --status--error: #2f7ea3;
+  --status--muted: #2f7ea3;
 
-  --text-color--text-primary: var(--base-color-brand--text-darker);
-  --text-color--text-secondary: var(--base-color-brand--bean);
-  --text-color--text-tertiary: #1a100b;
-  --text-color--text-success: #1a100b;
-  --text-color--text-error: #1a100b;
+  --text-color--text-primary: #ffffff;
+  --text-color--text-secondary: #ffffff;
+  --text-color--text-tertiary: #ffffff;
+  --text-color--text-success: #ffffff;
+  --text-color--text-error: #ffffff;
 
-  --background-color--background-primary: var(--base-color-brand--shell);
-  --background-color--background-secondary: var(--base-color-brand--champagne);
-  --background-color--background-tertiary: #130c09;
-  --background-color--background-success: #87b45f;
-  --background-color--background-error: #ff7d9c;
+  --background-color--background-primary: #000000;
+  --background-color--background-secondary: #03070a;
+  --background-color--background-tertiary: #000000;
+  --background-color--background-success: #123247;
+  --background-color--background-error: #123247;
 
-  --border-color--border-primary: var(--base-color-brand--umber);
-  --border-color--border-secondary: #3b2b22;
+  --border-color--border-primary: #2f7ea3;
+  --border-color--border-secondary: #123247;
 }

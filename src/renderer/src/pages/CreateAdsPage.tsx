@@ -73,6 +73,54 @@ const WIZARD_STEPS: StepDefinition[] = [
     hint: "A sentence or two — what it is, who it's for, key benefits. This guides scene, props, and any text the model renders.",
   },
   { id: 'format', label: 'Format', title: 'Format and generate' },
+  {
+    id: 'animate',
+    label: 'Animate',
+    title: 'Animate your winning creative',
+    hint: 'Use one of these copy-ready prompts in your image-to-video tool.',
+  },
+];
+
+interface QuickPreset {
+  id: string;
+  label: string;
+  category: AdReference['category'];
+  defaultAspectRatio: string;
+  brief: string;
+}
+
+const QUICK_PRESETS: QuickPreset[] = [
+  {
+    id: 'ugc',
+    label: 'UGC vibe',
+    category: 'beauty',
+    defaultAspectRatio: '9:16',
+    brief:
+      'Natural handheld-style social ad for mobile-first audiences. Show authentic lifestyle context and a clear benefit. If adding copy, keep it short and quote it like "Try it tonight".',
+  },
+  {
+    id: 'studio',
+    label: 'Clean studio',
+    category: 'health',
+    defaultAspectRatio: '1:1',
+    brief:
+      'Minimal studio setup with premium lighting and clean surfaces. Emphasize product texture, readability, and trust. Optional headline in quotes only, e.g. "Pure daily support".',
+  },
+  {
+    id: 'promo',
+    label: 'Bold promo',
+    category: 'supp',
+    defaultAspectRatio: '4:5',
+    brief:
+      'High-contrast promotional creative with strong visual hierarchy and clear focal point. Include offer messaging only if quoted exactly, e.g. "20% OFF Today".',
+  },
+];
+
+const BRIEF_CHIPS = [
+  'Audience: busy professionals',
+  'Benefit: saves time',
+  'Pain point: messy routine',
+  'CTA: "Shop now"',
 ];
 
 export default function CreateAdsPage() {
@@ -80,6 +128,7 @@ export default function CreateAdsPage() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [customRefs, setCustomRefs] = useState<CustomAdReferenceData[]>([]);
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
 
   // Wizard state lives in a Zustand store so it (and any in-flight fal
   // generations) survive navigating away from and back to this page.
@@ -208,6 +257,26 @@ export default function CreateAdsPage() {
     [products, selectedProductId],
   );
 
+  const applyPreset = useCallback(
+    (preset: QuickPreset) => {
+      const suggestedAd = allAds.find((ad) => ad.category === preset.category);
+      if (suggestedAd) setSelectedAdId(suggestedAd.id);
+      setAspectRatio(preset.defaultAspectRatio);
+      setProductBrief(preset.brief);
+      if (step !== 'ad') setStep('ad');
+      toast.success(`${preset.label} preset applied.`);
+    },
+    [allAds, setAspectRatio, setProductBrief, setSelectedAdId, setStep, step],
+  );
+
+  const insertBriefChip = useCallback(
+    (chip: string) => {
+      const next = productBrief.trim().length > 0 ? `${productBrief.trim()}\n${chip}` : chip;
+      setProductBrief(next);
+    },
+    [productBrief, setProductBrief],
+  );
+
   // Per-step validity — controls whether the Next button is enabled.
   const canAdvance: Record<StepId, boolean> = {
     ad: !!selectedAd,
@@ -215,6 +284,7 @@ export default function CreateAdsPage() {
     brief: productBrief.trim().length > 0,
     format: !!selectedAd && !!selectedProduct && productBrief.trim().length > 0 && !isGenerating,
     results: true,
+    animate: false,
   };
 
   const currentIndex = WIZARD_STEPS.findIndex((s) => s.id === step);
@@ -239,6 +309,10 @@ export default function CreateAdsPage() {
       setStep('format');
       return;
     }
+    if (step === 'animate') {
+      setStep('results');
+      return;
+    }
     const idx = WIZARD_STEPS.findIndex((s) => s.id === step);
     if (idx <= 0) return;
     const prev = WIZARD_STEPS[idx - 1];
@@ -250,6 +324,7 @@ export default function CreateAdsPage() {
   // in and are visible when they return.
   const handleGenerate = useCallback(() => {
     if (!selectedAd || !selectedProduct) return;
+    setCompareIds([]);
     void runGeneration(selectedAd, selectedProduct);
   }, [selectedAd, selectedProduct, runGeneration]);
 
@@ -309,6 +384,21 @@ export default function CreateAdsPage() {
             <WizardProgress currentStep={step} />
           </div>
 
+          {/* Quick presets keep first-time setup fast without changing the flow. */}
+          <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-2">
+            {QUICK_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => applyPreset(preset)}
+                className="rounded-full border border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
           {/* Step title — fixed min-height so the footer doesn't shift when
               the hint line appears only on some steps. */}
           <div className="mx-auto flex min-h-[112px] w-full max-w-3xl flex-col gap-2 text-center">
@@ -359,9 +449,15 @@ export default function CreateAdsPage() {
                 onSelect={setSelectedProductId}
               />
             )}
-            {step === 'brief' && <BriefStep value={productBrief} onChange={setProductBrief} />}
+            {step === 'brief' && (
+              <BriefStep value={productBrief} onChange={setProductBrief} onInsertChip={insertBriefChip} />
+            )}
             {step === 'format' && (
-              <FormatStep aspectRatio={aspectRatio} onAspectRatioChange={setAspectRatio} />
+              <FormatStep
+                aspectRatio={aspectRatio}
+                onAspectRatioChange={setAspectRatio}
+                selectedAd={selectedAd}
+              />
             )}
             {step === 'results' && (
               <ResultsStep
@@ -369,6 +465,21 @@ export default function CreateAdsPage() {
                 aspectRatio={aspectRatio}
                 onOpen={setSelectedImage}
                 onRetry={retrySlot}
+                compareIds={compareIds}
+                onToggleCompare={(id) =>
+                  setCompareIds((prev) =>
+                    prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 2 ? [...prev, id] : prev,
+                  )
+                }
+              />
+            )}
+            {step === 'animate' && (
+              <AnimateStep
+                selectedProduct={selectedProduct}
+                selectedAd={selectedAd}
+                productBrief={productBrief}
+                aspectRatio={aspectRatio}
+                results={results}
               />
             )}
           </div>
@@ -387,15 +498,26 @@ export default function CreateAdsPage() {
             </button>
 
             {step === 'results' ? (
-              <button
-                type="button"
-                onClick={startNewAd}
-                disabled={isGenerating}
-                className="inline-grid h-[52px] grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-6 text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_4px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_4px_0_0_var(--base-color-brand--bean)]"
-                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-              >
-                Create another
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep('animate')}
+                  disabled={results.filter((r) => r.status === 'success').length === 0 || isGenerating}
+                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-5 py-2.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)] disabled:cursor-not-allowed disabled:opacity-60"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  Animate
+                </button>
+                <button
+                  type="button"
+                  onClick={startNewAd}
+                  disabled={isGenerating}
+                  className="inline-grid h-[52px] grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-6 text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_4px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_4px_0_0_var(--base-color-brand--bean)]"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  Create another
+                </button>
+              </div>
             ) : step === 'format' ? (
               <button
                 type="button"
@@ -521,10 +643,24 @@ function AdStyleStep({
     [onUpload],
   );
 
+  const handleWheelScroll = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const horizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    const delta = horizontalIntent ? e.deltaX : e.deltaY;
+    if (delta === 0) return;
+    e.preventDefault();
+    el.scrollLeft += delta;
+  }, []);
+
   return (
     <div className="flex items-center gap-3">
       <CarouselScrollButton direction="left" onClick={() => scrollBy(-1)} />
-      <div ref={scrollerRef} className="hide-scrollbar min-w-0 flex-1 overflow-x-auto">
+      <div
+        ref={scrollerRef}
+        className="hide-scrollbar min-w-0 flex-1 overflow-x-auto"
+        onWheel={handleWheelScroll}
+      >
         <div className="flex gap-4 pb-2">
           {/* Upload tile — always first so the action is discoverable
               regardless of how many ads are in the carousel. */}
@@ -716,15 +852,38 @@ function ProductStep({
 
 // --- Step: Brief ----------------------------------------------------------
 
-function BriefStep({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function BriefStep({
+  value,
+  onChange,
+  onInsertChip,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onInsertChip: (chip: string) => void;
+}) {
   return (
-    <textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder="e.g. A double-walled stainless steel coffee mug that keeps drinks hot for 6 hours. Leak-proof lid, minimalist design, aimed at remote workers."
-      autoFocus
-      className="min-h-[180px] w-full resize-y rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-4 text-[15px] text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
-    />
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {BRIEF_CHIPS.map((chip) => (
+          <button
+            key={chip}
+            type="button"
+            onClick={() => onInsertChip(chip)}
+            className="rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            + {chip}
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="e.g. A double-walled stainless steel coffee mug that keeps drinks hot for 6 hours. Leak-proof lid, minimalist design, aimed at remote workers."
+        autoFocus
+        className="min-h-[180px] w-full resize-y rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-4 text-[15px] text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
+      />
+    </div>
   );
 }
 
@@ -733,55 +892,70 @@ function BriefStep({ value, onChange }: { value: string; onChange: (v: string) =
 function FormatStep({
   aspectRatio,
   onAspectRatioChange,
+  selectedAd,
 }: {
   aspectRatio: string;
   onAspectRatioChange: (v: string) => void;
+  selectedAd?: AdReference;
 }) {
+  const suggestedRatio = selectedAd?.variants?.[0]?.aspectRatio;
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {AD_ASPECT_RATIOS.map((ratio) => {
-        const active = aspectRatio === ratio.value;
-        return (
-          <button
-            key={ratio.value}
-            type="button"
-            onClick={() => onAspectRatioChange(ratio.value)}
-            className={`group relative flex flex-col items-center gap-3 rounded-2xl border-2 bg-[var(--base-color-brand--champagne)] p-4 transition-all ${
-              active
-                ? 'border-[var(--base-color-brand--bean)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]'
-                : 'border-transparent hover:border-[var(--base-color-brand--umber)]/40'
-            }`}
-          >
-            {/* Proportional shape preview */}
-            <div className="grid h-[60px] w-full place-items-center">
-              <div
-                className={`rounded-md border-2 transition-colors ${
-                  active
-                    ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)]/10'
-                    : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)]'
-                }`}
-                style={{ width: ratio.width, height: ratio.height }}
-              />
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <span
-                className="text-sm font-bold tracking-tight text-[var(--base-color-brand--bean)]"
-                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-              >
-                {ratio.label}
-              </span>
-              <span className="text-[11px] text-[var(--base-color-brand--umber)]">
-                {ratio.description}
-              </span>
-            </div>
-            {active && (
-              <div className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]">
-                <CheckIcon />
+    <div className="space-y-3">
+      {suggestedRatio && suggestedRatio !== aspectRatio && (
+        <button
+          type="button"
+          onClick={() => onAspectRatioChange(suggestedRatio)}
+          className="rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)]"
+          style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+        >
+          Suggested for this style: {suggestedRatio}
+        </button>
+      )}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {AD_ASPECT_RATIOS.map((ratio) => {
+          const active = aspectRatio === ratio.value;
+          return (
+            <button
+              key={ratio.value}
+              type="button"
+              onClick={() => onAspectRatioChange(ratio.value)}
+              className={`group relative flex flex-col items-center gap-3 rounded-2xl border-2 bg-[var(--base-color-brand--champagne)] p-4 transition-all ${
+                active
+                  ? 'border-[var(--base-color-brand--bean)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]'
+                  : 'border-transparent hover:border-[var(--base-color-brand--umber)]/40'
+              }`}
+            >
+              <div className="grid h-[60px] w-full place-items-center">
+                <div
+                  className={`rounded-md border-2 transition-colors ${
+                    active
+                      ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)]/10'
+                      : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)]'
+                  }`}
+                  style={{ width: ratio.width, height: ratio.height }}
+                />
               </div>
-            )}
-          </button>
-        );
-      })}
+              <div className="flex flex-col items-center gap-0.5">
+                <span
+                  className="text-sm font-bold tracking-tight text-[var(--base-color-brand--bean)]"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  {ratio.label}
+                </span>
+                <span className="text-[11px] text-[var(--base-color-brand--umber)]">
+                  {ratio.description}
+                </span>
+              </div>
+              {active && (
+                <div className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]">
+                  <CheckIcon />
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -793,11 +967,15 @@ function ResultsStep({
   aspectRatio,
   onOpen,
   onRetry,
+  compareIds,
+  onToggleCompare,
 }: {
   results: ResultSlot[];
   aspectRatio: string;
   onOpen: (image: GeneratedImage) => void;
   onRetry: (slotId: string) => void;
+  compareIds: string[];
+  onToggleCompare: (slotId: string) => void;
 }) {
   if (results.length === 0) {
     return (
@@ -809,16 +987,247 @@ function ResultsStep({
   // All 4 generations side-by-side on one row so the user can compare them
   // at a glance. Uses the same wider container width as the ad carousel.
   return (
-    <div className="grid grid-cols-4 gap-4">
-      {results.map((slot) => (
-        <ResultCard
-          key={slot.id}
-          slot={slot}
-          aspectRatio={aspectRatio}
-          onOpen={onOpen}
-          onRetry={onRetry}
+    <div className="space-y-3">
+      <p className="text-center text-xs text-[var(--base-color-brand--umber)]">
+        Select up to 2 results to compare.
+      </p>
+      <div className="grid grid-cols-4 gap-4">
+        {results.map((slot) => (
+          <ResultCard
+            key={slot.id}
+            slot={slot}
+            aspectRatio={aspectRatio}
+            onOpen={onOpen}
+            onRetry={onRetry}
+            compareSelected={compareIds.includes(slot.id)}
+            onToggleCompare={onToggleCompare}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnimateStep({
+  selectedProduct,
+  selectedAd,
+  productBrief,
+  aspectRatio,
+  results,
+}: {
+  selectedProduct?: EntityData;
+  selectedAd?: AdReference;
+  productBrief: string;
+  aspectRatio: string;
+  results: ResultSlot[];
+}) {
+  const style = AD_CATEGORY_LABELS[selectedAd?.category ?? 'custom'];
+  const productName = selectedProduct?.name ?? 'the product';
+
+  const shirtUnwrapPrompt = `Static camera, studio mannequin torso centered. Two realistic human hands slowly unwrap and unfold ${productName} on the mannequin, revealing a clean front view. Keep natural cloth physics, soft commercial lighting, and premium ecommerce styling inspired by ${style}. No face, no warped logos, no extra fingers, no camera motion. Duration 5 seconds. Output ${aspectRatio}.`;
+
+  const revealPrompt = `Locked-off camera. Start with ${productName} partially obscured, then hands reveal it smoothly in one continuous motion. Preserve product identity, label readability, and stitching details. Match ${style} ad quality with natural shadows and controlled highlights. No jitter, no frame warping, no extra limbs. Output ${aspectRatio}, 5-7 seconds.`;
+
+  const [selectedSourceImageUrl, setSelectedSourceImageUrl] = useState<string | null>(null);
+  const [videoPrompt, setVideoPrompt] = useState(shirtUnwrapPrompt);
+  const [videoDuration, setVideoDuration] = useState<5 | 10>(5);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+
+  const successfulImages = results
+    .filter((slot) => slot.status === 'success' && slot.image)
+    .map((slot) => slot.image!);
+
+  const sourceImageUrl = selectedSourceImageUrl ?? successfulImages[0]?.url ?? null;
+
+  useEffect(() => {
+    if (!selectedSourceImageUrl && successfulImages[0]?.url) {
+      setSelectedSourceImageUrl(successfulImages[0].url);
+    }
+  }, [selectedSourceImageUrl, successfulImages]);
+
+  const copyPrompt = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Prompt copied.');
+    } catch {
+      toast.error("Couldn't copy prompt.");
+    }
+  };
+
+  const handleGenerateVideo = async () => {
+    if (!sourceImageUrl) {
+      toast.error('Generate at least one image first, then select it as video source.');
+      return;
+    }
+    if (!videoPrompt.trim()) {
+      toast.error('Add a video prompt first.');
+      return;
+    }
+
+    setIsGeneratingVideo(true);
+    setVideoUrl(null);
+    try {
+      const result = await window.api.generate.video({
+        prompt: videoPrompt.trim(),
+        imageUrl: sourceImageUrl,
+        aspectRatio,
+        durationSeconds: videoDuration,
+      });
+      setVideoUrl(result.videoUrl);
+      toast.success('Video generated.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Couldn't generate video.";
+      toast.error(message);
+    } finally {
+      setIsGeneratingVideo(false);
+    }
+  };
+
+  const handleDownloadVideo = async () => {
+    if (!videoUrl) return;
+    const filename = `create_ads_video_${Date.now()}.mp4`;
+    try {
+      const result = await window.api.files.download(videoUrl, filename);
+      if (result.success) toast.success('Video saved.');
+      else if (!result.cancelled) toast.error("Couldn't save video.");
+    } catch {
+      toast.error("Couldn't save video.");
+    }
+  };
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-[var(--base-color-brand--umber)]/35 bg-[var(--base-color-brand--champagne)] p-4">
+      <h3
+        className="text-lg font-bold text-[var(--base-color-brand--bean)]"
+        style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+      >
+        Video prompt pack: Shirt unwrap
+      </h3>
+      <p className="text-xs text-[var(--base-color-brand--umber)]">
+        Generate video directly in-app from a successful Create Ads result.
+      </p>
+
+      {successfulImages.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">1) Pick source image</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {successfulImages.map((img) => {
+              const active = sourceImageUrl === img.url;
+              return (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={() => setSelectedSourceImageUrl(img.url)}
+                  className={`overflow-hidden rounded-xl border-2 ${
+                    active
+                      ? 'border-[var(--base-color-brand--bean)]'
+                      : 'border-[var(--base-color-brand--umber)]/35'
+                  }`}
+                >
+                  <img src={img.url} alt="Source" className="h-20 w-16 object-cover" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-[var(--base-color-brand--umber)]">
+          No successful images yet. Go back to Results and generate at least one image.
+        </p>
+      )}
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">2) Choose prompt preset</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setVideoPrompt(shirtUnwrapPrompt)}
+            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            Use Prompt A
+          </button>
+          <button
+            type="button"
+            onClick={() => setVideoPrompt(revealPrompt)}
+            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            Use Prompt B
+          </button>
+          <button
+            type="button"
+            onClick={() => void copyPrompt(videoPrompt)}
+            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            Copy current prompt
+          </button>
+        </div>
+
+        <textarea
+          value={videoPrompt}
+          onChange={(e) => setVideoPrompt(e.target.value)}
+          className="min-h-24 w-full resize-y rounded-xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] p-3 text-xs leading-relaxed text-[var(--text-color--text-primary)] focus:border-[var(--base-color-brand--bean)] focus:outline-none"
         />
-      ))}
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">3) Duration and generate</p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setVideoDuration(5)}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+              videoDuration === 5
+                ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+            }`}
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            5s
+          </button>
+          <button
+            type="button"
+            onClick={() => setVideoDuration(10)}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+              videoDuration === 10
+                ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+            }`}
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            10s
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleGenerateVideo()}
+            disabled={isGeneratingVideo || !sourceImageUrl}
+            className="btn-cinamon btn-sm disabled:opacity-60"
+          >
+            {isGeneratingVideo ? 'Generating video…' : 'Generate Video'}
+          </button>
+          {videoUrl && (
+            <button type="button" onClick={() => void handleDownloadVideo()} className="btn-shell btn-sm">
+              Download Video
+            </button>
+          )}
+        </div>
+      </div>
+
+      {videoUrl && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Generated preview</p>
+          <video src={videoUrl} controls className="w-full rounded-xl border border-[var(--base-color-brand--umber)]/30" />
+        </div>
+      )}
+
+      {productBrief.trim() && (
+        <p className="text-xs text-[var(--base-color-brand--umber)]">
+          Brief context included: “{productBrief.trim().slice(0, 140)}{productBrief.trim().length > 140 ? '…' : ''}”
+        </p>
+      )}
     </div>
   );
 }
@@ -828,11 +1237,15 @@ function ResultCard({
   aspectRatio,
   onOpen,
   onRetry,
+  compareSelected,
+  onToggleCompare,
 }: {
   slot: ResultSlot;
   aspectRatio: string;
   onOpen: (image: GeneratedImage) => void;
   onRetry: (slotId: string) => void;
+  compareSelected: boolean;
+  onToggleCompare: (slotId: string) => void;
 }) {
   const [w, h] = aspectRatio.split(':').map(Number);
   const aspectStyle =
@@ -877,32 +1290,44 @@ function ResultCard({
   // Success — click to open the full-size detail overlay.
   const image = slot.image!;
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(image)}
-      className={`group cursor-zoom-in transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)] ${cardClass}`}
-      style={aspectStyle}
-      aria-label="Open generated ad"
-    >
-      <img
-        src={image.url}
-        alt="Generated ad"
-        className="size-full object-cover transition-transform group-hover:scale-[1.03]"
-        onError={(e) => {
-          // If the saved file has gone missing, show a placeholder
-          // instead of a broken image icon.
-          const img = e.currentTarget;
-          img.style.display = 'none';
-          const parent = img.parentElement;
-          if (parent && !parent.querySelector('.missing-image-placeholder')) {
-            const placeholder = document.createElement('div');
-            placeholder.className =
-              'missing-image-placeholder grid size-full place-items-center p-4 text-center text-xs text-[var(--base-color-brand--umber)]';
-            placeholder.textContent = 'This image is no longer available.';
-            parent.appendChild(placeholder);
-          }
-        }}
-      />
-    </button>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => onOpen(image)}
+        className={`group cursor-zoom-in transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)] ${cardClass}`}
+        style={aspectStyle}
+        aria-label="Open generated ad"
+      >
+        <img
+          src={image.url}
+          alt="Generated ad"
+          className="size-full object-cover transition-transform group-hover:scale-[1.03]"
+          onError={(e) => {
+            const img = e.currentTarget;
+            img.style.display = 'none';
+            const parent = img.parentElement;
+            if (parent && !parent.querySelector('.missing-image-placeholder')) {
+              const placeholder = document.createElement('div');
+              placeholder.className =
+                'missing-image-placeholder grid size-full place-items-center p-4 text-center text-xs text-[var(--base-color-brand--umber)]';
+              placeholder.textContent = 'This image is no longer available.';
+              parent.appendChild(placeholder);
+            }
+          }}
+        />
+      </button>
+      <button
+        type="button"
+        onClick={() => onToggleCompare(slot.id)}
+        className={`absolute top-2 left-2 rounded-full border px-2 py-1 text-[10px] font-bold tracking-wide ${
+          compareSelected
+            ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+            : 'border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+        }`}
+        style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+      >
+        {compareSelected ? 'Selected' : 'Compare'}
+      </button>
+    </div>
   );
 }

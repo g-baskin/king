@@ -5,6 +5,8 @@ export type PromptCategory =
   | 'health'
   | 'food'
   | 'fashion'
+  | 'apparel'
+  | 'ugc'
   | 'home'
   | 'pet'
   | 'social'
@@ -24,6 +26,8 @@ export const promptCategories: PromptCategoryDef[] = [
   { id: 'health', label: 'Health' },
   { id: 'food', label: 'Food & Drink' },
   { id: 'fashion', label: 'Fashion' },
+  { id: 'apparel', label: 'Apparel' },
+  { id: 'ugc', label: 'UGC' },
   { id: 'home', label: 'Home' },
   { id: 'pet', label: 'Pet' },
   { id: 'social', label: 'Social & Ads' },
@@ -1384,6 +1388,130 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     image: memoryFoamCradle,
     prompt: `Photorealistic {productType} product photograph of the product pressed gently into a soft pastel-pink memory-foam cushion, the foam molded perfectly around the product base in a clean shallow crater. Bright clean studio lighting from above, tack-sharp foam surface texture, subtle soft shadow, airy weightless premium feel, clean pastel gradient background, color-accurate label, shot ratio 1:1, 8K resolution, 2026 premium cushion-soft {productType} ad.`,
   },
+
+  // UGC — creator-style social prompts (use case in description)
+  {
+    id: 'ugc-tshirt-unfold-mannequin',
+    title: 'UGC T-Shirt Unfold',
+    description: 'Use case: reveal tee design with hands on mannequin for Reels',
+    prompt: `Realistic UGC-style vertical video keyframe of the product (t-shirt) wrapped around a matte mannequin torso, two human hands mid-motion gently unfolding and revealing the shirt front print. iPhone camera look, indoor soft daylight, authentic creator aesthetic, no face, clean background, slight natural imperfections, shot ratio 9:16.`,
+  },
+  {
+    id: 'ugc-tshirt-fit-check-flat',
+    title: 'UGC Fit Check Flat',
+    description: 'Use case: outfit fit-check post with tee + jeans combo',
+    prompt: `Creator-style flat-lay scene with the product (t-shirt) as hero, paired with jeans and sneakers on a bedroom floor, natural window light, handheld iPhone authenticity, casual Gen-Z styling, subtle shadows, shot ratio 9:16, social-ready UGC look.`,
+  },
+  {
+    id: 'ugc-tshirt-mirror-hold',
+    title: 'UGC Mirror Hold',
+    description: 'Use case: quick mirror showcase for story poll',
+    prompt: `Realistic mirror selfie composition featuring the product (t-shirt) held up in front of torso, no visible face, slight motion blur from handheld phone, home mirror environment, natural lighting, authentic UGC vibe, 9:16 vertical.`,
+  },
+  {
+    id: 'ugc-tshirt-pack-open',
+    title: 'UGC Package Open',
+    description: 'Use case: unboxing hook for first 2 seconds of ad',
+    prompt: `Authentic creator-style scene of the product (t-shirt) halfway pulled from shipping mailer on a desk, hands visible, packaging texture details, natural indoor light, cozy home background blur, handheld iPhone framing, 9:16 vertical social format.`,
+  },
+  {
+    id: 'ugc-tshirt-detail-closeup',
+    title: 'UGC Detail Closeup',
+    description: 'Use case: quality proof (stitch/print close-up) for trust',
+    prompt: `Macro-ish UGC closeup of the product (t-shirt) collar seam and print detail held between fingers, natural soft light, realistic fabric grain, slight phone-camera noise for authenticity, minimal background, vertical 9:16 framing.`,
+  },
+  {
+    id: 'ugc-apparel-bts-rack',
+    title: 'UGC Rack BTS',
+    description: 'Use case: behind-the-scenes collection tease on stories',
+    prompt: `Behind-the-scenes creator shot of the product hanging on a clothing rack among complementary pieces, hand reaching in to pull it forward, warm indoor boutique lighting, candid social feel, vertical 9:16 composition.`,
+  },
+  {
+    id: 'ugc-apparel-bed-layout',
+    title: 'UGC Bed Layout',
+    description: 'Use case: "what I’m wearing today" quick post',
+    prompt: `Casual UGC bedroom scene with the product laid on a bed with accessories (cap, watch, sneakers), overhead smartphone angle, soft morning light, real lived-in vibe, clean but not over-styled, 9:16 vertical social format.`,
+  },
+  {
+    id: 'ugc-apparel-street-hold',
+    title: 'UGC Street Hold',
+    description: 'Use case: streetwear drop announcement post',
+    prompt: `Urban creator-style shot of the product held up outdoors against textured wall, natural daylight, slight handheld framing imperfections, modern streetwear tone, high authenticity, vertical 9:16 ratio for reels.`,
+  },
+  {
+    id: 'ugc-apparel-before-after',
+    title: 'UGC Before/After Outfit',
+    description: 'Use case: styling transformation ad concept',
+    prompt: `Vertical split-style UGC frame showing left side basic outfit and right side upgraded look featuring the product, consistent indoor lighting, smartphone creator aesthetic, clear contrast between looks, social-native 9:16.`,
+  },
+  {
+    id: 'ugc-apparel-review-card',
+    title: 'UGC Review Card',
+    description: 'Use case: testimonial visual with product in hand',
+    prompt: `Creator testimonial-style scene with the product held at chest level, simple neutral background, warm natural light, relaxed candid composition, space reserved for on-screen quote text, 9:16 vertical paid-social UGC style.`,
+  },
+
+  // Apparel — product-vertical prompts (use case in description)
+  {
+    id: 'apparel-tee-front-back-grid',
+    title: 'Tee Front/Back Grid',
+    description: 'Use case: PDP carousel showing front/back quickly',
+    prompt: `Clean ecommerce composite showing the product (t-shirt) front and back views in a balanced two-panel layout, soft neutral studio lighting, accurate fabric texture, wrinkle-controlled, minimal backdrop, catalog-ready styling, ratio 4:5.`,
+  },
+  {
+    id: 'apparel-tee-folded-stack',
+    title: 'Folded Tee Stack',
+    description: 'Use case: colorway stack visual for collection launch',
+    prompt: `Photoreal product image of the product folded neatly on top of a small stack of alternate colorways, clean studio setup, soft directional lighting, crisp edge detail, premium DTC brand style, 1:1 composition.`,
+  },
+  {
+    id: 'apparel-tee-hanger-minimal',
+    title: 'Hanger Minimal',
+    description: 'Use case: hero category thumbnail for storefront',
+    prompt: `Minimal fashion product shot of the product on a simple hanger against a smooth neutral wall, soft shadow cast behind, true-to-color fabric rendering, modern premium aesthetic, 4:5 framing.`,
+  },
+  {
+    id: 'apparel-tee-texture-macro',
+    title: 'Fabric Texture Macro',
+    description: 'Use case: quality close-up for conversion trust',
+    prompt: `Ultra-detailed macro of the product fabric weave and print edge, studio side lighting to reveal texture depth, color-accurate thread detail, premium textile presentation, shallow depth but clear product context, 1:1.`,
+  },
+  {
+    id: 'apparel-tee-model-waist-up',
+    title: 'Model Waist-Up',
+    description: 'Use case: fit visualization without face dependency',
+    prompt: `Editorial product shot of the product worn on a model from shoulders to hips (no face visible), natural drape and proportions, soft studio lighting, neutral seamless background, fashion ecommerce style, 4:5 ratio.`,
+  },
+  {
+    id: 'apparel-tee-flatlay-styled',
+    title: 'Styled Flatlay',
+    description: 'Use case: bundle/cross-sell presentation',
+    prompt: `Curated flat-lay featuring the product with complementary apparel accessories (denim, belt, sneakers), tidy geometric arrangement, soft top lighting, subtle natural shadows, premium merch lookbook style, 1:1 format.`,
+  },
+  {
+    id: 'apparel-tee-retail-shelf',
+    title: 'Retail Shelf Display',
+    description: 'Use case: wholesale line-sheet mood shot',
+    prompt: `Realistic retail display scene with the product folded on a clean shelf stack, boutique-like lighting, organized merchandising composition, crisp fabric and print details, commercial catalog quality, ratio 4:5.`,
+  },
+  {
+    id: 'apparel-tee-outdoor-lifestyle',
+    title: 'Outdoor Lifestyle Tee',
+    description: 'Use case: campaign creative for casual wear positioning',
+    prompt: `Lifestyle fashion image of the product worn in a casual outdoor setting, natural daylight, soft background blur, realistic fabric folds and movement, aspirational but believable styling, social-ad-friendly 4:5 composition.`,
+  },
+  {
+    id: 'apparel-tee-podium-studio',
+    title: 'Podium Studio Hero',
+    description: 'Use case: launch-day hero visual with premium feel',
+    prompt: `High-end studio hero shot of the product displayed on a minimal podium, controlled directional light with soft rim highlights, elegant shadow geometry, clean monochrome backdrop, premium DTC launch aesthetic, ratio 4:5.`,
+  },
+  {
+    id: 'apparel-tee-size-tag-focus',
+    title: 'Size Tag Proof',
+    description: 'Use case: reduce returns with construction/detail proof',
+    prompt: `Detailed close product shot highlighting the product neck label and interior size tag area with clear stitching and material quality, soft macro lighting, true color and texture fidelity, ecommerce trust-builder composition, 1:1 ratio.`,
+  },
 ];
 
 // Category assignment by prompt id — grouped so re-categorization is easy.
@@ -1421,13 +1549,44 @@ const categoryMap: Record<PromptCategory, string[]> = {
   fashion: [
     'sneaker-studio-hero',
     'handbag-pedestal-editorial',
-    'apparel-flatlay-editorial',
     'model-jacket-no-face',
     'jewelry-velvet-hero',
     'sunglasses-glow-studio',
     'watch-dial-macro-luxury',
     'hat-wall-minimalist',
     'sneaker-street-action',
+  ],
+  apparel: [
+    'apparel-flatlay',
+    'apparel-flatlay-editorial',
+    'ugc-tshirt-unfold-mannequin',
+    'ugc-tshirt-fit-check-flat',
+    'ugc-tshirt-mirror-hold',
+    'ugc-tshirt-pack-open',
+    'ugc-tshirt-detail-closeup',
+    'apparel-tee-front-back-grid',
+    'apparel-tee-folded-stack',
+    'apparel-tee-hanger-minimal',
+    'apparel-tee-texture-macro',
+    'apparel-tee-model-waist-up',
+    'apparel-tee-flatlay-styled',
+    'apparel-tee-retail-shelf',
+    'apparel-tee-outdoor-lifestyle',
+    'apparel-tee-podium-studio',
+    'apparel-tee-size-tag-focus',
+  ],
+  ugc: [
+    'ugc-iphone-look',
+    'ugc-tshirt-unfold-mannequin',
+    'ugc-tshirt-fit-check-flat',
+    'ugc-tshirt-mirror-hold',
+    'ugc-tshirt-pack-open',
+    'ugc-tshirt-detail-closeup',
+    'ugc-apparel-bts-rack',
+    'ugc-apparel-bed-layout',
+    'ugc-apparel-street-hold',
+    'ugc-apparel-before-after',
+    'ugc-apparel-review-card',
   ],
   home: [
     'candle-ambient-living',

@@ -31,6 +31,13 @@ interface GenerateImageData {
   modelVariant?: ModelVariant;
 }
 
+interface GenerateVideoData {
+  prompt: string;
+  imageUrl: string;
+  aspectRatio: string;
+  durationSeconds?: 5 | 10;
+}
+
 // Mirror of the renderer's SUPPORTED_IMAGE_MIME_TYPES — covers every
 // format Google Gemini's image input accepts: PNG, JPEG, WebP, HEIC, HEIF.
 // https://ai.google.dev/gemini-api/docs/image-understanding
@@ -68,6 +75,14 @@ const SAFETY_BLOCK_MESSAGE =
   'Google blocked this one as a safety precaution. The filter is probabilistic — hitting Try again often works, especially on face-swap and character workflows.';
 const VALIDATION_MESSAGE =
   "Something about this request wasn't accepted. Try a different image or prompt.";
+
+const VIDEO_MODEL = 'fal-ai/minimax-video/image-to-video';
+
+function mapAspectRatioToVideoRatio(aspectRatio: string): '16:9' | '9:16' | '1:1' {
+  if (aspectRatio === '9:16') return '9:16';
+  if (aspectRatio === '1:1') return '1:1';
+  return '16:9';
+}
 
 /**
  * Detect Gemini / Nano Banana Pro safety-filter refusals. Gemini wraps
@@ -296,6 +311,57 @@ export function registerGenerateHandlers(): void {
         log.error('[generate:image] validation detail:', msg);
         throw new Error(VALIDATION_MESSAGE);
       }
+      throw err;
+    }
+  });
+
+  secureHandle('generate:video', async (_event, data: GenerateVideoData) => {
+    const falKey = getApiKey('fal') ?? process.env.FAL_KEY;
+    if (!falKey) {
+      throw new Error(MISSING_KEY_MESSAGE);
+    }
+
+    const { fal } = await import('@fal-ai/client');
+    fal.config({ credentials: falKey });
+
+    const resolvedImageUrl = resolveImageUrl(data.imageUrl);
+    if (!(resolvedImageUrl.startsWith('data:') || resolvedImageUrl.startsWith('http'))) {
+      throw new Error("Couldn't read the source image for animation.");
+    }
+
+    const input: Record<string, unknown> = {
+      prompt: data.prompt,
+      image_url: resolvedImageUrl,
+      aspect_ratio: mapAspectRatioToVideoRatio(data.aspectRatio),
+      duration: data.durationSeconds === 10 ? '10' : '5',
+    };
+
+    try {
+      const result = await fal.subscribe(VIDEO_MODEL, { input, logs: true });
+      const resultData = result.data as {
+        video?: { url?: string };
+        video_url?: string;
+      };
+      const videoUrl = resultData.video?.url ?? resultData.video_url;
+      if (!videoUrl) {
+        throw new Error("Couldn't generate video output.");
+      }
+      return { success: true, videoUrl };
+    } catch (err) {
+      const e = err as { status?: number; body?: unknown; message?: string };
+      const falMessage = extractFalMessage(e);
+      log.error(
+        '[generate:video] fal error — status:',
+        e?.status,
+        'message:',
+        e?.message,
+        'body:',
+        JSON.stringify(e?.body, null, 2),
+      );
+
+      if (isOutOfCredits(e?.status, falMessage)) throw new Error(OUT_OF_CREDITS_MESSAGE);
+      if (isAuthFailure(e?.status, falMessage)) throw new Error(INVALID_KEY_MESSAGE);
+      if (e?.status === 422) throw new Error(VALIDATION_MESSAGE);
       throw err;
     }
   });

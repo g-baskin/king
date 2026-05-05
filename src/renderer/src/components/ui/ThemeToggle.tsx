@@ -10,7 +10,7 @@ export function ThemeToggle() {
       onClick={() => setTheme(dark ? 'light' : 'dark')}
       className={`flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-colors ${
         dark
-          ? 'border-[var(--base-color-brand--shell)]/30 bg-[var(--base-color-brand--shell)]/10 text-[var(--base-color-brand--shell)]'
+          ? 'border-[#2f7ea3] bg-[#0b1d2a] text-white hover:bg-[#123247]'
           : 'border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--champagne)]'
       }`}
       aria-pressed={dark}
@@ -21,7 +21,7 @@ export function ThemeToggle() {
       <span
         aria-hidden="true"
         className={`relative inline-block h-3.5 w-7 rounded-full transition-colors ${
-          dark ? 'bg-[var(--base-color-brand--shell)]/65' : 'bg-[var(--base-color-brand--umber)]/40'
+          dark ? 'bg-[#2f7ea3]' : 'bg-[var(--base-color-brand--umber)]/40'
         }`}
       >
         <span

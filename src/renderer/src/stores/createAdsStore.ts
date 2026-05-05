@@ -11,7 +11,7 @@ import { useModelStore } from '@/stores/modelStore';
 import { useImagesStore } from '@/stores/imagesStore';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
 
-export type StepId = 'ad' | 'product' | 'brief' | 'format' | 'results';
+export type StepId = 'ad' | 'product' | 'brief' | 'format' | 'results' | 'animate';
 
 export interface ResultSlot {
   id: string;

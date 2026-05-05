@@ -17,6 +17,12 @@ const api = {
       imageUrls: string[];
       modelVariant?: 'nano_banana_pro' | 'gpt_image_2';
     }) => ipcRenderer.invoke('generate:image', data),
+    video: (data: {
+      prompt: string;
+      imageUrl: string;
+      aspectRatio: string;
+      durationSeconds?: 5 | 10;
+    }) => ipcRenderer.invoke('generate:video', data),
   },
   files: {
     download: (url: string, filename: string) =>
