@@ -311,7 +311,7 @@ export default function CreateAdsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const list = await window.api.entities.list('products');
+        const list = await window.api.entities.list('products', activeWorkspace.id);
         if (!cancelled) setProducts(list);
       } catch {
         if (!cancelled) toast.error("Couldn't load your products. Please try again.");
@@ -322,13 +322,13 @@ export default function CreateAdsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeWorkspace.id]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const list = await window.api.entities.list('characters');
+        const list = await window.api.entities.list('characters', activeWorkspace.id);
         if (!cancelled) setCharacters(list);
       } catch {
         if (!cancelled) setCharacters([]);
@@ -339,7 +339,7 @@ export default function CreateAdsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeWorkspace.id]);
 
   useEffect(() => {
     let cancelled = false;
