@@ -15,12 +15,19 @@ import {
   AD_CATEGORY_LABELS,
   AD_REFERENCES,
   getThumbnail,
+  pickVariant,
   type AdReference,
   type AdVariant,
 } from '@/lib/adReferences';
 import { readImageDimensions } from '@/lib/aspectRatio';
-import { useCreateAdsStore, type ResultSlot, type StepId } from '@/stores/createAdsStore';
+import {
+  useCreateAdsStore,
+  type CreateAdsOutputMode,
+  type ResultSlot,
+  type StepId,
+} from '@/stores/createAdsStore';
 import type { CustomAdReferenceData, EntityData, GeneratedImageData } from '@/types/electron';
+import { useImagesStore } from '@/stores/imagesStore';
 
 // Image MIME types we accept for custom ad-reference uploads. Matches the
 // formats Gemini's image input handles end-to-end (PNG, JPEG, WebP, HEIC,
@@ -216,6 +223,40 @@ const BRIEF_CHIPS = [
   'No logo/text changes',
 ];
 
+async function bundledAssetToDataUrl(assetUrl: string): Promise<string> {
+  const response = await fetch(assetUrl);
+  const blob = await response.blob();
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read asset'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function buildTalkShotFramePrompt(
+  productName: string,
+  brief: string,
+  aspectRatio: string,
+  shot: NonNullable<ResultSlot['talkShot']>,
+): string {
+  return `Create a single ${aspectRatio} photorealistic ad frame for ${productName}. This frame is part of an expert talk-to-camera sequence.
+Shot objective: ${shot.angle}
+On-camera script: ${shot.script}
+Framing guidance: ${shot.framing}
+B-roll guidance: ${shot.broll}
+On-screen text: "${shot.onScreenText}"
+Product brief context: ${brief}
+
+HARD PRODUCT RULES:
+- Show exactly one unit of ${productName} in frame by default.
+- Do not introduce any other product, package, flavor, variant, or category cue.
+- Only show multiple units if the brief explicitly requests a specific quantity (e.g., "two bottles", "3-pack").
+- Keep logo, label text, and packaging design faithful to the selected product references.
+
+Use premium commercial lighting, natural skin tones, realistic hands/faces, clean product readability, and strong conversion-oriented composition. No extra fingers, no warped text, no watermarks.`;
+}
+
 function extractImageList(page: unknown): GeneratedImageData[] {
   if (typeof page !== 'object' || page === null) return [];
 
@@ -252,11 +293,13 @@ export default function CreateAdsPage() {
   const aspectRatio = useCreateAdsStore((s) => s.aspectRatio);
   const results = useCreateAdsStore((s) => s.results);
   const isGenerating = useCreateAdsStore((s) => s.isGenerating);
+  const outputMode = useCreateAdsStore((s) => s.outputMode);
   const setStep = useCreateAdsStore((s) => s.setStep);
   const setSelectedAdId = useCreateAdsStore((s) => s.setSelectedAdId);
   const setSelectedProductId = useCreateAdsStore((s) => s.setSelectedProductId);
   const setProductBrief = useCreateAdsStore((s) => s.setProductBrief);
   const setAspectRatio = useCreateAdsStore((s) => s.setAspectRatio);
+  const setOutputMode = useCreateAdsStore((s) => s.setOutputMode);
   const removeResultByImageId = useCreateAdsStore((s) => s.removeResultByImageId);
   const startNewAd = useCreateAdsStore((s) => s.startNewAd);
   const runGeneration = useCreateAdsStore((s) => s.runGeneration);
@@ -423,8 +466,13 @@ export default function CreateAdsPage() {
 
   const insertBriefChip = useCallback(
     (chip: string) => {
-      const next = productBrief.trim().length > 0 ? `${productBrief.trim()}\n${chip}` : chip;
-      setProductBrief(next);
+      const lines = productBrief
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      const hasChip = lines.includes(chip);
+      const nextLines = hasChip ? lines.filter((line) => line !== chip) : [...lines, chip];
+      setProductBrief(nextLines.join('\n'));
     },
     [productBrief, setProductBrief],
   );
@@ -489,7 +537,7 @@ export default function CreateAdsPage() {
     }
 
     const characterReferenceUrls = selectedCharacter?.referenceImages.slice(0, 2) ?? [];
-    void runGeneration(adForRun, selectedProduct, characterReferenceUrls);
+    void runGeneration(adForRun, selectedProduct, outputMode, characterReferenceUrls);
   }, [selectedAd, selectedProduct, runGeneration, selectedStyleImageUrl, aspectRatio, selectedCharacter]);
 
   // Download a generated ad to the user's filesystem — same mechanism the
@@ -640,12 +688,20 @@ export default function CreateAdsPage() {
                 aspectRatio={aspectRatio}
                 onAspectRatioChange={setAspectRatio}
                 selectedAd={selectedAd}
+                outputMode={outputMode}
+                onOutputModeChange={setOutputMode}
               />
             )}
             {step === 'results' && (
               <ResultsStep
                 results={results}
                 aspectRatio={aspectRatio}
+                outputMode={outputMode}
+                selectedAd={selectedAd}
+                selectedProduct={selectedProduct}
+                selectedCharacter={selectedCharacter}
+                productBrief={productBrief}
+                selectedStyleImageUrl={selectedStyleImageUrl}
                 onOpen={setSelectedImage}
                 onRetry={retrySlot}
                 compareIds={compareIds}
@@ -1063,17 +1119,28 @@ function BriefStep({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {BRIEF_CHIPS.map((chip) => (
-          <button
-            key={chip}
-            type="button"
-            onClick={() => onInsertChip(chip)}
-            className="rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)]"
-            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-          >
-            + {chip}
-          </button>
-        ))}
+        {BRIEF_CHIPS.map((chip) => {
+          const selected = value
+            .split('\n')
+            .map((line) => line.trim())
+            .includes(chip);
+          return (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => onInsertChip(chip)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                selected
+                  ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                  : 'border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] hover:border-[var(--base-color-brand--bean)]'
+              }`}
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              {selected ? '✓ ' : '+ '}
+              {chip}
+            </button>
+          );
+        })}
       </div>
       <div className="space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/35 bg-[var(--base-color-brand--shell)] p-3">
         <div className="space-y-1">
@@ -1176,15 +1243,45 @@ function FormatStep({
   aspectRatio,
   onAspectRatioChange,
   selectedAd,
+  outputMode,
+  onOutputModeChange,
 }: {
   aspectRatio: string;
   onAspectRatioChange: (v: string) => void;
   selectedAd?: AdReference;
+  outputMode: CreateAdsOutputMode;
+  onOutputModeChange: (mode: CreateAdsOutputMode) => void;
 }) {
   const suggestedRatio = selectedAd?.variants?.[0]?.aspectRatio;
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onOutputModeChange('still-batch')}
+          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+            outputMode === 'still-batch'
+              ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+              : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+          }`}
+          style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+        >
+          Still Batch (4 images)
+        </button>
+        <button
+          type="button"
+          onClick={() => onOutputModeChange('talk-to-cam')}
+          className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+            outputMode === 'talk-to-cam'
+              ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+              : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+          }`}
+          style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+        >
+          Talk-to-Cam Shot Plan
+        </button>
+      </div>
       {suggestedRatio && suggestedRatio !== aspectRatio && (
         <button
           type="button"
@@ -1248,6 +1345,12 @@ function FormatStep({
 function ResultsStep({
   results,
   aspectRatio,
+  outputMode,
+  selectedAd,
+  selectedProduct,
+  selectedCharacter,
+  productBrief,
+  selectedStyleImageUrl,
   onOpen,
   onRetry,
   compareIds,
@@ -1255,11 +1358,80 @@ function ResultsStep({
 }: {
   results: ResultSlot[];
   aspectRatio: string;
+  outputMode: CreateAdsOutputMode;
+  selectedAd?: AdReference;
+  selectedProduct?: EntityData;
+  selectedCharacter?: EntityData;
+  productBrief: string;
+  selectedStyleImageUrl: string | null;
   onOpen: (image: GeneratedImage) => void;
   onRetry: (slotId: string) => void;
   compareIds: string[];
   onToggleCompare: (slotId: string) => void;
 }) {
+  const [editableShots, setEditableShots] = useState<NonNullable<ResultSlot['talkShot']>[]>([]);
+  const [isGeneratingAdSet, setIsGeneratingAdSet] = useState(false);
+
+  useEffect(() => {
+    setEditableShots(
+      results
+        .map((slot) => slot.talkShot)
+        .filter((shot): shot is NonNullable<ResultSlot['talkShot']> => !!shot),
+    );
+  }, [results]);
+
+  const generateCompleteAdSet = async () => {
+    if (!selectedAd || !selectedProduct) {
+      toast.error('Pick an ad style and product first.');
+      return;
+    }
+    if (editableShots.length === 0) {
+      toast.error('No shot plan available.');
+      return;
+    }
+
+    setIsGeneratingAdSet(true);
+    try {
+      const variant = pickVariant(selectedAd, aspectRatio);
+      let adReferenceUrl = variant.imageUrl;
+      if (!adReferenceUrl.startsWith('local-file://') && !adReferenceUrl.startsWith('http')) {
+        adReferenceUrl = await bundledAssetToDataUrl(adReferenceUrl);
+      }
+      const productUrls = selectedProduct.referenceImages.slice(0, 4);
+      const characterUrls = selectedCharacter?.referenceImages.slice(0, 2) ?? [];
+
+      let createdCount = 0;
+      for (const shot of editableShots) {
+        const prompt = buildTalkShotFramePrompt(selectedProduct.name, productBrief, aspectRatio, shot);
+        const result = await window.api.generate.image({
+          prompt,
+          aspectRatio,
+          resolution: '2K',
+          outputFormat: 'png',
+          imageUrls: [
+            ...(selectedStyleImageUrl ? [selectedStyleImageUrl] : [adReferenceUrl]),
+            ...productUrls,
+            ...characterUrls,
+          ],
+        });
+        const firstUrl = result.success ? result.resultUrls?.[0] : undefined;
+        if (!firstUrl) continue;
+
+        const saved = await window.api.images.save({ url: firstUrl, prompt, aspectRatio });
+        useImagesStore.getState().addImage(saved);
+        createdCount += 1;
+      }
+
+      if (createdCount === 0) toast.error('No frames were generated.');
+      else toast.success(`Generated ${createdCount} talk-to-cam frame${createdCount > 1 ? 's' : ''}.`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to generate complete ad set.';
+      toast.error(message);
+    } finally {
+      setIsGeneratingAdSet(false);
+    }
+  };
+
   if (results.length === 0) {
     return (
       <div className="flex items-center justify-center py-8 text-sm text-[var(--base-color-brand--umber)]">
@@ -1267,6 +1439,56 @@ function ResultsStep({
       </div>
     );
   }
+  if (outputMode === 'talk-to-cam') {
+    return (
+      <div className="space-y-3">
+        <div className="rounded-2xl border-2 border-[var(--base-color-brand--cinamon)] bg-[var(--base-color-brand--champagne)] p-3">
+          <p className="text-center text-xs font-semibold text-[var(--base-color-brand--bean)]" style={{ fontFamily: 'var(--text-color--font-family--heading)' }}>
+            Structured talking-head sequence for script + shot execution.
+          </p>
+          <div className="mt-2 flex justify-center">
+            <button
+              type="button"
+              onClick={() => void generateCompleteAdSet()}
+              disabled={isGeneratingAdSet}
+              className="inline-grid h-10 grid-flow-col items-center justify-center rounded-full bg-[var(--base-color-brand--cinamon)] px-4 text-xs font-semibold text-[var(--base-color-brand--shell)] disabled:opacity-60"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              {isGeneratingAdSet ? 'Generating complete ad set…' : 'Generate complete ad set'}
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {results.map((slot) => {
+            if (slot.status !== 'success' || !slot.talkShot) {
+              return (
+                <div
+                  key={slot.id}
+                  className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4 text-xs text-[var(--base-color-brand--umber)]"
+                >
+                  {slot.status === 'pending' ? 'Generating shot plan…' : slot.error ?? 'Shot plan unavailable.'}
+                </div>
+              );
+            }
+            const shot = slot.talkShot;
+            return (
+              <div
+                key={slot.id}
+                className="space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-4"
+              >
+                <p className="text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]">{shot.angle}</p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">Script:</span> {shot.script}</p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">Framing:</span> {shot.framing}</p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">B-roll:</span> {shot.broll}</p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">On-screen text:</span> {shot.onScreenText}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   // All 4 generations side-by-side on one row so the user can compare them
   // at a glance. Uses the same wider container width as the ad carousel.
   return (

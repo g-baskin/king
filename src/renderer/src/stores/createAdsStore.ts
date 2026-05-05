@@ -13,10 +13,21 @@ import type { EntityData, GeneratedImageData } from '@/types/electron';
 
 export type StepId = 'ad' | 'product' | 'brief' | 'format' | 'results' | 'animate';
 
+export type CreateAdsOutputMode = 'still-batch' | 'talk-to-cam';
+
+export interface TalkToCamShot {
+  angle: 'Hook' | 'Problem' | 'Proof' | 'CTA';
+  script: string;
+  framing: string;
+  broll: string;
+  onScreenText: string;
+}
+
 export interface ResultSlot {
   id: string;
   status: 'pending' | 'success' | 'error';
   image?: GeneratedImageData;
+  talkShot?: TalkToCamShot;
   error?: string;
 }
 
@@ -53,6 +64,7 @@ interface CreateAdsStore {
   selectedProductId: string | null;
   productBrief: string;
   aspectRatio: string;
+  outputMode: CreateAdsOutputMode;
 
   // Generation state. Lives in the store (not the component) so fal calls
   // started before navigation continue updating the slots after the user
@@ -81,12 +93,14 @@ interface CreateAdsStore {
   setSelectedProductId: (id: string | null) => void;
   setProductBrief: (brief: string) => void;
   setAspectRatio: (ratio: string) => void;
+  setOutputMode: (mode: CreateAdsOutputMode) => void;
   removeResultByImageId: (imageId: string) => void;
   startNewAd: () => void;
 
   runGeneration: (
     ad: AdReference,
     product: EntityData,
+    outputMode: CreateAdsOutputMode,
     extraReferenceImageUrls?: string[],
   ) => Promise<void>;
   /** Re-run a single failed slot using the cached generation inputs. */
@@ -99,6 +113,7 @@ const INITIAL_STATE = {
   selectedProductId: null,
   productBrief: '',
   aspectRatio: '1:1',
+  outputMode: 'still-batch' as CreateAdsOutputMode,
   results: [] as ResultSlot[],
   isGenerating: false,
   generationId: 0,
@@ -113,6 +128,7 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
   setSelectedProductId: (selectedProductId) => set({ selectedProductId }),
   setProductBrief: (productBrief) => set({ productBrief }),
   setAspectRatio: (aspectRatio) => set({ aspectRatio }),
+  setOutputMode: (outputMode) => set({ outputMode }),
 
   removeResultByImageId: (imageId) =>
     set((state) => ({
@@ -123,7 +139,7 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
   // "Create another" button on the results screen.
   startNewAd: () => set({ ...INITIAL_STATE }),
 
-  runGeneration: async (ad, product, extraReferenceImageUrls = []) => {
+  runGeneration: async (ad, product, outputMode, extraReferenceImageUrls = []) => {
     const { productBrief, aspectRatio } = get();
 
     if (productBrief.trim().length === 0) {
@@ -147,6 +163,20 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
       generationId: thisGenId,
       results: slotIds.map((id) => ({ id, status: 'pending' })),
     });
+
+    if (outputMode === 'talk-to-cam') {
+      const shots = buildTalkToCamShots(product.name, productBrief);
+      set({
+        results: shots.map((shot, i) => ({
+          id: slotIds[i] ?? `talk-${Date.now()}-${i}`,
+          status: 'success',
+          talkShot: shot,
+        })),
+        isGenerating: false,
+      });
+      toast.success('Talk-to-cam shot plan generated.');
+      return;
+    }
 
     // Pick the variant of the selected ad that best matches the user's
     // chosen output aspect ratio (falls back to the ad's default variant).
@@ -226,6 +256,40 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
  * both the initial `runGeneration` and a manual `retrySlot` share the same
  * success/error handling.
  */
+function buildTalkToCamShots(productName: string, brief: string): TalkToCamShot[] {
+  const summary = brief.trim() || `Expert talk-to-camera ad for ${productName}.`;
+  return [
+    {
+      angle: 'Hook',
+      script: `"If you're struggling with this, ${productName} might be your fastest fix."`,
+      framing: 'Direct-to-camera medium close-up, eye-level, confident delivery in first 2 seconds.',
+      broll: `Open with expert holding ${productName} near chest level; quick cut to product close-up.`,
+      onScreenText: 'Stop scrolling: here\'s the fix',
+    },
+    {
+      angle: 'Problem',
+      script: '"Most people do this wrong and never see consistent results."',
+      framing: 'Slight push-in while expert explains the common mistake; empathetic tone.',
+      broll: `Show the problem context and then the expert pointing to ${productName} as the correction.`,
+      onScreenText: 'Common mistake',
+    },
+    {
+      angle: 'Proof',
+      script: `"Here\'s exactly how I use ${productName} and why it works."`,
+      framing: 'Over-shoulder demo + insert close-ups for texture/details; steady camera.',
+      broll: `Demonstrate product usage step-by-step with clear hand actions and clean lighting.`,
+      onScreenText: 'How it works',
+    },
+    {
+      angle: 'CTA',
+      script: '"Try this routine today and tell me how it goes."',
+      framing: 'Back to direct-to-camera framing with assertive, warm close.',
+      broll: `Final hero hold of ${productName} with confident nod; end on clean product hero frame.`,
+      onScreenText: 'Try it now',
+    },
+  ].map((shot) => ({ ...shot, broll: `${shot.broll} Brief context: ${summary}` }));
+}
+
 async function generateSingleSlot(
   slotId: string,
   set: (
