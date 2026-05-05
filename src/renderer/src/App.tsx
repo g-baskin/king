@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { CharacterConsistencyIntent } from '@/stores/imageIntentStore';
 import type { Prompt } from '@/lib/prompts';
 import Header from '@/components/layout/Header';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -36,6 +37,7 @@ function AppContent() {
     requiresProduct?: boolean;
     recommendedEntityType?: 'product' | 'character';
   } | null>(null);
+  const [imageIntent, setImageIntent] = useState<CharacterConsistencyIntent | null>(null);
 
   const handleUsePrompt = useCallback((prompt: Prompt) => {
     setPrefillPrompt(prompt.prompt);
@@ -58,12 +60,29 @@ function AppContent() {
           prefillPrompt={prefillPrompt}
           prefillPromptMeta={prefillPromptMeta}
           onPromptConsumed={handlePromptConsumed}
+          imageIntent={imageIntent}
+          onImageIntentConsumed={() => {
+            setImageIntent(null);
+          }}
         />
       )}
       {currentPage === 'create-ads' && <CreateAdsPage />}
       {currentPage === 'clone' && <ClonePage />}
       {currentPage === 'products' && <ProductsPage onNavigate={setCurrentPage} />}
-      {currentPage === 'characters' && <CharactersPage onNavigate={setCurrentPage} />}
+      {currentPage === 'characters' && (
+        <CharactersPage
+          onNavigate={setCurrentPage}
+          onCharacterConsistencyIntent={({ characterEntity, prompt, templateImageUrl }) => {
+            setImageIntent({
+              type: 'character-consistency-sheet',
+              characterEntity,
+              prompt,
+              templateImageUrl,
+              ts: Date.now(),
+            });
+          }}
+        />
+      )}
       {currentPage === 'facebook-ads' && <FacebookAdsPage onNavigate={setCurrentPage} />}
       {currentPage === 'google-ads' && <GoogleAdsPage onNavigate={setCurrentPage} />}
       {currentPage === 'tiktok-shop' && <TiktokShopPage onNavigate={setCurrentPage} />}

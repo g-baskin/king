@@ -3,9 +3,14 @@ import type { PageType } from '@/App';
 
 interface CharactersPageProps {
   onNavigate: (page: PageType) => void;
+  onCharacterConsistencyIntent?: (payload: {
+    characterEntity: string;
+    prompt: string;
+    templateImageUrl: string;
+  }) => void;
 }
 
-export default function CharactersPage({ onNavigate }: CharactersPageProps) {
+export default function CharactersPage({ onNavigate, onCharacterConsistencyIntent }: CharactersPageProps) {
   return (
     <EntityManagementPage
       entityType="characters"
@@ -15,6 +20,7 @@ export default function CharactersPage({ onNavigate }: CharactersPageProps) {
       deleteTitle="Delete Character"
       deleteMessage="Are you sure you want to delete this character? All reference images will be removed. This action cannot be undone."
       onNavigate={onNavigate}
+      onCharacterConsistencyIntent={onCharacterConsistencyIntent}
     />
   );
 }

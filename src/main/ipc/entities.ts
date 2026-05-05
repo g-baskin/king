@@ -28,6 +28,7 @@ export function registerEntityHandlers(): void {
         name: string;
         files: { name: string; buffer: Uint8Array }[];
         productType?: string;
+        primaryReferenceIndex?: number;
       },
     ) => {
       if (!validateType(entityType)) throw new Error('Invalid entity type');
@@ -37,7 +38,13 @@ export function registerEntityHandlers(): void {
         buffer: Buffer.from(f.buffer),
       }));
       const imageUrls = saveEntityImages(entityType, buffers);
-      return await addEntity(entityType, data.name, imageUrls, data.productType);
+      return await addEntity(
+        entityType,
+        data.name,
+        imageUrls,
+        data.productType,
+        data.primaryReferenceIndex,
+      );
     },
   );
 
@@ -52,6 +59,7 @@ export function registerEntityHandlers(): void {
         existingImages: string[];
         newFiles: { name: string; buffer: Uint8Array }[];
         productType?: string;
+        primaryReferenceIndex?: number;
       },
     ) => {
       if (!validateType(entityType)) throw new Error('Invalid entity type');
@@ -66,7 +74,14 @@ export function registerEntityHandlers(): void {
       }
 
       const allImages = [...data.existingImages, ...newUrls];
-      const updated = await updateEntity(entityType, id, data.name, allImages, data.productType);
+      const updated = await updateEntity(
+        entityType,
+        id,
+        data.name,
+        allImages,
+        data.productType,
+        data.primaryReferenceIndex,
+      );
       if (!updated) throw new Error('Entity not found');
       return updated;
     },

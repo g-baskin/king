@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
+import editorialShotTemplate from '@/assets/prompts/editorial-shot-template.png';
+
+const CHARACTER_CONSISTENCY_SHEET_PROMPT = `Use the provided editorial template image as a HARD LAYOUT BLUEPRINT. Recreate that exact sheet structure: same panel count, same panel positions, same spacing, same relative framing style, and one final composite image only. Fill the template with exactly 5 required unique views of the same person from the character reference: (1) Front full-body, (2) Back full-body, (3) Left profile full-body, (4) Right profile full-body, (5) ECU close-up portrait face panel. HARD RULES: each required view appears exactly once; no duplicate side angles; do not replace ECU with another body shot; no missing slots; no extra slots; no collage outside the template. Keep character identity locked across all panels: same face geometry, skin tone, age, body proportions, and hairline. Keep outfit design and colors consistent across all full-body views with no wardrobe drift. Use neutral standing pose for full-body panels, direct camera alignment per required angle, expression neutral/composed. Pure white seamless studio background, high-key lighting, minimal floor shadow, commercial editorial clarity. No text labels, no logos, no added props. Before final output, verify all 5 slots are unique and match required angles; if not, correct and regenerate internally before returning the final image.`;
 import UploadModal from './UploadModal';
 import UploadReviewModal from './UploadReviewModal';
 import EntityCard from './EntityCard';
@@ -17,6 +21,11 @@ interface EntityManagementPageProps {
   deleteTitle: string;
   deleteMessage: string;
   onNavigate: (page: PageType) => void;
+  onCharacterConsistencyIntent?: (payload: {
+    characterEntity: string;
+    prompt: string;
+    templateImageUrl: string;
+  }) => void;
 }
 
 export default function EntityManagementPage({
@@ -27,6 +36,7 @@ export default function EntityManagementPage({
   deleteTitle,
   deleteMessage,
   onNavigate,
+  onCharacterConsistencyIntent,
 }: EntityManagementPageProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -53,9 +63,14 @@ export default function EntityManagementPage({
     setIsReviewModalOpen(true);
   };
 
-  const handleSave = async (name: string, images: UploadedImage[], productType?: string) => {
+  const handleSave = async (
+    name: string,
+    images: UploadedImage[],
+    productType?: string,
+    primaryReferenceImageUrl?: string,
+  ) => {
     try {
-      await handleCreate(name, images, productType);
+      await handleCreate(name, images, productType, primaryReferenceImageUrl);
       setIsReviewModalOpen(false);
       setUploadedFiles([]);
     } catch {
@@ -79,16 +94,29 @@ export default function EntityManagementPage({
     name: string,
     images: UploadedImage[],
     productType?: string,
+    primaryReferenceImageUrl?: string,
   ) => {
     try {
-      await handleSaveEdit(id, name, images, productType);
+      await handleSaveEdit(id, name, images, productType, primaryReferenceImageUrl);
       setIsReviewModalOpen(false);
     } catch {
       // Error already handled in hook
     }
   };
 
-  const handleGenerateWithEntity = (_entityId: string) => {
+  const handleGenerateWithEntity = (entityId: string) => {
+    if (entityType === 'characters') {
+      try {
+        onCharacterConsistencyIntent?.({
+          characterEntity: `character:${entityId}`,
+          prompt: CHARACTER_CONSISTENCY_SHEET_PROMPT,
+          templateImageUrl: editorialShotTemplate,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        toast.error(`Couldn't start character consistency flow: ${message}`);
+      }
+    }
     onNavigate('image');
   };
 

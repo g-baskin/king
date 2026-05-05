@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import SelectDropdown from '@/components/ui/SelectDropdown';
 import {
@@ -26,6 +26,13 @@ import {
   SUPPORTED_IMAGE_MIME_REGEX,
 } from '@/lib/constants/image-form';
 import { renderPrompt } from '@/lib/productTypes';
+import {
+  buildCinemaPrompt,
+  DEFAULT_CINEMA_SETTINGS,
+  formatCinemaSummary,
+  type CinemaSettings,
+} from '@/lib/cinema-prompt';
+import CinemaControlsModal from '@/components/ui/CinemaControlsModal';
 import { useModelStore, type ImageModel } from '@/stores/modelStore';
 
 // Same option list the Settings modal uses — kept in lockstep so the
@@ -57,6 +64,49 @@ interface ImagePromptFormProps {
   recreateData?: { prompt: string } | null;
   editData?: { imageUrl: string } | null;
   forceEntitySelection?: string | null;
+  selectedProductOverride?: string | null;
+  selectedCharacterOverride?: string | null;
+  additionalReferenceImageUrls?: string[];
+  intentPrompt?: string | null;
+}
+
+const KING_CINEMA_STORAGE_KEY = 'king_cinema_v1';
+
+function loadPersistedCinema(): {
+  settings: CinemaSettings;
+  modifiersEnabled: boolean;
+} {
+  try {
+    const raw = localStorage.getItem(KING_CINEMA_STORAGE_KEY);
+    if (!raw) {
+      return {
+        settings: { ...DEFAULT_CINEMA_SETTINGS },
+        modifiersEnabled: true,
+      };
+    }
+    const parsed = JSON.parse(raw) as {
+      settings?: Partial<CinemaSettings>;
+      modifiersEnabled?: boolean;
+    };
+    const settings: CinemaSettings = {
+      ...DEFAULT_CINEMA_SETTINGS,
+      ...parsed.settings,
+      focal:
+        typeof parsed.settings?.focal === 'number'
+          ? parsed.settings.focal
+          : DEFAULT_CINEMA_SETTINGS.focal,
+    };
+    return {
+      settings,
+      modifiersEnabled:
+        typeof parsed.modifiersEnabled === 'boolean' ? parsed.modifiersEnabled : true,
+    };
+  } catch {
+    return {
+      settings: { ...DEFAULT_CINEMA_SETTINGS },
+      modifiersEnabled: true,
+    };
+  }
 }
 
 export default function ImagePromptForm({
@@ -65,6 +115,10 @@ export default function ImagePromptForm({
   recreateData,
   editData,
   forceEntitySelection,
+  selectedProductOverride,
+  selectedCharacterOverride,
+  additionalReferenceImageUrls = [],
+  intentPrompt,
 }: ImagePromptFormProps) {
   const selectedModel = useModelStore((s) => s.selectedModel);
   const setSelectedModel = useModelStore((s) => s.setSelectedModel);
@@ -99,6 +153,27 @@ export default function ImagePromptForm({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxImages = MAX_IMAGES_PER_GENERATION;
 
+  const [cinemaModalOpen, setCinemaModalOpen] = useState(false);
+  const initialCinema = useMemo(() => loadPersistedCinema(), []);
+  const [cinemaSettings, setCinemaSettings] = useState<CinemaSettings>(initialCinema.settings);
+  const [cinemaModifiersEnabled, setCinemaModifiersEnabled] = useState(
+    initialCinema.modifiersEnabled,
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        KING_CINEMA_STORAGE_KEY,
+        JSON.stringify({
+          settings: cinemaSettings,
+          modifiersEnabled: cinemaModifiersEnabled,
+        }),
+      );
+    } catch {
+      /* ignore quota */
+    }
+  }, [cinemaSettings, cinemaModifiersEnabled]);
+
   // Fetch products and characters for the entity selector
   useEffect(() => {
     const fetchEntities = async () => {
@@ -116,7 +191,9 @@ export default function ImagePromptForm({
     fetchEntities();
   }, []);
 
-  // Build entity selector options
+  // Build entity selector options.
+  // Characters are intentionally excluded here and selected via the dedicated
+  // character strip on ImagePage so products/characters are separate surfaces.
   const entityOptions = [
     { value: 'none', label: 'Default' },
     ...(products.length > 0
@@ -125,42 +202,70 @@ export default function ImagePromptForm({
           ...products.map((p) => ({ value: `product:${p.id}`, label: p.name })),
         ]
       : []),
-    ...(characters.length > 0
-      ? [
-          { value: '_character_header', label: 'Characters', disabled: true },
-          ...characters.map((c) => ({ value: `character:${c.id}`, label: c.name })),
-        ]
-      : []),
   ];
 
-  // When an entity is selected, load its reference images
+  const mapReferenceUrls = useCallback((urls: string[]): ReferenceImage[] => {
+    return urls.slice(0, MAX_REFERENCE_IMAGES).map((url) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      preview: url,
+      url,
+      isLoading: false,
+    }));
+  }, []);
+
+  const applyEntitySelections = useCallback(
+    (productEntityValue: string | null, characterEntityValue: string | null) => {
+      const resolvedUrls: string[] = [];
+
+      for (const url of additionalReferenceImageUrls) {
+        if (resolvedUrls.length >= MAX_REFERENCE_IMAGES) break;
+        if (!resolvedUrls.includes(url)) resolvedUrls.push(url);
+      }
+
+      if (productEntityValue && productEntityValue.startsWith('product:')) {
+        const productId = productEntityValue.slice('product:'.length);
+        const product = products.find((p) => p.id === productId);
+        if (product) {
+          for (const url of product.referenceImages) {
+            if (resolvedUrls.length >= MAX_REFERENCE_IMAGES) break;
+            if (!resolvedUrls.includes(url)) resolvedUrls.push(url);
+          }
+        }
+      }
+
+      if (characterEntityValue && characterEntityValue.startsWith('character:')) {
+        const characterId = characterEntityValue.slice('character:'.length);
+        const character = characters.find((c) => c.id === characterId);
+        if (character && character.referenceImages.length > 0) {
+          const primaryIndex =
+            typeof character.primaryReferenceIndex === 'number' &&
+            character.primaryReferenceIndex >= 0 &&
+            character.primaryReferenceIndex < character.referenceImages.length
+              ? character.primaryReferenceIndex
+              : 0;
+          const primaryUrl = character.referenceImages[primaryIndex];
+          if (primaryUrl && resolvedUrls.length < MAX_REFERENCE_IMAGES && !resolvedUrls.includes(primaryUrl)) {
+            resolvedUrls.push(primaryUrl);
+          }
+        }
+      }
+
+      setReferenceImages(mapReferenceUrls(resolvedUrls));
+    },
+    [additionalReferenceImageUrls, characters, mapReferenceUrls, products],
+  );
+
+  // When a product is selected from the dropdown, load only product refs.
   const handleEntityChange = useCallback(
     (value: string) => {
       setSelectedEntity(value);
-
       if (value === 'none') {
         setReferenceImages([]);
         return;
       }
-
-      const [type, id] = value.split(':');
-      const entities = type === 'product' ? products : characters;
-      const entity = entities.find((e) => e.id === id);
-
-      if (!entity) return;
-
-      const entityImages: ReferenceImage[] = entity.referenceImages
-        .slice(0, MAX_REFERENCE_IMAGES)
-        .map((url) => ({
-          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          preview: url,
-          url,
-          isLoading: false,
-        }));
-
-      setReferenceImages(entityImages);
+      applyEntitySelections(value, null);
     },
-    [products, characters],
+    [applyEntitySelections],
   );
 
   const autoResizeTextarea = useCallback(() => {
@@ -183,6 +288,12 @@ export default function ImagePromptForm({
     }
   }, [recreateData]);
 
+  // Handle cross-page intent prompt (Characters -> Image flow)
+  useEffect(() => {
+    if (!intentPrompt) return;
+    setPrompt(intentPrompt);
+  }, [intentPrompt]);
+
   // Handle edit data
   useEffect(() => {
     if (!editData?.imageUrl) return;
@@ -202,6 +313,19 @@ export default function ImagePromptForm({
     if (!forceEntitySelection || forceEntitySelection === selectedEntity) return;
     handleEntityChange(forceEntitySelection);
   }, [forceEntitySelection, handleEntityChange, selectedEntity]);
+
+  useEffect(() => {
+    const hasProductOverride = !!selectedProductOverride && selectedProductOverride !== 'none';
+    const hasCharacterOverride =
+      !!selectedCharacterOverride && selectedCharacterOverride !== 'none';
+
+    if (!hasProductOverride && !hasCharacterOverride) return;
+
+    applyEntitySelections(
+      hasProductOverride ? selectedProductOverride : null,
+      hasCharacterOverride ? selectedCharacterOverride : null,
+    );
+  }, [applyEntitySelections, selectedCharacterOverride, selectedProductOverride]);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,7 +397,17 @@ export default function ImagePromptForm({
       const id = selectedEntity.slice('product:'.length);
       selectedProductType = products.find((p) => p.id === id)?.productType;
     }
-    const resolvedPrompt = renderPrompt(prompt, selectedProductType);
+    let resolvedPrompt = renderPrompt(prompt, selectedProductType);
+
+    if (!isGpt && cinemaModifiersEnabled) {
+      resolvedPrompt = buildCinemaPrompt(
+        resolvedPrompt,
+        cinemaSettings.camera,
+        cinemaSettings.lens,
+        cinemaSettings.focal,
+        cinemaSettings.aperture,
+      );
+    }
 
     onSubmit?.({
       prompt: resolvedPrompt,
@@ -384,13 +518,40 @@ export default function ImagePromptForm({
           </div>
 
           {/* Controls row */}
-          <div className="flex h-9 items-center gap-2">
+          <div className="flex min-h-9 flex-wrap items-center gap-2">
             <SelectDropdown
               options={MODEL_OPTIONS}
               value={selectedModel}
               onChange={(v) => setSelectedModel(v as ImageModel)}
               icon={<SparkleIcon />}
             />
+
+            {!isGpt && (
+              <>
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-medium text-[var(--base-color-brand--bean)] select-none">
+                  <input
+                    type="checkbox"
+                    checked={cinemaModifiersEnabled}
+                    onChange={(e) => setCinemaModifiersEnabled(e.target.checked)}
+                    className="rounded border-[var(--base-color-brand--umber)] text-[var(--base-color-brand--cinamon)] focus:ring-[var(--base-color-brand--cinamon)]"
+                  />
+                  Cinema optics
+                </label>
+                <button
+                  type="button"
+                  disabled={!cinemaModifiersEnabled}
+                  onClick={() => setCinemaModalOpen(true)}
+                  className="flex max-w-[200px] min-w-0 flex-col items-start rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-left transition hover:border-[var(--base-color-brand--cinamon)]/50 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <span className="w-full truncate text-[9px] font-bold tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+                    {cinemaSettings.camera}
+                  </span>
+                  <span className="w-full truncate text-[11px] font-semibold text-[var(--base-color-brand--bean)]">
+                    {formatCinemaSummary(cinemaSettings)}
+                  </span>
+                </button>
+              </>
+            )}
 
             <SelectDropdown
               options={entityOptions}
@@ -465,6 +626,13 @@ export default function ImagePromptForm({
           </button>
         </aside>
       </fieldset>
+
+      <CinemaControlsModal
+        isOpen={cinemaModalOpen}
+        onClose={() => setCinemaModalOpen(false)}
+        settings={cinemaSettings}
+        onSettingsChange={setCinemaSettings}
+      />
     </form>
   );
 }
