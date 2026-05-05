@@ -27,6 +27,7 @@ export interface ResultSlot {
 // the IPC payload.
 // https://ai.google.dev/gemini-api/docs/image-generation
 const MAX_PRODUCT_REFERENCES = 4;
+const MAX_CHARACTER_REFERENCES = 2;
 
 /**
  * Convert a bundled vite-served asset URL to a base64 data URL so it can be
@@ -83,7 +84,11 @@ interface CreateAdsStore {
   removeResultByImageId: (imageId: string) => void;
   startNewAd: () => void;
 
-  runGeneration: (ad: AdReference, product: EntityData) => Promise<void>;
+  runGeneration: (
+    ad: AdReference,
+    product: EntityData,
+    extraReferenceImageUrls?: string[],
+  ) => Promise<void>;
   /** Re-run a single failed slot using the cached generation inputs. */
   retrySlot: (slotId: string) => Promise<void>;
 }
@@ -118,7 +123,7 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
   // "Create another" button on the results screen.
   startNewAd: () => set({ ...INITIAL_STATE }),
 
-  runGeneration: async (ad, product) => {
+  runGeneration: async (ad, product, extraReferenceImageUrls = []) => {
     const { productBrief, aspectRatio } = get();
 
     if (productBrief.trim().length === 0) {
@@ -172,7 +177,8 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
     }
 
     const prompt = buildCreateAdsPrompt(productBrief, aspectRatio);
-    const imageUrls = [adReferenceUrl, ...productUrls];
+    const characterUrls = extraReferenceImageUrls.slice(0, MAX_CHARACTER_REFERENCES);
+    const imageUrls = [adReferenceUrl, ...productUrls, ...characterUrls];
 
     // Cache inputs so individual slot retries don't rebuild them.
     set({ lastGenerationInputs: { prompt, imageUrls, aspectRatio } });
