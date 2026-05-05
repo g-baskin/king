@@ -56,6 +56,19 @@ export default function ImagePage({
     }
   }, [prefillPrompt, onPromptConsumed]);
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [promptNeedsProduct, setPromptNeedsProduct] = useState(false);
+  const [promptNeedsCharacter, setPromptNeedsCharacter] = useState(false);
+  const [productOptions, setProductOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [forceEntitySelection, setForceEntitySelection] = useState<string | null>(null);
+  const [products, setProducts] = useState<EntityData[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [characters, setCharacters] = useState<EntityData[]>([]);
+  const [charactersLoading, setCharactersLoading] = useState(true);
+  const [selectedProductEntity, setSelectedProductEntity] = useState<string>('none');
+  const [selectedCharacterEntity, setSelectedCharacterEntity] = useState<string>('none');
+  const [consistencyTemplateImageUrl, setConsistencyTemplateImageUrl] = useState<string | null>(null);
+
   // Handle cross-page intent from Characters tab (Generate button).
   useEffect(() => {
     const resolvedIntent = imageIntent ?? null;
@@ -73,18 +86,6 @@ export default function ImagePage({
     onImageIntentConsumed?.();
     toast.success('Character consistency prompt loaded.');
   }, [imageIntent, onImageIntentConsumed]);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [promptNeedsProduct, setPromptNeedsProduct] = useState(false);
-  const [promptNeedsCharacter, setPromptNeedsCharacter] = useState(false);
-  const [productOptions, setProductOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [forceEntitySelection, setForceEntitySelection] = useState<string | null>(null);
-  const [products, setProducts] = useState<EntityData[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [characters, setCharacters] = useState<EntityData[]>([]);
-  const [charactersLoading, setCharactersLoading] = useState(true);
-  const [selectedProductEntity, setSelectedProductEntity] = useState<string>('none');
-  const [selectedCharacterEntity, setSelectedCharacterEntity] = useState<string>('none');
-  const [consistencyTemplateImageUrl, setConsistencyTemplateImageUrl] = useState<string | null>(null);
 
   const {
     images: allImages,

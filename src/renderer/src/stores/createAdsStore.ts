@@ -265,7 +265,7 @@ function buildTalkToCamShots(productName: string, brief: string): TalkToCamShot[
       script: `"If you're struggling with this, ${productName} might be your fastest fix."`,
       framing: 'Direct-to-camera medium close-up, eye-level, confident delivery in first 2 seconds.',
       broll: `Open with expert holding ${productName} near chest level; quick cut to product close-up.`,
-      onScreenText: 'Stop scrolling: here\'s the fix',
+      onScreenText: "Stop scrolling: here's the fix",
     },
     {
       angle: 'Problem',
@@ -276,7 +276,7 @@ function buildTalkToCamShots(productName: string, brief: string): TalkToCamShot[
     },
     {
       angle: 'Proof',
-      script: `"Here\'s exactly how I use ${productName} and why it works."`,
+      script: `"Here's exactly how I use ${productName} and why it works."`,
       framing: 'Over-shoulder demo + insert close-ups for texture/details; steady camera.',
       broll: `Demonstrate product usage step-by-step with clear hand actions and clean lighting.`,
       onScreenText: 'How it works',
