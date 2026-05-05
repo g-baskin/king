@@ -345,7 +345,7 @@ export default function CreateAdsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const page = await window.api.images.list(undefined, 24);
+        const page = await window.api.images.list(undefined, 24, activeWorkspace.id);
         if (!cancelled) setStyleLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setStyleLibraryImages([]);
@@ -356,7 +356,7 @@ export default function CreateAdsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeWorkspace.id]);
 
   // Load user-uploaded ad references on mount. They live in the same
   // carousel as the bundled defaults, prepended newest-first so a fresh
@@ -1570,7 +1570,7 @@ function AnimateStep({
     let cancelled = false;
     (async () => {
       try {
-        const page = await window.api.images.list(undefined, 24);
+        const page = await window.api.images.list(undefined, 24, activeWorkspace.id);
         if (!cancelled) setLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setLibraryImages([]);
@@ -1581,7 +1581,7 @@ function AnimateStep({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeWorkspace.id]);
 
   useEffect(() => {
     if (!pinnedSourceImageUrl && !selectedSourceImageUrl && successfulImages[0]?.url) {

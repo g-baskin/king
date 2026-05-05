@@ -26,6 +26,7 @@ import {
   SUPPORTED_IMAGE_MIME_REGEX,
 } from '@/lib/constants/image-form';
 import { renderPrompt } from '@/lib/productTypes';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import {
   buildCinemaPrompt,
   DEFAULT_CINEMA_SETTINGS,
@@ -154,6 +155,7 @@ export default function ImagePromptForm({
   const maxImages = MAX_IMAGES_PER_GENERATION;
 
   const [cinemaModalOpen, setCinemaModalOpen] = useState(false);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const initialCinema = useMemo(() => loadPersistedCinema(), []);
   const [cinemaSettings, setCinemaSettings] = useState<CinemaSettings>(initialCinema.settings);
   const [cinemaModifiersEnabled, setCinemaModifiersEnabled] = useState(
@@ -179,8 +181,8 @@ export default function ImagePromptForm({
     const fetchEntities = async () => {
       try {
         const [p, c] = await Promise.all([
-          window.api.entities.list('products'),
-          window.api.entities.list('characters'),
+          window.api.entities.list('products', activeWorkspaceId),
+          window.api.entities.list('characters', activeWorkspaceId),
         ]);
         setProducts(p);
         setCharacters(c);
@@ -189,7 +191,7 @@ export default function ImagePromptForm({
       }
     };
     fetchEntities();
-  }, []);
+  }, [activeWorkspaceId]);
 
   // Build entity selector options.
   // Characters are intentionally excluded here and selected via the dedicated

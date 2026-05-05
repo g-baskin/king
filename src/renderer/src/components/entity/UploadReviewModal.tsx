@@ -7,6 +7,7 @@ import type { EntityData } from '@/types/electron';
 import { productTypes } from '@/lib/productTypes';
 import { SUPPORTED_IMAGE_ACCEPT } from '@/lib/constants/image-form';
 import type { GeneratedImageData } from '@/types/electron';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 interface UploadReviewModalProps {
   isOpen: boolean;
@@ -63,6 +64,7 @@ export default function UploadReviewModal({
   const [primaryReferenceImageUrl, setPrimaryReferenceImageUrl] = useState<string | null>(null);
   const [libraryImages, setLibraryImages] = useState<GeneratedImageData[]>([]);
   const [isLibraryLoading, setIsLibraryLoading] = useState(false);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const isEditMode = !!editEntity;
   const showProductType = entityType === 'products';
 
@@ -170,7 +172,7 @@ export default function UploadReviewModal({
     if (entityType !== 'characters' || isLibraryLoading) return;
     setIsLibraryLoading(true);
     try {
-      const result = await window.api.images.list(undefined, 24);
+      const result = await window.api.images.list(undefined, 24, activeWorkspaceId);
       setLibraryImages(result.data);
     } catch {
       toast.error("Couldn't load image library.");

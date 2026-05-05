@@ -100,14 +100,7 @@ export default function ImagePage({
 
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
 
-  const generatedImages = useMemo(
-    () =>
-      allImages.filter((img) => {
-        const marker = `[workspace:${activeWorkspace.id}]`;
-        return img.prompt.includes(marker) || (!img.prompt.includes('[workspace:') && activeWorkspace.id === 'workspace-ugc');
-      }),
-    [allImages, activeWorkspace.id],
-  );
+  const generatedImages = allImages;
 
   useEffect(() => {
     if (!(prefillPrompt && prefillPromptMeta?.requiresProduct)) return;
@@ -115,7 +108,7 @@ export default function ImagePage({
     setPromptNeedsProduct(true);
     void (async () => {
       try {
-        const products = await window.api.entities.list('products');
+        const products = await window.api.entities.list('products', activeWorkspace.id);
         setProductOptions(products.map((p) => ({ id: p.id, name: p.name })));
       } catch {
         setProductOptions([]);
@@ -133,8 +126,8 @@ export default function ImagePage({
     void (async () => {
       try {
         const [productList, characterList] = await Promise.all([
-          window.api.entities.list('products'),
-          window.api.entities.list('characters'),
+          window.api.entities.list('products', activeWorkspace.id),
+          window.api.entities.list('characters', activeWorkspace.id),
         ]);
         if (!cancelled) {
           setProducts(productList);
@@ -155,7 +148,7 @@ export default function ImagePage({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [activeWorkspace.id]);
   const selectedCount = selectedImages.size;
 
   const clearSelection = useCallback(() => setSelectedImages(new Set()), []);

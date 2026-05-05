@@ -9,6 +9,7 @@ import {
 import { pickVariant, type AdReference } from '@/lib/adReferences';
 import { useModelStore } from '@/stores/modelStore';
 import { useImagesStore } from '@/stores/imagesStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
 
 export type StepId = 'ad' | 'product' | 'brief' | 'format' | 'results' | 'animate';
@@ -339,6 +340,7 @@ async function generateSingleSlot(
       url: firstUrl,
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
+      workspaceId: useWorkspaceStore.getState().activeWorkspaceId,
     });
 
     // Push into the global gallery store so the Image page picks it up
