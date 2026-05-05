@@ -1065,6 +1065,11 @@ function AnimateStep({
       return;
     }
 
+    if (typeof window.api.generate.video !== 'function') {
+      toast.error('Video generation is not loaded in this session. Please restart the app and try again.');
+      return;
+    }
+
     setIsGeneratingVideo(true);
     setVideoUrl(null);
     try {
@@ -1078,7 +1083,11 @@ function AnimateStep({
       toast.success('Video generated.');
     } catch (err) {
       const message = err instanceof Error ? err.message : "Couldn't generate video.";
-      toast.error(message);
+      if (/No handler registered for 'generate:video'/.test(message)) {
+        toast.error('Video engine update detected. Restart the app, then run Animate again.');
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsGeneratingVideo(false);
     }

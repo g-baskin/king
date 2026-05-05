@@ -23,6 +23,10 @@ import { secureHandle } from './validateSender';
 const ALLOWED_EXTERNAL_HOSTS = new Set<string>([
   'fal.ai',
   'docs.fal.ai',
+  'openrouter.ai',
+  'firecrawl.dev',
+  'replicate.com',
+  'elevenlabs.io',
   'github.com',
   'open.shopee.com',
   'ads.google.com',

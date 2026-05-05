@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { Prompt } from '@/lib/prompts';
 import Header from '@/components/layout/Header';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import ImagePage from '@/pages/ImagePage';
@@ -31,20 +32,33 @@ export type PageType =
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageType>('image');
   const [prefillPrompt, setPrefillPrompt] = useState<string | null>(null);
+  const [prefillPromptMeta, setPrefillPromptMeta] = useState<{
+    requiresProduct?: boolean;
+    recommendedEntityType?: 'product' | 'character';
+  } | null>(null);
 
-  const handleUsePrompt = useCallback((promptText: string) => {
-    setPrefillPrompt(promptText);
+  const handleUsePrompt = useCallback((prompt: Prompt) => {
+    setPrefillPrompt(prompt.prompt);
+    setPrefillPromptMeta({
+      requiresProduct: prompt.requiresProduct,
+      recommendedEntityType: prompt.recommendedEntityType,
+    });
   }, []);
 
   const handlePromptConsumed = useCallback(() => {
     setPrefillPrompt(null);
+    setPrefillPromptMeta(null);
   }, []);
 
   return (
     <div className="relative flex h-screen flex-col overflow-hidden">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
       {currentPage === 'image' && (
-        <ImagePage prefillPrompt={prefillPrompt} onPromptConsumed={handlePromptConsumed} />
+        <ImagePage
+          prefillPrompt={prefillPrompt}
+          prefillPromptMeta={prefillPromptMeta}
+          onPromptConsumed={handlePromptConsumed}
+        />
       )}
       {currentPage === 'create-ads' && <CreateAdsPage />}
       {currentPage === 'clone' && <ClonePage />}

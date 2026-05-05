@@ -42,6 +42,8 @@ export interface Prompt {
   image?: string;
   prompt: string;
   category: PromptCategory;
+  requiresProduct?: boolean;
+  recommendedEntityType?: 'product' | 'character';
 }
 
 // Import all product prompt images
@@ -1836,5 +1838,12 @@ export const prompts: Prompt[] = rawPrompts.map((p) => {
     throw new Error(`Prompt "${p.id}" is missing a category assignment in categoryMap.`);
   }
   const cleaned = stripLegacyFidelityPhrases(p.prompt);
-  return { ...p, prompt: cleaned + PRODUCT_FIDELITY_CLAUSE, category };
+  const requiresProduct = category === 'apparel' || category === 'ugc';
+  return {
+    ...p,
+    prompt: cleaned + PRODUCT_FIDELITY_CLAUSE,
+    category,
+    requiresProduct,
+    recommendedEntityType: requiresProduct ? 'product' : undefined,
+  };
 });

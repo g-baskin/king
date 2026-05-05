@@ -20,7 +20,15 @@ interface ApiKeyStore {
   keys: Record<string, StoredKey>;
 }
 
-const ENV_MAP: Record<string, string> = { fal: 'FAL_KEY' };
+const ENV_MAP: Record<string, string> = {
+  fal: 'FAL_KEY',
+  openrouter: 'OPENROUTER_API_KEY',
+  firecrawl: 'FIRECRAWL_API_KEY',
+  replicate: 'REPLICATE_API_TOKEN',
+  elevenlabs: 'ELEVENLABS_API_KEY',
+  meta: 'META_API_KEY',
+  'google-ads-api': 'GOOGLE_ADS_API_KEY',
+};
 
 function getStorePath(): string {
   return join(getDataDir(), 'api-keys.json');

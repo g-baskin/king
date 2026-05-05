@@ -61,7 +61,7 @@ const PromptCard = memo(function PromptCard({
 }: {
   prompt: Prompt;
   priority?: boolean;
-  onUsePrompt: (promptText: string) => void;
+  onUsePrompt: (prompt: Prompt) => void;
 }) {
   const [copied, setCopied] = useState(false);
   const incrementUsage = usePromptUsageStore((s) => s.incrementUsage);
@@ -75,8 +75,8 @@ const PromptCard = memo(function PromptCard({
 
   const handleUse = useCallback(() => {
     incrementUsage(prompt.id);
-    onUsePrompt(prompt.prompt);
-  }, [onUsePrompt, prompt.prompt, prompt.id, incrementUsage]);
+    onUsePrompt(prompt);
+  }, [onUsePrompt, prompt, incrementUsage]);
 
   return (
     <div className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] transition-all duration-200 hover:border-[var(--base-color-brand--umber)] hover:shadow-lg">
@@ -147,7 +147,7 @@ const PromptCard = memo(function PromptCard({
 
 interface PromptsPageProps {
   onNavigate: (page: PageType) => void;
-  onUsePrompt: (promptText: string) => void;
+  onUsePrompt: (prompt: Prompt) => void;
 }
 
 export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProps) {
@@ -184,8 +184,8 @@ export default function PromptsPage({ onNavigate, onUsePrompt }: PromptsPageProp
   }, [searchQuery, activeCategory, usageCounts]);
 
   const handleUsePrompt = useCallback(
-    (promptText: string) => {
-      onUsePrompt(promptText);
+    (prompt: Prompt) => {
+      onUsePrompt(prompt);
       onNavigate('image');
     },
     [onUsePrompt, onNavigate],

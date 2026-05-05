@@ -56,6 +56,7 @@ interface ImagePromptFormProps {
   initialPrompt?: string;
   recreateData?: { prompt: string } | null;
   editData?: { imageUrl: string } | null;
+  forceEntitySelection?: string | null;
 }
 
 export default function ImagePromptForm({
@@ -63,6 +64,7 @@ export default function ImagePromptForm({
   initialPrompt = '',
   recreateData,
   editData,
+  forceEntitySelection,
 }: ImagePromptFormProps) {
   const selectedModel = useModelStore((s) => s.selectedModel);
   const setSelectedModel = useModelStore((s) => s.setSelectedModel);
@@ -195,6 +197,11 @@ export default function ImagePromptForm({
       },
     ]);
   }, [editData]);
+
+  useEffect(() => {
+    if (!forceEntitySelection || forceEntitySelection === selectedEntity) return;
+    handleEntityChange(forceEntitySelection);
+  }, [forceEntitySelection, handleEntityChange, selectedEntity]);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -15,10 +15,15 @@ import { useModelStore } from '@/stores/modelStore';
 
 interface ImagePageProps {
   prefillPrompt?: string | null;
+  prefillPromptMeta?: { requiresProduct?: boolean; recommendedEntityType?: 'product' | 'character' } | null;
   onPromptConsumed?: () => void;
 }
 
-export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePageProps) {
+export default function ImagePage({
+  prefillPrompt,
+  prefillPromptMeta,
+  onPromptConsumed,
+}: ImagePageProps) {
   // Split single-atom selectors so ImagePage only re-renders when one of
   // these slices actually changes. Destructuring the whole store returns a
   // fresh object on every store update and triggers spurious renders.
@@ -41,6 +46,9 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
     }
   }, [prefillPrompt, onPromptConsumed]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [promptNeedsProduct, setPromptNeedsProduct] = useState(false);
+  const [productOptions, setProductOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [forceEntitySelection, setForceEntitySelection] = useState<string | null>(null);
 
   const {
     images: generatedImages,
@@ -55,6 +63,20 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
   } = useImages();
 
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+
+  useEffect(() => {
+    if (!(prefillPrompt && prefillPromptMeta?.requiresProduct)) return;
+
+    setPromptNeedsProduct(true);
+    void (async () => {
+      try {
+        const products = await window.api.entities.list('products');
+        setProductOptions(products.map((p) => ({ id: p.id, name: p.name })));
+      } catch {
+        setProductOptions([]);
+      }
+    })();
+  }, [prefillPrompt, prefillPromptMeta]);
   const selectedCount = selectedImages.size;
 
   const clearSelection = useCallback(() => setSelectedImages(new Set()), []);
@@ -261,7 +283,52 @@ export default function ImagePage({ prefillPrompt, onPromptConsumed }: ImagePage
         </div>
         </div>{/* end scrollable gallery */}
 
-        <ImagePromptForm onSubmit={handleGenerate} recreateData={recreateData} editData={editData} />
+        {promptNeedsProduct && (
+          <div className="mx-6 mb-2 rounded-2xl border-2 border-[var(--base-color-brand--cinamon)] bg-[color-mix(in_srgb,var(--base-color-brand--cinamon)_18%,var(--base-color-brand--champagne))] p-3 shadow-[0_10px_24px_-10px_rgba(0,0,0,0.45)]">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--text-color--text-tertiary)]"
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                Recommended
+              </span>
+              <span
+                className="text-xs font-semibold text-[var(--text-color--text-primary)]"
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                This prompt works best with a product.
+              </span>
+              {productOptions.map((product) => (
+                <button
+                  key={product.id}
+                  type="button"
+                  onClick={() => {
+                    setForceEntitySelection(`product:${product.id}`);
+                    setPromptNeedsProduct(false);
+                    toast.success(`Selected ${product.name} for this prompt.`);
+                  }}
+                  className="rounded-full border border-[var(--base-color-brand--cinamon)] bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--text-color--text-primary)] hover:bg-[var(--base-color-brand--cinamon)] hover:text-[var(--text-color--text-tertiary)]"
+                >
+                  {product.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setPromptNeedsProduct(false)}
+                className="rounded-full border border-[var(--base-color-brand--cinamon)]/65 bg-transparent px-3 py-1 text-xs font-semibold text-[var(--text-color--text-primary)] hover:bg-[var(--base-color-brand--shell)]"
+              >
+                Use without product
+              </button>
+            </div>
+          </div>
+        )}
+
+        <ImagePromptForm
+          onSubmit={handleGenerate}
+          recreateData={recreateData}
+          editData={editData}
+          forceEntitySelection={forceEntitySelection}
+        />
       </div>{/* end flex-col wrapper */}
 
       {selectedImage && (
