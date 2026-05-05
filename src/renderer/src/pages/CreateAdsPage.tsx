@@ -1572,7 +1572,7 @@ function AnimateStep({
     let cancelled = false;
     (async () => {
       try {
-        const page = await window.api.images.list(undefined, 24, activeWorkspace.id);
+        const page = await window.api.images.list(undefined, 24, workspaceId);
         if (!cancelled) setLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setLibraryImages([]);
@@ -1583,7 +1583,7 @@ function AnimateStep({
     return () => {
       cancelled = true;
     };
-  }, [activeWorkspace.id]);
+  }, [workspaceId]);
 
   useEffect(() => {
     if (!pinnedSourceImageUrl && !selectedSourceImageUrl && successfulImages[0]?.url) {
