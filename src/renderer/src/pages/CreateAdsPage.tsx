@@ -123,6 +123,86 @@ const QUICK_PRESETS: QuickPreset[] = [
     brief:
       'Static mannequin product reveal setup with clean background and fixed camera. Emphasize consistent framing and product fidelity. If adding copy, keep it short and quote it, e.g. "New drop".',
   },
+  {
+    id: 'editorial-lifestyle',
+    label: 'Editorial lifestyle',
+    category: 'beauty',
+    defaultAspectRatio: '4:5',
+    brief:
+      'Premium editorial lifestyle ad with natural environment storytelling, intentional composition, and polished fashion-magazine tone. Keep brand feel elevated and aspirational. Optional copy must be short and quoted, e.g. "Everyday luxury".',
+  },
+  {
+    id: 'expert-talk',
+    label: 'Expert talk-to-cam',
+    category: 'health',
+    defaultAspectRatio: '9:16',
+    brief:
+      'Creator-style expert explanation with a trustworthy human presence and clear product demo. Keep the framing social-native, benefit-led, and conversion-oriented. If adding text overlays, quote them exactly, e.g. "Clinically inspired routine".',
+  },
+  {
+    id: 'problem-solution',
+    label: 'Problem → solution',
+    category: 'health',
+    defaultAspectRatio: '9:16',
+    brief:
+      'Before-and-after narrative: clearly show the pain point first, then the product-led improvement. Keep transitions readable and claim-safe. Optional headline must be quoted, e.g. "From chaos to clarity".',
+  },
+  {
+    id: 'macro-proof',
+    label: 'Macro proof demo',
+    category: 'beauty',
+    defaultAspectRatio: '1:1',
+    brief:
+      'Close-up product proof creative emphasizing texture, ingredients, and mechanism details. Use clean light and controlled highlights for high trust and premium quality. Keep any copy short and quoted, e.g. "See the texture".',
+  },
+  {
+    id: 'benefit-carousel',
+    label: 'Benefit stack',
+    category: 'supp',
+    defaultAspectRatio: '4:5',
+    brief:
+      'Carousel-friendly benefit stack style: one clear benefit per panel with strong hierarchy and legible spacing. Keep language concise, specific, and direct-response ready. Optional benefit lines must be quoted.',
+  },
+  {
+    id: 'offer-retail',
+    label: 'Offer-first retail',
+    category: 'supp',
+    defaultAspectRatio: '1:1',
+    brief:
+      'Retail performance ad with offer-forward messaging, urgency cues, and prominent CTA placement while maintaining product clarity. If using discount text, quote it exactly, e.g. "Save 20% today".',
+  },
+  {
+    id: 'testimonial-proof',
+    label: 'Testimonial proof',
+    category: 'health',
+    defaultAspectRatio: '4:5',
+    brief:
+      'Social proof creative featuring review-style overlays and authentic customer sentiment while keeping the product as focal point. Keep quote text concise and clearly framed in quotes.',
+  },
+  {
+    id: 'comparison',
+    label: 'Comparison angle',
+    category: 'health',
+    defaultAspectRatio: '1:1',
+    brief:
+      'Side-by-side comparison layout that communicates product differentiation quickly and clearly. Keep claims measured and visual evidence strong. Optional headline must be quoted, e.g. "Why users switch".',
+  },
+  {
+    id: 'seasonal-moment',
+    label: 'Seasonal moment',
+    category: 'beauty',
+    defaultAspectRatio: '4:5',
+    brief:
+      'Seasonal campaign style tailored to a timely moment (holiday, summer, back-to-school) while preserving core product identity. Use thematic props sparingly and keep CTA copy short and quoted.',
+  },
+  {
+    id: 'cinematic-hero',
+    label: 'Cinematic hero',
+    category: 'beauty',
+    defaultAspectRatio: '16:9',
+    brief:
+      'Cinematic brand hero creative with dramatic lighting, refined composition, and premium storytelling tone. Keep the product unmistakably clear in-frame and any headline short and quoted, e.g. "Crafted to stand out".',
+  },
 ];
 
 const BRIEF_CHIPS = [
@@ -130,11 +210,31 @@ const BRIEF_CHIPS = [
   'Benefit: saves time',
   'Pain point: messy routine',
   'CTA: "Shop now"',
+  'Reveal start: chest center',
+  'Motion: roll downward to hem',
+  'Lock camera + mannequin + green bg',
+  'No logo/text changes',
 ];
+
+function extractImageList(page: unknown): GeneratedImageData[] {
+  if (typeof page !== 'object' || page === null) return [];
+
+  const pageRecord = page as { items?: unknown; data?: unknown };
+  if (Array.isArray(pageRecord.items)) {
+    return pageRecord.items as GeneratedImageData[];
+  }
+  if (Array.isArray(pageRecord.data)) {
+    return pageRecord.data as GeneratedImageData[];
+  }
+  return [];
+}
 
 export default function CreateAdsPage() {
   const [products, setProducts] = useState<EntityData[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [characters, setCharacters] = useState<EntityData[]>([]);
+  const [charactersLoading, setCharactersLoading] = useState(true);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
   const [customRefs, setCustomRefs] = useState<CustomAdReferenceData[]>([]);
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -183,11 +283,25 @@ export default function CreateAdsPage() {
     let cancelled = false;
     (async () => {
       try {
+        const list = await window.api.entities.list('characters');
+        if (!cancelled) setCharacters(list);
+      } catch {
+        if (!cancelled) setCharacters([]);
+      } finally {
+        if (!cancelled) setCharactersLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
         const page = await window.api.images.list(undefined, 24);
-        const items = Array.isArray((page as { items?: GeneratedImageData[] }).items)
-          ? ((page as { items: GeneratedImageData[] }).items ?? [])
-          : ((page as { data?: GeneratedImageData[] }).data ?? []);
-        if (!cancelled) setStyleLibraryImages(items);
+        if (!cancelled) setStyleLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setStyleLibraryImages([]);
       } finally {
@@ -289,6 +403,10 @@ export default function CreateAdsPage() {
     () => products.find((p) => p.id === selectedProductId),
     [products, selectedProductId],
   );
+  const selectedCharacter: EntityData | undefined = useMemo(
+    () => characters.find((character) => character.id === selectedCharacterId),
+    [characters, selectedCharacterId],
+  );
 
   const applyPreset = useCallback(
     (preset: QuickPreset) => {
@@ -370,8 +488,9 @@ export default function CreateAdsPage() {
       };
     }
 
-    void runGeneration(adForRun, selectedProduct);
-  }, [selectedAd, selectedProduct, runGeneration, selectedStyleImageUrl, aspectRatio]);
+    const characterReferenceUrls = selectedCharacter?.referenceImages.slice(0, 2) ?? [];
+    void runGeneration(adForRun, selectedProduct, characterReferenceUrls);
+  }, [selectedAd, selectedProduct, runGeneration, selectedStyleImageUrl, aspectRatio, selectedCharacter]);
 
   // Download a generated ad to the user's filesystem — same mechanism the
   // Image page uses so the two flows stay consistent.
@@ -510,6 +629,10 @@ export default function CreateAdsPage() {
                 isStyleLibraryLoading={isStyleLibraryLoading}
                 selectedStyleImageUrl={selectedStyleImageUrl}
                 onSelectStyleImage={setSelectedStyleImageUrl}
+                characters={characters}
+                charactersLoading={charactersLoading}
+                selectedCharacterId={selectedCharacterId}
+                onSelectCharacter={setSelectedCharacterId}
               />
             )}
             {step === 'format' && (
@@ -920,6 +1043,10 @@ function BriefStep({
   isStyleLibraryLoading,
   selectedStyleImageUrl,
   onSelectStyleImage,
+  characters,
+  charactersLoading,
+  selectedCharacterId,
+  onSelectCharacter,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -928,6 +1055,10 @@ function BriefStep({
   isStyleLibraryLoading: boolean;
   selectedStyleImageUrl: string | null;
   onSelectStyleImage: (url: string | null) => void;
+  characters: EntityData[];
+  charactersLoading: boolean;
+  selectedCharacterId: string | null;
+  onSelectCharacter: (id: string | null) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -945,6 +1076,48 @@ function BriefStep({
         ))}
       </div>
       <div className="space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/35 bg-[var(--base-color-brand--shell)] p-3">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Add character reference (optional)</p>
+          {charactersLoading ? (
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">Loading characters…</p>
+          ) : characters.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onSelectCharacter(null)}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                  selectedCharacterId === null
+                    ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                    : 'border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                }`}
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                None
+              </button>
+              {characters.map((character) => {
+                const active = selectedCharacterId === character.id;
+                return (
+                  <button
+                    key={character.id}
+                    type="button"
+                    onClick={() => onSelectCharacter(character.id)}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                      active
+                        ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                        : 'border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                    }`}
+                    style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                    title={character.name}
+                  >
+                    {character.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">No character entities found yet.</p>
+          )}
+        </div>
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Optional: use Image tab base image as style source</p>
           {selectedStyleImageUrl && (
@@ -1139,28 +1312,37 @@ function AnimateStep({
   const revealPrompt = `Locked-off camera. Start with ${productName} partially obscured, then hands reveal it smoothly in one continuous motion. Preserve product identity, label readability, and stitching details. Match ${style} ad quality with natural shadows and controlled highlights. No jitter, no frame warping, no extra limbs. Output ${aspectRatio}, 5-7 seconds.`;
 
   const [selectedSourceImageUrl, setSelectedSourceImageUrl] = useState<string | null>(null);
+  const [pinnedSourceImageUrl, setPinnedSourceImageUrl] = useState<string | null>(null);
   const [videoPrompt, setVideoPrompt] = useState(shirtUnwrapPrompt);
   const [videoDuration, setVideoDuration] = useState<5 | 10>(5);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [libraryImages, setLibraryImages] = useState<GeneratedImageData[]>([]);
   const [isLibraryLoading, setIsLibraryLoading] = useState(true);
+  const [isMotionPackOpen, setIsMotionPackOpen] = useState(false);
+  const [useMultiShotGuidance, setUseMultiShotGuidance] = useState(false);
+  const [shot1Prompt, setShot1Prompt] = useState(
+    `Shot 1: Lock camera on mannequin chest center with green background; ${productName} enters frame with natural hand movement and no logo distortion.`,
+  );
+  const [shot2Prompt, setShot2Prompt] = useState(
+    'Shot 2: Controlled reveal begins from chest center and slowly unfolds downward, preserving garment shape, stitching, and print accuracy.',
+  );
+  const [shot3Prompt, setShot3Prompt] = useState(
+    `Shot 3: Complete downward roll to hem and hold final front-facing frame with clean ecommerce lighting in ${style} quality.`,
+  );
 
   const successfulImages = results
     .filter((slot) => slot.status === 'success' && slot.image)
     .map((slot) => slot.image!);
 
-  const sourceImageUrl = selectedSourceImageUrl ?? successfulImages[0]?.url ?? null;
+  const sourceImageUrl = pinnedSourceImageUrl ?? selectedSourceImageUrl ?? successfulImages[0]?.url ?? null;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const page = await window.api.images.list(undefined, 24);
-        const items = Array.isArray((page as { items?: GeneratedImageData[] }).items)
-          ? ((page as { items: GeneratedImageData[] }).items ?? [])
-          : ((page as { data?: GeneratedImageData[] }).data ?? []);
-        if (!cancelled) setLibraryImages(items);
+        if (!cancelled) setLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setLibraryImages([]);
       } finally {
@@ -1173,10 +1355,10 @@ function AnimateStep({
   }, []);
 
   useEffect(() => {
-    if (!selectedSourceImageUrl && successfulImages[0]?.url) {
+    if (!pinnedSourceImageUrl && !selectedSourceImageUrl && successfulImages[0]?.url) {
       setSelectedSourceImageUrl(successfulImages[0].url);
     }
-  }, [selectedSourceImageUrl, successfulImages]);
+  }, [pinnedSourceImageUrl, selectedSourceImageUrl, successfulImages]);
 
   const copyPrompt = async (text: string) => {
     try {
@@ -1250,7 +1432,25 @@ function AnimateStep({
       </p>
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">1) Pick source image</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">1) Pick source image</p>
+          {sourceImageUrl && (
+            <button
+              type="button"
+              onClick={() =>
+                setPinnedSourceImageUrl((prev) => (prev === sourceImageUrl ? null : sourceImageUrl))
+              }
+              className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                pinnedSourceImageUrl === sourceImageUrl
+                  ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                  : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+              }`}
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              {pinnedSourceImageUrl === sourceImageUrl ? 'Pinned source image' : 'Pin source image for session'}
+            </button>
+          )}
+        </div>
 
         {successfulImages.length > 0 && (
           <div className="space-y-1">
@@ -1262,7 +1462,9 @@ function AnimateStep({
                   <button
                     key={img.id}
                     type="button"
-                    onClick={() => setSelectedSourceImageUrl(img.url)}
+                    onClick={() => {
+                      setSelectedSourceImageUrl(img.url);
+                    }}
                     className={`overflow-hidden rounded-xl border-2 ${
                       active
                         ? 'border-[var(--base-color-brand--bean)]'
@@ -1289,7 +1491,9 @@ function AnimateStep({
                   <button
                     key={img.id}
                     type="button"
-                    onClick={() => setSelectedSourceImageUrl(img.url)}
+                    onClick={() => {
+                      setSelectedSourceImageUrl(img.url);
+                    }}
                     className={`overflow-hidden rounded-xl border-2 ${
                       active
                         ? 'border-[var(--base-color-brand--bean)]'
@@ -1342,6 +1546,62 @@ function AnimateStep({
             Copy current prompt
           </button>
         </div>
+
+        <details
+          open={isMotionPackOpen}
+          onToggle={(e) => setIsMotionPackOpen((e.target as HTMLDetailsElement).open)}
+          className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-3"
+        >
+          <summary
+            className="cursor-pointer text-xs font-semibold text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
+            Advanced Motion Pack (beta)
+          </summary>
+          <div className="mt-3 space-y-2">
+            <label className="flex items-center gap-2 text-xs text-[var(--base-color-brand--bean)]">
+              <input
+                type="checkbox"
+                checked={useMultiShotGuidance}
+                onChange={(e) => setUseMultiShotGuidance(e.target.checked)}
+              />
+              Use multi-shot reveal guidance (beta)
+            </label>
+            {useMultiShotGuidance && (
+              <div className="space-y-2">
+                <textarea
+                  value={shot1Prompt}
+                  onChange={(e) => setShot1Prompt(e.target.value)}
+                  className="min-h-16 w-full resize-y rounded-lg border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-2 text-xs"
+                />
+                <textarea
+                  value={shot2Prompt}
+                  onChange={(e) => setShot2Prompt(e.target.value)}
+                  className="min-h-16 w-full resize-y rounded-lg border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-2 text-xs"
+                />
+                <textarea
+                  value={shot3Prompt}
+                  onChange={(e) => setShot3Prompt(e.target.value)}
+                  className="min-h-16 w-full resize-y rounded-lg border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-2 text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVideoPrompt(
+                      [shot1Prompt.trim(), shot2Prompt.trim(), shot3Prompt.trim()]
+                        .filter((part) => part.length > 0)
+                        .join('\n'),
+                    )
+                  }
+                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  Compose Combined Prompt
+                </button>
+              </div>
+            )}
+          </div>
+        </details>
 
         <textarea
           value={videoPrompt}
