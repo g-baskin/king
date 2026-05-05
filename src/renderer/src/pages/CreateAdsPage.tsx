@@ -712,6 +712,7 @@ export default function CreateAdsPage() {
                     prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 2 ? [...prev, id] : prev,
                   )
                 }
+                workspaceId={activeWorkspace.id}
               />
             )}
             {step === 'animate' && (
@@ -1370,6 +1371,7 @@ function ResultsStep({
   onRetry: (slotId: string) => void;
   compareIds: string[];
   onToggleCompare: (slotId: string) => void;
+  workspaceId: string;
 }) {
   const [editableShots, setEditableShots] = useState<NonNullable<ResultSlot['talkShot']>[]>([]);
   const [isGeneratingAdSet, setIsGeneratingAdSet] = useState(false);
@@ -1423,7 +1425,7 @@ function ResultsStep({
           url: firstUrl,
           prompt,
           aspectRatio,
-          workspaceId: activeWorkspace.id,
+          workspaceId,
         });
         useImagesStore.getState().addImage(saved);
         createdCount += 1;
