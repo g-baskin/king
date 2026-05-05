@@ -3,6 +3,7 @@ import type { PageType } from '@/App';
 import { ChevronDownIcon, SettingsIcon } from '@/components/icons';
 import SettingsModal from '@/components/ui/SettingsModal';
 import { DemoToggle } from '@/components/ui/DemoToggle';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 // Baked in at build time from package.json via electron.vite.config.ts.
 const APP_VERSION = __APP_VERSION__;
@@ -58,9 +59,9 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
   return (
     <>
       {/* Draggable title bar area — sits behind the native traffic light buttons */}
-      <div className="drag-region h-7 shrink-0 bg-[var(--base-color-brand--shell)]" />
+      <div className="drag-region h-7 shrink-0 bg-[var(--background-color--background-primary)]" />
       {/* Actual header content below the title bar */}
-      <header className="flex h-14 shrink-0 items-center border-b border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] px-4">
+      <header className="flex h-14 shrink-0 items-center border-b border-[var(--border-color--border-primary)]/30 bg-[var(--background-color--background-primary)] px-4">
         <div className="flex items-center gap-2">
           <h1
             className="text-2xl leading-none font-black tracking-tight text-[var(--base-color-brand--bean)]"
@@ -149,6 +150,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           })}
         </nav>
         <div className="no-drag ml-auto flex items-center gap-2">
+          <ThemeToggle />
           {/* Master demo-mode switch. Dev-only — `import.meta.env.DEV` is
               statically replaced at build time, so the entire <DemoToggle/>
               import + component drops out of production bundles via Vite
