@@ -11,6 +11,7 @@ export interface StoredEntity {
   thumbnailUrl: string | null;
   createdAt: string;
   productType?: string;
+  primaryReferenceIndex?: number;
 }
 
 interface EntityStore {
@@ -23,9 +24,17 @@ function readStore(entityType: string): EntityStore {
 
 export function listEntities(entityType: string): StoredEntity[] {
   const store = readStore(entityType);
-  return [...store.entities].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  return [...store.entities]
+    .map((entity) => ({
+      ...entity,
+      primaryReferenceIndex:
+        typeof entity.primaryReferenceIndex === 'number' &&
+        entity.primaryReferenceIndex >= 0 &&
+        entity.primaryReferenceIndex < entity.referenceImages.length
+          ? entity.primaryReferenceIndex
+          : 0,
+    }))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export function getEntity(entityType: string, id: string): StoredEntity | undefined {
@@ -56,16 +65,23 @@ export async function addEntity(
   name: string,
   referenceImages: string[],
   productType?: string,
+  primaryReferenceIndex?: number,
 ): Promise<StoredEntity> {
   const path = getEntityJsonPath(entityType);
   return withJsonLock(path, () => {
     const store = readStore(entityType);
+    const clampedPrimaryIndex =
+      referenceImages.length === 0
+        ? 0
+        : Math.max(0, Math.min(primaryReferenceIndex ?? 0, referenceImages.length - 1));
+
     const entity: StoredEntity = {
       id: randomUUID(),
       name,
       referenceImages,
-      thumbnailUrl: referenceImages[0] ?? null,
+      thumbnailUrl: referenceImages[clampedPrimaryIndex] ?? null,
       createdAt: new Date().toISOString(),
+      primaryReferenceIndex: clampedPrimaryIndex,
       ...(productType ? { productType } : {}),
     };
     store.entities.push(entity);
@@ -80,6 +96,7 @@ export async function updateEntity(
   name: string,
   referenceImages: string[],
   productType?: string,
+  primaryReferenceIndex?: number,
 ): Promise<StoredEntity | null> {
   const path = getEntityJsonPath(entityType);
   return withJsonLock(path, () => {
@@ -88,11 +105,21 @@ export async function updateEntity(
     const existing = index === -1 ? undefined : store.entities[index];
     if (!existing) return null;
 
+    const currentPrimaryIndex =
+      typeof existing.primaryReferenceIndex === 'number' ? existing.primaryReferenceIndex : 0;
+    const targetPrimaryIndex =
+      typeof primaryReferenceIndex === 'number' ? primaryReferenceIndex : currentPrimaryIndex;
+    const clampedPrimaryIndex =
+      referenceImages.length === 0
+        ? 0
+        : Math.max(0, Math.min(targetPrimaryIndex, referenceImages.length - 1));
+
     const updated: StoredEntity = {
       ...existing,
       name,
       referenceImages,
-      thumbnailUrl: referenceImages[0] ?? null,
+      thumbnailUrl: referenceImages[clampedPrimaryIndex] ?? null,
+      primaryReferenceIndex: clampedPrimaryIndex,
       ...(productType !== undefined ? { productType } : {}),
     };
     store.entities[index] = updated;

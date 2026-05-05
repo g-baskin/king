@@ -15,6 +15,7 @@ export interface EntityData {
   thumbnailUrl: string | null;
   createdAt: string;
   productType?: string;
+  primaryReferenceIndex?: number;
 }
 
 export interface CustomAdReferenceData {
@@ -339,6 +340,7 @@ export interface ElectronAPI {
         name: string;
         files: { name: string; buffer: ArrayBuffer }[];
         productType?: string;
+        primaryReferenceIndex?: number;
       },
     ) => Promise<EntityData>;
     update: (
@@ -349,6 +351,7 @@ export interface ElectronAPI {
         existingImages: string[];
         newFiles: { name: string; buffer: ArrayBuffer }[];
         productType?: string;
+        primaryReferenceIndex?: number;
       },
     ) => Promise<EntityData>;
     delete: (entityType: string, id: string) => Promise<{ success: boolean }>;

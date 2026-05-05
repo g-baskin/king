@@ -1563,6 +1563,7 @@ const categoryMap: Record<PromptCategory, string[]> = {
     'chocolate-bar-reveal',
   ],
   fashion: [
+    'character-consistency-sheet-5shot',
     'sneaker-studio-hero',
     'handbag-pedestal-editorial',
     'model-jacket-no-face',
