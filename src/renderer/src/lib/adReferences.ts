@@ -34,13 +34,15 @@ import supp1 from '@/assets/ad-references/supp-1.jpg';
 import supp2 from '@/assets/ad-references/supp-2.jpg';
 import supp3 from '@/assets/ad-references/supp-3.jpg';
 import supp4 from '@/assets/ad-references/supp-4.jpg';
+import modelJacketNoFace from '@/assets/prompts/model-jacket-no-face.jpg';
 
-export type AdCategory = 'beauty' | 'health' | 'supp' | 'custom';
+export type AdCategory = 'beauty' | 'health' | 'supp' | 'mannequin' | 'custom';
 
 export const AD_CATEGORY_LABELS: Record<AdCategory, string> = {
   beauty: 'Beauty',
   health: 'Health',
   supp: 'Supplements',
+  mannequin: 'Mannequin',
   custom: 'Custom',
 };
 
@@ -129,6 +131,16 @@ export const AD_REFERENCES: AdReference[] = [
     variants: [
       { aspectRatio: '9:16', imageUrl: supp3 },
       { aspectRatio: '1:1', imageUrl: supp4 },
+    ],
+  },
+
+  // --- Mannequin ---
+  {
+    id: 'mannequin-1',
+    category: 'mannequin',
+    variants: [
+      { aspectRatio: '4:5', imageUrl: modelJacketNoFace },
+      { aspectRatio: '9:16', imageUrl: modelJacketNoFace },
     ],
   },
 ];

@@ -16,10 +16,11 @@ import {
   AD_REFERENCES,
   getThumbnail,
   type AdReference,
+  type AdVariant,
 } from '@/lib/adReferences';
 import { readImageDimensions } from '@/lib/aspectRatio';
 import { useCreateAdsStore, type ResultSlot, type StepId } from '@/stores/createAdsStore';
-import type { CustomAdReferenceData, EntityData } from '@/types/electron';
+import type { CustomAdReferenceData, EntityData, GeneratedImageData } from '@/types/electron';
 
 // Image MIME types we accept for custom ad-reference uploads. Matches the
 // formats Gemini's image input handles end-to-end (PNG, JPEG, WebP, HEIC,
@@ -93,7 +94,7 @@ const QUICK_PRESETS: QuickPreset[] = [
   {
     id: 'ugc',
     label: 'UGC vibe',
-    category: 'beauty',
+    category: 'mannequin',
     defaultAspectRatio: '9:16',
     brief:
       'Natural handheld-style social ad for mobile-first audiences. Show authentic lifestyle context and a clear benefit. If adding copy, keep it short and quote it like "Try it tonight".',
@@ -114,6 +115,14 @@ const QUICK_PRESETS: QuickPreset[] = [
     brief:
       'High-contrast promotional creative with strong visual hierarchy and clear focal point. Include offer messaging only if quoted exactly, e.g. "20% OFF Today".',
   },
+  {
+    id: 'mannequin',
+    label: 'Mannequin reveal',
+    category: 'mannequin',
+    defaultAspectRatio: '9:16',
+    brief:
+      'Static mannequin product reveal setup with clean background and fixed camera. Emphasize consistent framing and product fidelity. If adding copy, keep it short and quote it, e.g. "New drop".',
+  },
 ];
 
 const BRIEF_CHIPS = [
@@ -129,6 +138,10 @@ export default function CreateAdsPage() {
   const [customRefs, setCustomRefs] = useState<CustomAdReferenceData[]>([]);
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [styleLibraryImages, setStyleLibraryImages] = useState<GeneratedImageData[]>([]);
+  const [isStyleLibraryLoading, setIsStyleLibraryLoading] = useState(true);
+  const [selectedStyleImageUrl, setSelectedStyleImageUrl] = useState<string | null>(null);
 
   // Wizard state lives in a Zustand store so it (and any in-flight fal
   // generations) survive navigating away from and back to this page.
@@ -159,6 +172,26 @@ export default function CreateAdsPage() {
         if (!cancelled) toast.error("Couldn't load your products. Please try again.");
       } finally {
         if (!cancelled) setProductsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const page = await window.api.images.list(undefined, 24);
+        const items = Array.isArray((page as { items?: GeneratedImageData[] }).items)
+          ? ((page as { items: GeneratedImageData[] }).items ?? [])
+          : ((page as { data?: GeneratedImageData[] }).data ?? []);
+        if (!cancelled) setStyleLibraryImages(items);
+      } catch {
+        if (!cancelled) setStyleLibraryImages([]);
+      } finally {
+        if (!cancelled) setIsStyleLibraryLoading(false);
       }
     })();
     return () => {
@@ -263,6 +296,7 @@ export default function CreateAdsPage() {
       if (suggestedAd) setSelectedAdId(suggestedAd.id);
       setAspectRatio(preset.defaultAspectRatio);
       setProductBrief(preset.brief);
+      setActivePresetId(preset.id);
       if (step !== 'ad') setStep('ad');
       toast.success(`${preset.label} preset applied.`);
     },
@@ -325,8 +359,19 @@ export default function CreateAdsPage() {
   const handleGenerate = useCallback(() => {
     if (!selectedAd || !selectedProduct) return;
     setCompareIds([]);
-    void runGeneration(selectedAd, selectedProduct);
-  }, [selectedAd, selectedProduct, runGeneration]);
+
+    let adForRun: AdReference = selectedAd;
+    if (selectedStyleImageUrl) {
+      const styleVariant: AdVariant = { aspectRatio, imageUrl: selectedStyleImageUrl };
+      adForRun = {
+        id: `library-style-${Date.now()}`,
+        category: 'custom',
+        variants: [styleVariant],
+      };
+    }
+
+    void runGeneration(adForRun, selectedProduct);
+  }, [selectedAd, selectedProduct, runGeneration, selectedStyleImageUrl, aspectRatio]);
 
   // Download a generated ad to the user's filesystem — same mechanism the
   // Image page uses so the two flows stay consistent.
@@ -386,17 +431,24 @@ export default function CreateAdsPage() {
 
           {/* Quick presets keep first-time setup fast without changing the flow. */}
           <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-2">
-            {QUICK_PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => applyPreset(preset)}
-                className="rounded-full border border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
-                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-              >
-                {preset.label}
-              </button>
-            ))}
+            {QUICK_PRESETS.map((preset) => {
+              const isActive = activePresetId === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => applyPreset(preset)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+                    isActive
+                      ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                      : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]'
+                  }`}
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Step title — fixed min-height so the footer doesn't shift when
@@ -450,7 +502,15 @@ export default function CreateAdsPage() {
               />
             )}
             {step === 'brief' && (
-              <BriefStep value={productBrief} onChange={setProductBrief} onInsertChip={insertBriefChip} />
+              <BriefStep
+                value={productBrief}
+                onChange={setProductBrief}
+                onInsertChip={insertBriefChip}
+                styleLibraryImages={styleLibraryImages}
+                isStyleLibraryLoading={isStyleLibraryLoading}
+                selectedStyleImageUrl={selectedStyleImageUrl}
+                onSelectStyleImage={setSelectedStyleImageUrl}
+              />
             )}
             {step === 'format' && (
               <FormatStep
@@ -856,10 +916,18 @@ function BriefStep({
   value,
   onChange,
   onInsertChip,
+  styleLibraryImages,
+  isStyleLibraryLoading,
+  selectedStyleImageUrl,
+  onSelectStyleImage,
 }: {
   value: string;
   onChange: (v: string) => void;
   onInsertChip: (chip: string) => void;
+  styleLibraryImages: GeneratedImageData[];
+  isStyleLibraryLoading: boolean;
+  selectedStyleImageUrl: string | null;
+  onSelectStyleImage: (url: string | null) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -876,6 +944,48 @@ function BriefStep({
           </button>
         ))}
       </div>
+      <div className="space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/35 bg-[var(--base-color-brand--shell)] p-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Optional: use Image tab base image as style source</p>
+          {selectedStyleImageUrl && (
+            <button
+              type="button"
+              onClick={() => onSelectStyleImage(null)}
+              className="text-[11px] font-semibold text-[var(--base-color-brand--umber)] hover:text-[var(--base-color-brand--bean)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        {isStyleLibraryLoading ? (
+          <p className="text-[11px] text-[var(--base-color-brand--umber)]">Loading images…</p>
+        ) : styleLibraryImages.length > 0 ? (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {styleLibraryImages.map((img) => {
+              const active = selectedStyleImageUrl === img.url;
+              return (
+                <button
+                  key={img.id}
+                  type="button"
+                  onClick={() => onSelectStyleImage(img.url)}
+                  className={`overflow-hidden rounded-xl border-2 ${
+                    active
+                      ? 'border-[var(--base-color-brand--bean)]'
+                      : 'border-[var(--base-color-brand--umber)]/35'
+                  }`}
+                  title={img.prompt}
+                >
+                  <img src={img.thumbnailUrl ?? img.url} alt="Style source" className="h-16 w-12 object-cover" />
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-[11px] text-[var(--base-color-brand--umber)]">No images found in Image tab yet.</p>
+        )}
+      </div>
+
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -1033,12 +1143,34 @@ function AnimateStep({
   const [videoDuration, setVideoDuration] = useState<5 | 10>(5);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [libraryImages, setLibraryImages] = useState<GeneratedImageData[]>([]);
+  const [isLibraryLoading, setIsLibraryLoading] = useState(true);
 
   const successfulImages = results
     .filter((slot) => slot.status === 'success' && slot.image)
     .map((slot) => slot.image!);
 
   const sourceImageUrl = selectedSourceImageUrl ?? successfulImages[0]?.url ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const page = await window.api.images.list(undefined, 24);
+        const items = Array.isArray((page as { items?: GeneratedImageData[] }).items)
+          ? ((page as { items: GeneratedImageData[] }).items ?? [])
+          : ((page as { data?: GeneratedImageData[] }).data ?? []);
+        if (!cancelled) setLibraryImages(items);
+      } catch {
+        if (!cancelled) setLibraryImages([]);
+      } finally {
+        if (!cancelled) setIsLibraryLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedSourceImageUrl && successfulImages[0]?.url) {
@@ -1117,34 +1249,70 @@ function AnimateStep({
         Generate video directly in-app from a successful Create Ads result.
       </p>
 
-      {successfulImages.length > 0 ? (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">1) Pick source image</p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {successfulImages.map((img) => {
-              const active = sourceImageUrl === img.url;
-              return (
-                <button
-                  key={img.id}
-                  type="button"
-                  onClick={() => setSelectedSourceImageUrl(img.url)}
-                  className={`overflow-hidden rounded-xl border-2 ${
-                    active
-                      ? 'border-[var(--base-color-brand--bean)]'
-                      : 'border-[var(--base-color-brand--umber)]/35'
-                  }`}
-                >
-                  <img src={img.url} alt="Source" className="h-20 w-16 object-cover" />
-                </button>
-              );
-            })}
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">1) Pick source image</p>
+
+        {successfulImages.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">From this Create Ads run</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {successfulImages.map((img) => {
+                const active = sourceImageUrl === img.url;
+                return (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => setSelectedSourceImageUrl(img.url)}
+                    className={`overflow-hidden rounded-xl border-2 ${
+                      active
+                        ? 'border-[var(--base-color-brand--bean)]'
+                        : 'border-[var(--base-color-brand--umber)]/35'
+                    }`}
+                  >
+                    <img src={img.url} alt="Source" className="h-20 w-16 object-cover" />
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        )}
+
+        <div className="space-y-1">
+          <p className="text-[11px] text-[var(--base-color-brand--umber)]">From Image library</p>
+          {isLibraryLoading ? (
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">Loading library images…</p>
+          ) : libraryImages.length > 0 ? (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {libraryImages.map((img) => {
+                const active = sourceImageUrl === img.url;
+                return (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => setSelectedSourceImageUrl(img.url)}
+                    className={`overflow-hidden rounded-xl border-2 ${
+                      active
+                        ? 'border-[var(--base-color-brand--bean)]'
+                        : 'border-[var(--base-color-brand--umber)]/35'
+                    }`}
+                    title={img.prompt}
+                  >
+                    <img src={img.thumbnailUrl ?? img.url} alt="Library source" className="h-20 w-16 object-cover" />
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">No image-library items found yet.</p>
+          )}
         </div>
-      ) : (
-        <p className="text-xs text-[var(--base-color-brand--umber)]">
-          No successful images yet. Go back to Results and generate at least one image.
-        </p>
-      )}
+
+        {successfulImages.length === 0 && libraryImages.length === 0 && !isLibraryLoading && (
+          <p className="text-xs text-[var(--base-color-brand--umber)]">
+            No source images yet. Generate on Image page or Create Ads Results first.
+          </p>
+        )}
+      </div>
 
       <div className="space-y-2">
         <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">2) Choose prompt preset</p>

@@ -1399,6 +1399,20 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
     prompt: `Realistic UGC-style vertical video keyframe of the product (t-shirt) wrapped around a matte mannequin torso, two human hands mid-motion gently unfolding and revealing the shirt front print. iPhone camera look, indoor soft daylight, authentic creator aesthetic, no face, clean background, slight natural imperfections, shot ratio 9:16.`,
   },
   {
+    id: 'apparel-static-mannequin-greenscreen',
+    title: 'Static Mannequin Greenscreen',
+    description:
+      'Use case: repeatable no-motion mannequin setup for consistent product videos and keying',
+    prompt: `Photorealistic locked-off studio shot of the product worn on the exact same matte black torso mannequin, centered and perfectly front-facing, no human present, no pose change, no camera movement, no motion blur, no wind. Uniform chroma green seamless background with even lighting and clean edge separation around the mannequin and garment for easy keying. Keep framing, distance, lens perspective, mannequin scale, posture, and lighting geometry identical every time so only the product changes between outputs. Clean commercial baseline plate, ratio 9:16.`,
+  },
+  {
+    id: 'apparel-mannequin-mid-reveal-universal',
+    title: 'Mannequin Mid Reveal',
+    description:
+      'Use case: product-aware reveal starting at chest/mid-area (works for tank tops and other apparel)',
+    prompt: `Product-aware mannequin reveal keyframe for vertical video. This is a {productType}. The reveal starts at the product's center-focus area (for tops: chest/mid-torso), explicitly not at the collar or neckline. Two hands begin at that center-focus area and smoothly roll or fold the material downward toward the lower hem to reveal the main design area. Fixed tripod camera, mannequin locked perfectly centered, no zoom/pan/tilt, no background change. Uniform chroma green seamless background, clean edge separation for keying, consistent studio lighting, natural hand anatomy, realistic fabric behavior, ratio 9:16.`,
+  },
+  {
     id: 'ugc-tshirt-fit-check-flat',
     title: 'UGC Fit Check Flat',
     description: 'Use case: outfit fit-check post with tee + jeans combo',
@@ -1566,6 +1580,8 @@ const categoryMap: Record<PromptCategory, string[]> = {
     'ugc-tshirt-mirror-hold',
     'ugc-tshirt-pack-open',
     'ugc-tshirt-detail-closeup',
+    'apparel-static-mannequin-greenscreen',
+    'apparel-mannequin-mid-reveal-universal',
     'apparel-tee-front-back-grid',
     'apparel-tee-folded-stack',
     'apparel-tee-hanger-minimal',
@@ -1584,6 +1600,8 @@ const categoryMap: Record<PromptCategory, string[]> = {
     'ugc-tshirt-mirror-hold',
     'ugc-tshirt-pack-open',
     'ugc-tshirt-detail-closeup',
+    'apparel-static-mannequin-greenscreen',
+    'apparel-mannequin-mid-reveal-universal',
     'ugc-apparel-bts-rack',
     'ugc-apparel-bed-layout',
     'ugc-apparel-street-hold',

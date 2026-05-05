@@ -9,9 +9,14 @@ export function registerFileHandlers(): void {
     const win = BrowserWindow.getFocusedWindow();
     if (!win) return { success: false };
 
+    const lower = filename.toLowerCase();
+    const isVideo = /\.(mp4|mov|webm|m4v)$/.test(lower);
+
     const { filePath } = await dialog.showSaveDialog(win, {
       defaultPath: join(app.getPath('downloads'), filename),
-      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+      filters: isVideo
+        ? [{ name: 'Videos', extensions: ['mp4', 'mov', 'webm', 'm4v'] }]
+        : [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
     });
 
     if (!filePath) return { success: false, cancelled: true };
