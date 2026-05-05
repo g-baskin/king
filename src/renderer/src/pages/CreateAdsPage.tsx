@@ -28,6 +28,7 @@ import {
 } from '@/stores/createAdsStore';
 import type { CustomAdReferenceData, EntityData, GeneratedImageData } from '@/types/electron';
 import { useImagesStore } from '@/stores/imagesStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 // Image MIME types we accept for custom ad-reference uploads. Matches the
 // formats Gemini's image input handles end-to-end (PNG, JPEG, WebP, HEIC,
@@ -283,6 +284,7 @@ export default function CreateAdsPage() {
   const [styleLibraryImages, setStyleLibraryImages] = useState<GeneratedImageData[]>([]);
   const [isStyleLibraryLoading, setIsStyleLibraryLoading] = useState(true);
   const [selectedStyleImageUrl, setSelectedStyleImageUrl] = useState<string | null>(null);
+  const activeWorkspace = useWorkspaceStore((s) => s.activeWorkspace);
 
   // Wizard state lives in a Zustand store so it (and any in-flight fal
   // generations) survive navigating away from and back to this page.
@@ -1417,7 +1419,11 @@ function ResultsStep({
         const firstUrl = result.success ? result.resultUrls?.[0] : undefined;
         if (!firstUrl) continue;
 
-        const saved = await window.api.images.save({ url: firstUrl, prompt, aspectRatio });
+        const saved = await window.api.images.save({
+          url: firstUrl,
+          prompt: `${prompt}\n\n[workspace:${activeWorkspace.id}]`,
+          aspectRatio,
+        });
         useImagesStore.getState().addImage(saved);
         createdCount += 1;
       }

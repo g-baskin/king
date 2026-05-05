@@ -4,6 +4,7 @@ import { ChevronDownIcon, SettingsIcon } from '@/components/icons';
 import SettingsModal from '@/components/ui/SettingsModal';
 import { DemoToggle } from '@/components/ui/DemoToggle';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 // Baked in at build time from package.json via electron.vite.config.ts.
 const APP_VERSION = __APP_VERSION__;
@@ -35,6 +36,10 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const [adsOpen, setAdsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const adsRef = useRef<HTMLDivElement>(null);
+  const workspaces = useWorkspaceStore((s) => s.workspaces);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const setActiveWorkspace = useWorkspaceStore((s) => s.setActiveWorkspace);
+  const createWorkspace = useWorkspaceStore((s) => s.createWorkspace);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -80,6 +85,32 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           </span>
         </div>
         <nav className="ml-6 flex items-center gap-2">
+          <select
+            value={activeWorkspaceId}
+            onChange={(e) => setActiveWorkspace(e.target.value)}
+            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            title="Active workspace"
+          >
+            {workspaces.map((workspace) => (
+              <option key={workspace.id} value={workspace.id}>
+                {workspace.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => {
+              const name = window.prompt('New workspace name');
+              if (!name) return;
+              createWorkspace(name);
+            }}
+            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-2.5 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            title="Create workspace"
+          >
+            + Workspace
+          </button>
           {navItems.map(({ page, label }) => {
             const active = currentPage === page;
             return (

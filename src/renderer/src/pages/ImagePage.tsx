@@ -14,6 +14,7 @@ import { useGenerationStore } from '@/stores/generationStore';
 import { useModelStore } from '@/stores/modelStore';
 import type { CharacterConsistencyIntent } from '@/stores/imageIntentStore';
 import type { EntityData } from '@/types/electron';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 interface ImagePageProps {
   prefillPrompt?: string | null;
@@ -38,6 +39,7 @@ export default function ImagePage({
   const removeImageGeneration = useGenerationStore((s) => s.removeImageGeneration);
   const pendingCount = pendingImageGenerations.length;
   const selectedModel = useModelStore((s) => s.selectedModel);
+  const activeWorkspace = useWorkspaceStore((s) => s.activeWorkspace);
 
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
@@ -85,7 +87,7 @@ export default function ImagePage({
   const [consistencyTemplateImageUrl, setConsistencyTemplateImageUrl] = useState<string | null>(null);
 
   const {
-    images: generatedImages,
+    images: allImages,
     isLoading,
     isLoadingMore,
     hasMore,
@@ -97,6 +99,15 @@ export default function ImagePage({
   } = useImages();
 
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+
+  const generatedImages = useMemo(
+    () =>
+      allImages.filter((img) => {
+        const marker = `[workspace:${activeWorkspace.id}]`;
+        return img.prompt.includes(marker) || (!img.prompt.includes('[workspace:') && activeWorkspace.id === 'workspace-ugc');
+      }),
+    [allImages, activeWorkspace.id],
+  );
 
   useEffect(() => {
     if (!(prefillPrompt && prefillPromptMeta?.requiresProduct)) return;
@@ -247,7 +258,7 @@ export default function ImagePage({
           for (const url of result.resultUrls) {
             const savedImage = await window.api.images.save({
               url,
-              prompt: data.prompt,
+              prompt: `${data.prompt}\n\n[workspace:${activeWorkspace.id}]`,
               aspectRatio: data.aspectRatio,
             });
 
