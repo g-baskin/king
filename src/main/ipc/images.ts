@@ -4,13 +4,19 @@ import { downloadAndSaveImage, deleteImageFile } from '../services/fileManager';
 import { secureHandle } from './validateSender';
 
 export function registerImageHandlers(): void {
-  secureHandle('images:list', async (_event, cursor?: string, limit?: number) => {
-    return listImages(cursor, limit);
-  });
+  secureHandle(
+    'images:list',
+    async (_event, cursor?: string, limit?: number, workspaceId?: string) => {
+      return listImages(cursor, limit, workspaceId);
+    },
+  );
 
   secureHandle(
     'images:save',
-    async (_event, data: { url: string; prompt: string; aspectRatio: string }) => {
+    async (
+      _event,
+      data: { url: string; prompt: string; aspectRatio: string; workspaceId?: string },
+    ) => {
       const { filename, localUrl } = await downloadAndSaveImage(data.url);
       const image = await addImage({
         id: randomUUID(),
@@ -19,6 +25,7 @@ export function registerImageHandlers(): void {
         aspectRatio: data.aspectRatio,
         createdAt: new Date().toISOString(),
         filename,
+        workspaceId: data.workspaceId,
       });
       return image;
     },

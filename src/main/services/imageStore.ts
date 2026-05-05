@@ -9,6 +9,7 @@ export interface StoredImage {
   aspectRatio: string;
   createdAt: string;
   filename: string;
+  workspaceId?: string;
 }
 
 interface ImageStore {
@@ -22,10 +23,14 @@ function readStore(): ImageStore {
 export function listImages(
   cursor?: string,
   limit = 18,
+  workspaceId?: string,
 ): { data: StoredImage[]; nextCursor: string | null; hasMore: boolean } {
   const store = readStore();
+  const filtered = workspaceId
+    ? store.images.filter((img) => (img.workspaceId ?? 'workspace-ugc') === workspaceId)
+    : store.images;
   // Sort by createdAt descending (newest first)
-  const sorted = [...store.images].sort(
+  const sorted = [...filtered].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 

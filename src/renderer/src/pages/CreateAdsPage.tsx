@@ -1421,8 +1421,9 @@ function ResultsStep({
 
         const saved = await window.api.images.save({
           url: firstUrl,
-          prompt: `${prompt}\n\n[workspace:${activeWorkspace.id}]`,
+          prompt,
           aspectRatio,
+          workspaceId: activeWorkspace.id,
         });
         useImagesStore.getState().addImage(saved);
         createdCount += 1;

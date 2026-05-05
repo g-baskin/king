@@ -24,11 +24,12 @@ interface ImagesStore {
   hasMore: boolean;
   cursor: string | undefined;
   hasHydrated: boolean;
+  hydratedWorkspaceId: string | null;
   error: Error | null;
 
   /** Fetch the first page from disk. Idempotent \u2014 safe to call from useEffect. */
-  loadInitial: () => Promise<void>;
-  loadMore: () => Promise<void>;
+  loadInitial: (workspaceId?: string) => Promise<void>;
+  loadMore: (workspaceId?: string) => Promise<void>;
   addImage: (image: GeneratedImage) => void;
   deleteImage: (id: string) => Promise<void>;
   deleteImages: (ids: string[]) => Promise<void>;
@@ -42,20 +43,22 @@ export const useImagesStore = create<ImagesStore>()((set, get) => ({
   hasMore: false,
   cursor: undefined,
   hasHydrated: false,
+  hydratedWorkspaceId: null,
   error: null,
 
-  loadInitial: async () => {
+  loadInitial: async (workspaceId) => {
     // Already hydrated \u2014 no need to refetch on every ImagePage remount.
     // Saved images from any page are pushed in via `addImage` directly.
-    if (get().hasHydrated) return;
+    if (get().hasHydrated && get().hydratedWorkspaceId === (workspaceId ?? null)) return;
     try {
       set({ isLoading: true, error: null });
-      const result = await window.api.images.list(undefined, PAGE_SIZE);
+      const result = await window.api.images.list(undefined, PAGE_SIZE, workspaceId);
       set({
         images: result.data,
         hasMore: result.hasMore,
         cursor: result.nextCursor ?? undefined,
         hasHydrated: true,
+        hydratedWorkspaceId: workspaceId ?? null,
       });
     } catch (err) {
       set({ error: err instanceof Error ? err : new Error('Failed to load images') });
@@ -64,12 +67,12 @@ export const useImagesStore = create<ImagesStore>()((set, get) => ({
     }
   },
 
-  loadMore: async () => {
+  loadMore: async (workspaceId) => {
     const { hasMore, isLoadingMore, cursor } = get();
     if (!hasMore || isLoadingMore || !cursor) return;
     try {
       set({ isLoadingMore: true });
-      const result = await window.api.images.list(cursor, PAGE_SIZE);
+      const result = await window.api.images.list(cursor, PAGE_SIZE, workspaceId);
       set((state) => ({
         images: [...state.images, ...result.data],
         hasMore: result.hasMore,

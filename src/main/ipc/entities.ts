@@ -14,9 +14,9 @@ function validateType(entityType: string): boolean {
 }
 
 export function registerEntityHandlers(): void {
-  secureHandle('entities:list', async (_event, entityType: string) => {
+  secureHandle('entities:list', async (_event, entityType: string, workspaceId?: string) => {
     if (!validateType(entityType)) return [];
-    return listEntities(entityType);
+    return listEntities(entityType, workspaceId);
   });
 
   secureHandle(
@@ -29,6 +29,7 @@ export function registerEntityHandlers(): void {
         files: { name: string; buffer: Uint8Array }[];
         productType?: string;
         primaryReferenceIndex?: number;
+        workspaceId?: string;
       },
     ) => {
       if (!validateType(entityType)) throw new Error('Invalid entity type');
@@ -44,6 +45,7 @@ export function registerEntityHandlers(): void {
         imageUrls,
         data.productType,
         data.primaryReferenceIndex,
+        data.workspaceId,
       );
     },
   );

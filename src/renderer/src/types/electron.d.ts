@@ -333,7 +333,7 @@ export interface ElectronAPI {
     delete: (id: string) => Promise<{ success: boolean }>;
   };
   entities: {
-    list: (entityType: string) => Promise<EntityData[]>;
+    list: (entityType: string, workspaceId?: string) => Promise<EntityData[]>;
     create: (
       entityType: string,
       data: {
@@ -341,6 +341,7 @@ export interface ElectronAPI {
         files: { name: string; buffer: ArrayBuffer }[];
         productType?: string;
         primaryReferenceIndex?: number;
+        workspaceId?: string;
       },
     ) => Promise<EntityData>;
     update: (

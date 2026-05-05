@@ -35,6 +35,8 @@ const trailingItems: { page: PageType; label: string }[] = [{ page: 'store', lab
 export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const [adsOpen, setAdsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [workspaceModalOpen, setWorkspaceModalOpen] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const adsRef = useRef<HTMLDivElement>(null);
   const workspaces = useWorkspaceStore((s) => s.workspaces);
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
@@ -100,11 +102,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           </select>
           <button
             type="button"
-            onClick={() => {
-              const name = window.prompt('New workspace name');
-              if (!name) return;
-              createWorkspace(name);
-            }}
+            onClick={() => setWorkspaceModalOpen(true)}
             className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-2.5 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             title="Create workspace"
@@ -201,6 +199,48 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
         </div>
       </header>
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {workspaceModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-4 shadow-xl">
+            <h2
+              className="text-base font-bold text-[var(--base-color-brand--bean)]"
+              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+            >
+              Create workspace
+            </h2>
+            <input
+              autoFocus
+              value={newWorkspaceName}
+              onChange={(e) => setNewWorkspaceName(e.target.value)}
+              placeholder="Workspace name"
+              className="mt-3 w-full rounded-xl border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-2 text-sm text-[var(--base-color-brand--bean)]"
+            />
+            <div className="mt-3 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setWorkspaceModalOpen(false);
+                  setNewWorkspaceName('');
+                }}
+                className="rounded-full border border-[var(--base-color-brand--umber)]/50 px-3 py-1.5 text-xs font-semibold text-[var(--base-color-brand--bean)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  createWorkspace(newWorkspaceName);
+                  setWorkspaceModalOpen(false);
+                  setNewWorkspaceName('');
+                }}
+                className="rounded-full bg-[var(--base-color-brand--bean)] px-3 py-1.5 text-xs font-semibold text-[var(--base-color-brand--shell)]"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

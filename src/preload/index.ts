@@ -3,8 +3,9 @@ import type { IpcRendererEvent } from 'electron';
 
 const api = {
   images: {
-    list: (cursor?: string, limit?: number) => ipcRenderer.invoke('images:list', cursor, limit),
-    save: (data: { url: string; prompt: string; aspectRatio: string }) =>
+    list: (cursor?: string, limit?: number, workspaceId?: string) =>
+      ipcRenderer.invoke('images:list', cursor, limit, workspaceId),
+    save: (data: { url: string; prompt: string; aspectRatio: string; workspaceId?: string }) =>
       ipcRenderer.invoke('images:save', data),
     delete: (id: string) => ipcRenderer.invoke('images:delete', id),
   },
@@ -152,7 +153,8 @@ const api = {
     }) => ipcRenderer.invoke('facebookAds:createAd', request),
   },
   entities: {
-    list: (entityType: string) => ipcRenderer.invoke('entities:list', entityType),
+    list: (entityType: string, workspaceId?: string) =>
+      ipcRenderer.invoke('entities:list', entityType, workspaceId),
     create: (
       entityType: string,
       data: {
@@ -160,6 +162,7 @@ const api = {
         files: { name: string; buffer: ArrayBuffer }[];
         productType?: string;
         primaryReferenceIndex?: number;
+        workspaceId?: string;
       },
     ) => ipcRenderer.invoke('entities:create', entityType, data),
     update: (

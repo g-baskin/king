@@ -12,6 +12,7 @@ export interface StoredEntity {
   createdAt: string;
   productType?: string;
   primaryReferenceIndex?: number;
+  workspaceId?: string;
 }
 
 interface EntityStore {
@@ -22,9 +23,12 @@ function readStore(entityType: string): EntityStore {
   return readJson<EntityStore>(getEntityJsonPath(entityType), { entities: [] });
 }
 
-export function listEntities(entityType: string): StoredEntity[] {
+export function listEntities(entityType: string, workspaceId?: string): StoredEntity[] {
   const store = readStore(entityType);
-  return [...store.entities]
+  const filtered = workspaceId
+    ? store.entities.filter((entity) => (entity.workspaceId ?? 'workspace-ugc') === workspaceId)
+    : store.entities;
+  return [...filtered]
     .map((entity) => ({
       ...entity,
       primaryReferenceIndex:
@@ -66,6 +70,7 @@ export async function addEntity(
   referenceImages: string[],
   productType?: string,
   primaryReferenceIndex?: number,
+  workspaceId?: string,
 ): Promise<StoredEntity> {
   const path = getEntityJsonPath(entityType);
   return withJsonLock(path, () => {
@@ -83,6 +88,7 @@ export async function addEntity(
       createdAt: new Date().toISOString(),
       primaryReferenceIndex: clampedPrimaryIndex,
       ...(productType ? { productType } : {}),
+      workspaceId,
     };
     store.entities.push(entity);
     writeJsonAtomic(path, store);

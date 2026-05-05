@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { EntityData } from '@/types/electron';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 export type EntityType = 'characters' | 'products';
 
@@ -48,6 +49,7 @@ export function useEntityManagement({
   entityType,
 }: UseEntityManagementOptions): UseEntityManagementReturn {
   const [entities, setEntities] = useState<EntityData[]>([]);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const [isLoading, setIsLoading] = useState(true);
   const [hasFetched, setHasFetched] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -56,7 +58,7 @@ export function useEntityManagement({
 
   const fetchEntities = useCallback(async () => {
     try {
-      const data = await window.api.entities.list(entityType);
+      const data = await window.api.entities.list(entityType, activeWorkspaceId);
       setEntities(data);
     } catch (err) {
       const label = entityType === 'products' ? 'products' : 'characters';
@@ -67,7 +69,7 @@ export function useEntityManagement({
       setIsLoading(false);
       setHasFetched(true);
     }
-  }, [entityType]);
+  }, [entityType, activeWorkspaceId]);
 
   useEffect(() => {
     fetchEntities();
@@ -109,6 +111,7 @@ export function useEntityManagement({
           files,
           productType,
           primaryReferenceIndex,
+          workspaceId: activeWorkspaceId,
         });
         await fetchEntities();
       } catch {
@@ -119,7 +122,7 @@ export function useEntityManagement({
         setIsCreating(false);
       }
     },
-    [entityType, fetchEntities, entities],
+    [entityType, fetchEntities, entities, activeWorkspaceId],
   );
 
   const handleSaveEdit = useCallback(

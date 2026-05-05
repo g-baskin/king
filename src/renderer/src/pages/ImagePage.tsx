@@ -96,7 +96,7 @@ export default function ImagePage({
     deleteImage,
     deleteImages,
     downloadImage: handleDownload,
-  } = useImages();
+  } = useImages(activeWorkspace.id);
 
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
 
@@ -258,8 +258,9 @@ export default function ImagePage({
           for (const url of result.resultUrls) {
             const savedImage = await window.api.images.save({
               url,
-              prompt: `${data.prompt}\n\n[workspace:${activeWorkspace.id}]`,
+              prompt: data.prompt,
               aspectRatio: data.aspectRatio,
+              workspaceId: activeWorkspace.id,
             });
 
             addImage(savedImage);
