@@ -25,12 +25,18 @@ interface UseEntityManagementReturn {
   editingEntity: EntityData | null;
   deleteEntityId: string | null;
   fetchEntities: () => Promise<void>;
-  handleCreate: (name: string, images: UploadedImage[], productType?: string) => Promise<void>;
+  handleCreate: (
+    name: string,
+    images: UploadedImage[],
+    productType?: string,
+    primaryReferenceImageUrl?: string,
+  ) => Promise<void>;
   handleSaveEdit: (
     id: string,
     name: string,
     images: UploadedImage[],
     productType?: string,
+    primaryReferenceImageUrl?: string,
   ) => Promise<void>;
   handleDelete: (id: string) => void;
   confirmDelete: () => Promise<void>;
@@ -52,8 +58,11 @@ export function useEntityManagement({
     try {
       const data = await window.api.entities.list(entityType);
       setEntities(data);
-    } catch {
-      // Silently fail - entities will show empty state
+    } catch (err) {
+      const label = entityType === 'products' ? 'products' : 'characters';
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Couldn't load ${label}. ${message}`);
+      setEntities([]);
     } finally {
       setIsLoading(false);
       setHasFetched(true);
@@ -65,7 +74,12 @@ export function useEntityManagement({
   }, [fetchEntities]);
 
   const handleCreate = useCallback(
-    async (name: string, images: UploadedImage[], productType?: string) => {
+    async (
+      name: string,
+      images: UploadedImage[],
+      productType?: string,
+      primaryReferenceImageUrl?: string,
+    ) => {
       const trimmed = name.trim().toLowerCase();
       const isDuplicate = entities.some((e) => e.name.trim().toLowerCase() === trimmed);
       if (isDuplicate) {
@@ -85,7 +99,17 @@ export function useEntityManagement({
             })),
         );
 
-        await window.api.entities.create(entityType, { name, files, productType });
+        const normalizedImageUrls = images.map((img) => img.preview);
+        const primaryReferenceIndex = primaryReferenceImageUrl
+          ? Math.max(0, normalizedImageUrls.indexOf(primaryReferenceImageUrl))
+          : 0;
+
+        await window.api.entities.create(entityType, {
+          name,
+          files,
+          productType,
+          primaryReferenceIndex,
+        });
         await fetchEntities();
       } catch {
         const label = entityType === 'products' ? 'product' : 'character';
@@ -99,7 +123,13 @@ export function useEntityManagement({
   );
 
   const handleSaveEdit = useCallback(
-    async (id: string, name: string, images: UploadedImage[], productType?: string) => {
+    async (
+      id: string,
+      name: string,
+      images: UploadedImage[],
+      productType?: string,
+      primaryReferenceImageUrl?: string,
+    ) => {
       const trimmed = name.trim().toLowerCase();
       const isDuplicate = entities.some(
         (e) => e.id !== id && e.name.trim().toLowerCase() === trimmed,
@@ -122,11 +152,17 @@ export function useEntityManagement({
           })),
         );
 
+        const imageOrderKeys = images.map((img) => (img.isExisting ? img.preview : img.fileKey));
+        const primaryReferenceIndex = primaryReferenceImageUrl
+          ? Math.max(0, imageOrderKeys.indexOf(primaryReferenceImageUrl))
+          : undefined;
+
         await window.api.entities.update(entityType, id, {
           name,
           existingImages,
           newFiles: newFileBuffers,
           productType,
+          primaryReferenceIndex,
         });
 
         await fetchEntities();

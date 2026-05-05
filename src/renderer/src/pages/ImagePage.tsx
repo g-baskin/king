@@ -12,17 +12,23 @@ import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal';
 import { useImages } from '@/hooks';
 import { useGenerationStore } from '@/stores/generationStore';
 import { useModelStore } from '@/stores/modelStore';
+import type { CharacterConsistencyIntent } from '@/stores/imageIntentStore';
+import type { EntityData } from '@/types/electron';
 
 interface ImagePageProps {
   prefillPrompt?: string | null;
   prefillPromptMeta?: { requiresProduct?: boolean; recommendedEntityType?: 'product' | 'character' } | null;
   onPromptConsumed?: () => void;
+  imageIntent?: CharacterConsistencyIntent | null;
+  onImageIntentConsumed?: () => void;
 }
 
 export default function ImagePage({
   prefillPrompt,
   prefillPromptMeta,
   onPromptConsumed,
+  imageIntent,
+  onImageIntentConsumed,
 }: ImagePageProps) {
   // Split single-atom selectors so ImagePage only re-renders when one of
   // these slices actually changes. Destructuring the whole store returns a
@@ -36,6 +42,8 @@ export default function ImagePage({
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
   const [recreateData, setRecreateData] = useState<{ prompt: string } | null>(null);
+  const [intentPrompt, setIntentPrompt] = useState<string | null>(null);
+  const [promptFormSeed, setPromptFormSeed] = useState(0);
   const [editData, setEditData] = useState<{ imageUrl: string } | null>(null);
 
   // Handle prefilled prompt from Prompts page
@@ -45,10 +53,36 @@ export default function ImagePage({
       onPromptConsumed?.();
     }
   }, [prefillPrompt, onPromptConsumed]);
+
+  // Handle cross-page intent from Characters tab (Generate button).
+  useEffect(() => {
+    const resolvedIntent = imageIntent ?? null;
+
+    console.info('[intent] image page effect', { imageIntent, resolvedIntent });
+    if (!resolvedIntent || resolvedIntent.type !== 'character-consistency-sheet') return;
+
+    setRecreateData({ prompt: resolvedIntent.prompt });
+    setIntentPrompt(resolvedIntent.prompt);
+    setPromptFormSeed((prev) => prev + 1);
+    setSelectedCharacterEntity(resolvedIntent.characterEntity);
+    setPromptNeedsCharacter(true);
+    setConsistencyTemplateImageUrl(resolvedIntent.templateImageUrl ?? null);
+
+    onImageIntentConsumed?.();
+    toast.success('Character consistency prompt loaded.');
+  }, [imageIntent, onImageIntentConsumed]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [promptNeedsProduct, setPromptNeedsProduct] = useState(false);
+  const [promptNeedsCharacter, setPromptNeedsCharacter] = useState(false);
   const [productOptions, setProductOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [forceEntitySelection, setForceEntitySelection] = useState<string | null>(null);
+  const [products, setProducts] = useState<EntityData[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [characters, setCharacters] = useState<EntityData[]>([]);
+  const [charactersLoading, setCharactersLoading] = useState(true);
+  const [selectedProductEntity, setSelectedProductEntity] = useState<string>('none');
+  const [selectedCharacterEntity, setSelectedCharacterEntity] = useState<string>('none');
+  const [consistencyTemplateImageUrl, setConsistencyTemplateImageUrl] = useState<string | null>(null);
 
   const {
     images: generatedImages,
@@ -77,6 +111,40 @@ export default function ImagePage({
       }
     })();
   }, [prefillPrompt, prefillPromptMeta]);
+
+  useEffect(() => {
+    if (!(prefillPrompt && prefillPromptMeta?.recommendedEntityType === 'character')) return;
+    setPromptNeedsCharacter(true);
+  }, [prefillPrompt, prefillPromptMeta]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [productList, characterList] = await Promise.all([
+          window.api.entities.list('products'),
+          window.api.entities.list('characters'),
+        ]);
+        if (!cancelled) {
+          setProducts(productList);
+          setCharacters(characterList);
+        }
+      } catch {
+        if (!cancelled) {
+          setProducts([]);
+          setCharacters([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setProductsLoading(false);
+          setCharactersLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const selectedCount = selectedImages.size;
 
   const clearSelection = useCallback(() => setSelectedImages(new Set()), []);
@@ -323,11 +391,108 @@ export default function ImagePage({
           </div>
         )}
 
+        {productsLoading || charactersLoading ? (
+          <div className="mx-6 mb-2 rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--champagne)] px-4 py-2 text-xs text-[var(--base-color-brand--umber)]">
+            Loading products and characters...
+          </div>
+        ) : (
+          <div className="mx-6 mb-2 space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--champagne)] px-3 py-2">
+            {products.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="rounded-full bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  Products
+                </span>
+                <span className="text-xs text-[var(--base-color-brand--umber)]">Tap to add product references.</span>
+                {products.map((product) => {
+                  const entityValue = `product:${product.id}`;
+                  const active = selectedProductEntity === entityValue;
+                  return (
+                    <button
+                      key={product.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedProductEntity(entityValue);
+                        toast.success(`Selected ${product.name} product references.`);
+                      }}
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                        active
+                          ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                          : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                      }`}
+                    >
+                      {product.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {characters.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="rounded-full bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  Characters
+                </span>
+                <span className="text-xs text-[var(--base-color-brand--umber)]">Tap to add character references.</span>
+                {promptNeedsCharacter && (
+                  <span className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-[10px] font-bold tracking-wide text-[var(--text-color--text-tertiary)]">
+                    Recommended for this prompt
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCharacterEntity('none')}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                    selectedCharacterEntity === 'none'
+                      ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                      : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                  }`}
+                >
+                  None
+                </button>
+                {characters.map((character) => {
+                  const entityValue = `character:${character.id}`;
+                  const active = selectedCharacterEntity === entityValue;
+                  return (
+                    <button
+                      key={character.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCharacterEntity(entityValue);
+                        setPromptNeedsCharacter(false);
+                        toast.success(`Selected ${character.name} character references.`);
+                      }}
+                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                        active
+                          ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                          : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                      }`}
+                      title={character.name}
+                    >
+                      {character.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         <ImagePromptForm
+          key={promptFormSeed}
           onSubmit={handleGenerate}
           recreateData={recreateData}
           editData={editData}
           forceEntitySelection={forceEntitySelection}
+          selectedProductOverride={selectedProductEntity}
+          selectedCharacterOverride={selectedCharacterEntity}
+          additionalReferenceImageUrls={consistencyTemplateImageUrl ? [consistencyTemplateImageUrl] : []}
+          intentPrompt={intentPrompt}
         />
       </div>{/* end flex-col wrapper */}
 

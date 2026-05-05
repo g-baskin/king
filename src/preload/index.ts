@@ -159,6 +159,7 @@ const api = {
         name: string;
         files: { name: string; buffer: ArrayBuffer }[];
         productType?: string;
+        primaryReferenceIndex?: number;
       },
     ) => ipcRenderer.invoke('entities:create', entityType, data),
     update: (
@@ -169,6 +170,7 @@ const api = {
         existingImages: string[];
         newFiles: { name: string; buffer: ArrayBuffer }[];
         productType?: string;
+        primaryReferenceIndex?: number;
       },
     ) => ipcRenderer.invoke('entities:update', entityType, id, data),
     delete: (entityType: string, id: string) =>
