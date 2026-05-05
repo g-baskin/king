@@ -176,8 +176,8 @@ const api = {
         primaryReferenceIndex?: number;
       },
     ) => ipcRenderer.invoke('entities:update', entityType, id, data),
-    delete: (entityType: string, id: string) =>
-      ipcRenderer.invoke('entities:delete', entityType, id),
+    delete: (entityType: string, id: string, workspaceId?: string) =>
+      ipcRenderer.invoke('entities:delete', entityType, id, workspaceId),
   },
 };
 

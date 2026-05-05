@@ -89,9 +89,12 @@ export function registerEntityHandlers(): void {
     },
   );
 
-  secureHandle('entities:delete', async (_event, entityType: string, id: string) => {
-    if (!validateType(entityType)) return { success: false };
-    const success = await deleteEntity(entityType, id);
-    return { success };
-  });
+  secureHandle(
+    'entities:delete',
+    async (_event, entityType: string, id: string, workspaceId?: string) => {
+      if (!validateType(entityType)) return { success: false };
+      const success = await deleteEntity(entityType, id, workspaceId);
+      return { success };
+    },
+  );
 }

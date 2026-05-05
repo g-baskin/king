@@ -188,7 +188,7 @@ export function useEntityManagement({
   const confirmDelete = useCallback(async () => {
     if (!deleteEntityId) return;
     try {
-      const result = await window.api.entities.delete(entityType, deleteEntityId);
+      const result = await window.api.entities.delete(entityType, deleteEntityId, activeWorkspaceId);
       if (result.success) {
         setEntities((prev) => prev.filter((e) => e.id !== deleteEntityId));
       }
@@ -197,7 +197,7 @@ export function useEntityManagement({
     } finally {
       setDeleteEntityId(null);
     }
-  }, [deleteEntityId, entityType]);
+  }, [deleteEntityId, entityType, activeWorkspaceId]);
 
   const cancelDelete = useCallback(() => {
     setDeleteEntityId(null);

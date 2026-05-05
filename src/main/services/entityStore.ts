@@ -134,11 +134,17 @@ export async function updateEntity(
   });
 }
 
-export async function deleteEntity(entityType: string, id: string): Promise<boolean> {
+export async function deleteEntity(
+  entityType: string,
+  id: string,
+  workspaceId?: string,
+): Promise<boolean> {
   const path = getEntityJsonPath(entityType);
   return withJsonLock(path, () => {
     const store = readStore(entityType);
-    const entity = store.entities.find((e) => e.id === id);
+    const entity = store.entities.find(
+      (e) => e.id === id && (e.workspaceId ?? 'workspace-ugc') === (workspaceId ?? 'workspace-ugc'),
+    );
     if (!entity) return false;
 
     // Delete reference image files
@@ -154,7 +160,9 @@ export async function deleteEntity(entityType: string, id: string): Promise<bool
       }
     }
 
-    store.entities = store.entities.filter((e) => e.id !== id);
+    store.entities = store.entities.filter(
+      (e) => !(e.id === id && (e.workspaceId ?? 'workspace-ugc') === (workspaceId ?? 'workspace-ugc')),
+    );
     writeJsonAtomic(path, store);
     return true;
   });

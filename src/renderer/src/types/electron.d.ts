@@ -355,7 +355,7 @@ export interface ElectronAPI {
         primaryReferenceIndex?: number;
       },
     ) => Promise<EntityData>;
-    delete: (entityType: string, id: string) => Promise<{ success: boolean }>;
+    delete: (entityType: string, id: string, workspaceId?: string) => Promise<{ success: boolean }>;
   };
 }
 
