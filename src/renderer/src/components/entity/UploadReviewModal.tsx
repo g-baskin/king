@@ -6,15 +6,27 @@ import type { UploadedImage, EntityType } from '@/hooks/useEntityManagement';
 import type { EntityData } from '@/types/electron';
 import { productTypes } from '@/lib/productTypes';
 import { SUPPORTED_IMAGE_ACCEPT } from '@/lib/constants/image-form';
+import type { GeneratedImageData } from '@/types/electron';
 
 interface UploadReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialFiles: File[];
   entityType: EntityType;
-  onGenerate: (name: string, images: UploadedImage[], productType?: string) => void;
+  onGenerate: (
+    name: string,
+    images: UploadedImage[],
+    productType?: string,
+    primaryReferenceImageUrl?: string,
+  ) => void;
   editEntity?: EntityData | null;
-  onSaveEdit?: (id: string, name: string, images: UploadedImage[], productType?: string) => void;
+  onSaveEdit?: (
+    id: string,
+    name: string,
+    images: UploadedImage[],
+    productType?: string,
+    primaryReferenceImageUrl?: string,
+  ) => void;
   isLoading?: boolean;
 }
 
@@ -48,6 +60,9 @@ export default function UploadReviewModal({
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [entityName, setEntityName] = useState('');
   const [productType, setProductType] = useState<string>(DEFAULT_PRODUCT_TYPE);
+  const [primaryReferenceImageUrl, setPrimaryReferenceImageUrl] = useState<string | null>(null);
+  const [libraryImages, setLibraryImages] = useState<GeneratedImageData[]>([]);
+  const [isLibraryLoading, setIsLibraryLoading] = useState(false);
   const isEditMode = !!editEntity;
   const showProductType = entityType === 'products';
 
@@ -70,6 +85,9 @@ export default function UploadReviewModal({
           }),
         );
         setImages(existingImages);
+        const primaryIndex =
+          typeof editEntity.primaryReferenceIndex === 'number' ? editEntity.primaryReferenceIndex : 0;
+        setPrimaryReferenceImageUrl(existingImages[primaryIndex]?.preview ?? existingImages[0]?.preview ?? null);
       };
       loadExistingImages();
     }
@@ -109,6 +127,7 @@ export default function UploadReviewModal({
           }),
         );
         setImages(newImages);
+        setPrimaryReferenceImageUrl(newImages[0] ? newImages[0].fileKey : null);
       };
       loadImages();
     }
@@ -129,6 +148,7 @@ export default function UploadReviewModal({
       setEntityName('');
       setImages([]);
       setProductType(DEFAULT_PRODUCT_TYPE);
+      setPrimaryReferenceImageUrl(null);
     }
   }, [isOpen, editEntity, initialFiles.length]);
 
@@ -145,6 +165,37 @@ export default function UploadReviewModal({
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
+
+  const handleAddFromLibrary = async () => {
+    if (entityType !== 'characters' || isLibraryLoading) return;
+    setIsLibraryLoading(true);
+    try {
+      const result = await window.api.images.list(undefined, 24);
+      setLibraryImages(result.data);
+    } catch {
+      toast.error("Couldn't load image library.");
+    } finally {
+      setIsLibraryLoading(false);
+    }
+  };
+
+  const handleUseLibraryImage = async (image: GeneratedImageData) => {
+    const exists = images.some((img) => img.preview === image.url || img.fileKey === image.url);
+    if (exists) return;
+    const aspectRatio = await getImageAspectRatio(image.url);
+    const entry: UploadedImage = {
+      id: `library-${image.id}`,
+      preview: image.url,
+      aspectRatio,
+      fileKey: image.url,
+      isExisting: true,
+    };
+    setImages((prev) => {
+      const merged = [entry, ...prev].slice(0, MAX_IMAGES);
+      return merged;
+    });
+    if (!primaryReferenceImageUrl) setPrimaryReferenceImageUrl(image.url);
+  };
 
   const handleAddMoreImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -183,7 +234,14 @@ export default function UploadReviewModal({
             };
           }),
         );
-        setImages((prev) => [...prev, ...newImages].slice(0, MAX_IMAGES));
+        setImages((prev) => {
+          const merged = [...prev, ...newImages].slice(0, MAX_IMAGES);
+          if (!primaryReferenceImageUrl && merged.length > 0) {
+            const first = merged[0];
+            setPrimaryReferenceImageUrl(first.isExisting ? first.preview : first.fileKey);
+          }
+          return merged;
+        });
       }
     }
     e.target.value = '';
@@ -195,7 +253,13 @@ export default function UploadReviewModal({
       if (img && !img.isExisting && img.preview.startsWith('blob:')) {
         URL.revokeObjectURL(img.preview);
       }
-      return prev.filter((i) => i.id !== id);
+      const next = prev.filter((i) => i.id !== id);
+      const removedKey = img ? (img.isExisting ? img.preview : img.fileKey) : null;
+      if (removedKey && removedKey === primaryReferenceImageUrl) {
+        const fallback = next[0];
+        setPrimaryReferenceImageUrl(fallback ? (fallback.isExisting ? fallback.preview : fallback.fileKey) : null);
+      }
+      return next;
     });
   };
 
@@ -204,9 +268,9 @@ export default function UploadReviewModal({
     if (images.length === 0 || !entityName.trim() || isLoading) return;
     const typeArg = showProductType ? productType : undefined;
     if (isEditMode && editEntity && onSaveEdit) {
-      onSaveEdit(editEntity.id, entityName, images, typeArg);
+      onSaveEdit(editEntity.id, entityName, images, typeArg, primaryReferenceImageUrl ?? undefined);
     } else {
-      onGenerate(entityName, images, typeArg);
+      onGenerate(entityName, images, typeArg, primaryReferenceImageUrl ?? undefined);
     }
   };
 
@@ -235,8 +299,9 @@ export default function UploadReviewModal({
           <CloseIcon />
         </button>
 
-        {/* Upload More Button */}
-        <label className="grid w-full cursor-pointer rounded-t-3xl bg-[var(--base-color-brand--champagne)] p-3 text-center text-[var(--base-color-brand--umber)] transition hover:bg-[var(--base-color-brand--cream)]">
+        {/* Upload / Library Actions */}
+        <div className="grid w-full gap-2 rounded-t-3xl bg-[var(--base-color-brand--champagne)] p-3 text-center text-[var(--base-color-brand--umber)]">
+          <label className="grid cursor-pointer rounded-2xl transition hover:bg-[var(--base-color-brand--cream)]">
           <input
             multiple
             className="sr-only"
@@ -252,7 +317,37 @@ export default function UploadReviewModal({
               </span>
             </div>
           </div>
-        </label>
+          </label>
+          {entityType === 'characters' && (
+            <div className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-3 text-left">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Add from Image Library</p>
+                <button
+                  type="button"
+                  onClick={handleAddFromLibrary}
+                  className="rounded-full border border-[var(--base-color-brand--umber)]/40 px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
+                >
+                  {isLibraryLoading ? 'Loading...' : 'Load Images'}
+                </button>
+              </div>
+              {libraryImages.length > 0 && (
+                <div className="grid max-h-28 grid-cols-6 gap-2 overflow-y-auto">
+                  {libraryImages.map((image) => (
+                    <button
+                      key={image.id}
+                      type="button"
+                      onClick={() => void handleUseLibraryImage(image)}
+                      className="relative overflow-hidden rounded-md border border-[var(--base-color-brand--umber)]/30"
+                      title="Add to character"
+                    >
+                      <img src={image.thumbnailUrl ?? image.url} alt="library" className="h-12 w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Image Gallery */}
         <div className="grid grid-cols-2 gap-0 overflow-y-auto px-2 pt-1 pb-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -270,6 +365,21 @@ export default function UploadReviewModal({
                   className="relative overflow-hidden rounded-lg"
                   style={{ aspectRatio: img.aspectRatio }}
                 >
+                  {entityType === 'characters' && (
+                    <button
+                      type="button"
+                      onClick={() => setPrimaryReferenceImageUrl(img.isExisting ? img.preview : img.fileKey)}
+                      className={`absolute top-2 left-2 z-10 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide transition ${
+                        primaryReferenceImageUrl === (img.isExisting ? img.preview : img.fileKey)
+                          ? 'bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                          : 'bg-[var(--base-color-brand--shell)]/90 text-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--shell)]'
+                      }`}
+                    >
+                      {primaryReferenceImageUrl === (img.isExisting ? img.preview : img.fileKey)
+                        ? 'Primary'
+                        : 'Set primary'}
+                    </button>
+                  )}
                   <img
                     alt={`uploaded file ${index}`}
                     loading="lazy"
