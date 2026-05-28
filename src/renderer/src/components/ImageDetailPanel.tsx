@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { StorefrontBridgePublishPanel } from './image/StorefrontBridgePublishPanel';
 
 interface ImageDetailPanelProps {
   image: {
@@ -150,7 +151,7 @@ export default function ImageDetailPanel({
   const [isAdditionalOpen, setIsAdditionalOpen] = useState(false);
 
   const copyPrompt = () => {
-    navigator.clipboard.writeText(image.prompt);
+    void navigator.clipboard.writeText(image.prompt);
     toast.success('Prompt copied to clipboard');
   };
 
@@ -227,6 +228,8 @@ export default function ImageDetailPanel({
                 </p>
               </div>
             </section>
+
+            <StorefrontBridgePublishPanel image={image} />
 
             {/* Information Section */}
             <section className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)]">

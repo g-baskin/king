@@ -18,7 +18,10 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 interface ImagePageProps {
   prefillPrompt?: string | null;
-  prefillPromptMeta?: { requiresProduct?: boolean; recommendedEntityType?: 'product' | 'character' } | null;
+  prefillPromptMeta?: {
+    requiresProduct?: boolean;
+    recommendedEntityType?: 'product' | 'character';
+  } | null;
   onPromptConsumed?: () => void;
   imageIntent?: CharacterConsistencyIntent | null;
   onImageIntentConsumed?: () => void;
@@ -67,7 +70,9 @@ export default function ImagePage({
   const [charactersLoading, setCharactersLoading] = useState(true);
   const [selectedProductEntity, setSelectedProductEntity] = useState<string>('none');
   const [selectedCharacterEntity, setSelectedCharacterEntity] = useState<string>('none');
-  const [consistencyTemplateImageUrl, setConsistencyTemplateImageUrl] = useState<string | null>(null);
+  const [consistencyTemplateImageUrl, setConsistencyTemplateImageUrl] = useState<string | null>(
+    null,
+  );
 
   // Handle cross-page intent from Characters tab (Generate button).
   useEffect(() => {
@@ -288,74 +293,75 @@ export default function ImagePage({
         {/* Scrollable image gallery — flex-1 so the form below always stays
             on screen regardless of window height. */}
         <div className="relative min-h-0 flex-1 px-4 pt-4">
-        {/* Selection toolbar — slides down from the top-right of the image
+          {/* Selection toolbar — slides down from the top-right of the image
             grid whenever at least one image is selected. Contains a count,
             a delete action, and a clear-selection button. */}
-        <div
-          aria-hidden={selectedCount === 0}
-          className={`absolute top-4 right-4 z-20 transition-all duration-200 ease-out ${
-            selectedCount > 0
-              ? 'translate-y-0 opacity-100'
-              : 'pointer-events-none -translate-y-3 opacity-0'
-          }`}
-        >
-          <div className="flex items-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] py-1.5 pr-1.5 pl-4 shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]">
-            <span
-              className="text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
-              style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-            >
-              {selectedCount} selected
-            </span>
-            <button
-              type="button"
-              onClick={handleBatchDeleteClick}
-              className="btn-cinamon btn-sm"
-              title="Delete selected"
-            >
-              <DeleteIcon />
-              Delete
-            </button>
-            <button
-              type="button"
-              onClick={clearSelection}
-              className="grid h-7 w-7 place-items-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
-              title="Clear selection"
-              aria-label="Clear selection"
-            >
-              <CloseIcon />
-            </button>
+          <div
+            aria-hidden={selectedCount === 0}
+            className={`absolute top-4 right-4 z-20 transition-all duration-200 ease-out ${
+              selectedCount > 0
+                ? 'translate-y-0 opacity-100'
+                : 'pointer-events-none -translate-y-3 opacity-0'
+            }`}
+          >
+            <div className="flex items-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] py-1.5 pr-1.5 pl-4 shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]">
+              <span
+                className="text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
+                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+              >
+                {selectedCount} selected
+              </span>
+              <button
+                type="button"
+                onClick={handleBatchDeleteClick}
+                className="btn-cinamon btn-sm"
+                title="Delete selected"
+              >
+                <DeleteIcon />
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="grid h-7 w-7 place-items-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
+                title="Clear selection"
+                aria-label="Clear selection"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+          </div>
+
+          <div className="h-full">
+            {isLoading ? (
+              <div className="flex h-full w-full items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="size-8 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
+                  <span className="text-sm text-[var(--base-color-brand--umber)]">
+                    Loading images...
+                  </span>
+                </div>
+              </div>
+            ) : generatedImages.length > 0 || pendingCount > 0 ? (
+              <VirtualizedImageGrid
+                images={generatedImages}
+                selectedImages={selectedImages}
+                onSelect={toggleSelectImage}
+                onClick={handleImageClick}
+                onDownload={handleDownload}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onLoadMore={loadMoreImages}
+                hasMore={hasMore}
+                isLoadingMore={isLoadingMore}
+                pendingCount={pendingCount}
+              />
+            ) : (
+              <ImageEmptyState />
+            )}
           </div>
         </div>
-
-        <div className="h-full">
-          {isLoading ? (
-            <div className="flex h-full w-full items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="size-8 animate-spin rounded-full border-2 border-[var(--base-color-brand--umber)]/30 border-t-[var(--base-color-brand--bean)]" />
-                <span className="text-sm text-[var(--base-color-brand--umber)]">
-                  Loading images...
-                </span>
-              </div>
-            </div>
-          ) : generatedImages.length > 0 || pendingCount > 0 ? (
-            <VirtualizedImageGrid
-              images={generatedImages}
-              selectedImages={selectedImages}
-              onSelect={toggleSelectImage}
-              onClick={handleImageClick}
-              onDownload={handleDownload}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              onLoadMore={loadMoreImages}
-              hasMore={hasMore}
-              isLoadingMore={isLoadingMore}
-              pendingCount={pendingCount}
-            />
-          ) : (
-            <ImageEmptyState />
-          )}
-        </div>
-        </div>{/* end scrollable gallery */}
+        {/* end scrollable gallery */}
 
         {promptNeedsProduct && (
           <div className="mx-6 mb-2 rounded-2xl border-2 border-[var(--base-color-brand--cinamon)] bg-[color-mix(in_srgb,var(--base-color-brand--cinamon)_18%,var(--base-color-brand--champagne))] p-3 shadow-[0_10px_24px_-10px_rgba(0,0,0,0.45)]">
@@ -411,7 +417,9 @@ export default function ImagePage({
                 >
                   Products
                 </span>
-                <span className="text-xs text-[var(--base-color-brand--umber)]">Tap to add product references.</span>
+                <span className="text-xs text-[var(--base-color-brand--umber)]">
+                  Tap to add product references.
+                </span>
                 {products.map((product) => {
                   const entityValue = `product:${product.id}`;
                   const active = selectedProductEntity === entityValue;
@@ -444,7 +452,9 @@ export default function ImagePage({
                 >
                   Characters
                 </span>
-                <span className="text-xs text-[var(--base-color-brand--umber)]">Tap to add character references.</span>
+                <span className="text-xs text-[var(--base-color-brand--umber)]">
+                  Tap to add character references.
+                </span>
                 {promptNeedsCharacter && (
                   <span className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-[10px] font-bold tracking-wide text-[var(--text-color--text-tertiary)]">
                     Recommended for this prompt
@@ -497,10 +507,13 @@ export default function ImagePage({
           forceEntitySelection={forceEntitySelection}
           selectedProductOverride={selectedProductEntity}
           selectedCharacterOverride={selectedCharacterEntity}
-          additionalReferenceImageUrls={consistencyTemplateImageUrl ? [consistencyTemplateImageUrl] : []}
+          additionalReferenceImageUrls={
+            consistencyTemplateImageUrl ? [consistencyTemplateImageUrl] : []
+          }
           intentPrompt={intentPrompt}
         />
-      </div>{/* end flex-col wrapper */}
+      </div>
+      {/* end flex-col wrapper */}
 
       {selectedImage && (
         <ImageDetailOverlay

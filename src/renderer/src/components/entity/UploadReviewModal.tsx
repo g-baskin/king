@@ -88,8 +88,12 @@ export default function UploadReviewModal({
         );
         setImages(existingImages);
         const primaryIndex =
-          typeof editEntity.primaryReferenceIndex === 'number' ? editEntity.primaryReferenceIndex : 0;
-        setPrimaryReferenceImageUrl(existingImages[primaryIndex]?.preview ?? existingImages[0]?.preview ?? null);
+          typeof editEntity.primaryReferenceIndex === 'number'
+            ? editEntity.primaryReferenceIndex
+            : 0;
+        setPrimaryReferenceImageUrl(
+          existingImages[primaryIndex]?.preview ?? existingImages[0]?.preview ?? null,
+        );
       };
       loadExistingImages();
     }
@@ -238,8 +242,8 @@ export default function UploadReviewModal({
         );
         setImages((prev) => {
           const merged = [...prev, ...newImages].slice(0, MAX_IMAGES);
-          if (!primaryReferenceImageUrl && merged.length > 0) {
-            const first = merged[0];
+          const first = merged[0];
+          if (!primaryReferenceImageUrl && first) {
             setPrimaryReferenceImageUrl(first.isExisting ? first.preview : first.fileKey);
           }
           return merged;
@@ -259,7 +263,9 @@ export default function UploadReviewModal({
       const removedKey = img ? (img.isExisting ? img.preview : img.fileKey) : null;
       if (removedKey && removedKey === primaryReferenceImageUrl) {
         const fallback = next[0];
-        setPrimaryReferenceImageUrl(fallback ? (fallback.isExisting ? fallback.preview : fallback.fileKey) : null);
+        setPrimaryReferenceImageUrl(
+          fallback ? (fallback.isExisting ? fallback.preview : fallback.fileKey) : null,
+        );
       }
       return next;
     });
@@ -304,26 +310,28 @@ export default function UploadReviewModal({
         {/* Upload / Library Actions */}
         <div className="grid w-full gap-2 rounded-t-3xl bg-[var(--base-color-brand--champagne)] p-3 text-center text-[var(--base-color-brand--umber)]">
           <label className="grid cursor-pointer rounded-2xl transition hover:bg-[var(--base-color-brand--cream)]">
-          <input
-            multiple
-            className="sr-only"
-            accept={SUPPORTED_IMAGE_ACCEPT}
-            type="file"
-            onChange={handleAddMoreImages}
-          />
-          <div className="grid justify-center rounded-xl border border-dashed border-transparent p-5">
-            <div className="flex items-center justify-center">
-              <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]">
-                <SparkleIcon className="size-5" />
-                Upload images
-              </span>
+            <input
+              multiple
+              className="sr-only"
+              accept={SUPPORTED_IMAGE_ACCEPT}
+              type="file"
+              onChange={handleAddMoreImages}
+            />
+            <div className="grid justify-center rounded-xl border border-dashed border-transparent p-5">
+              <div className="flex items-center justify-center">
+                <span className="inline-grid h-12 grid-flow-col items-center justify-center gap-1.5 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]">
+                  <SparkleIcon className="size-5" />
+                  Upload images
+                </span>
+              </div>
             </div>
-          </div>
           </label>
           {entityType === 'characters' && (
             <div className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-3 text-left">
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Add from Image Library</p>
+                <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">
+                  Add from Image Library
+                </p>
                 <button
                   type="button"
                   onClick={handleAddFromLibrary}
@@ -342,7 +350,11 @@ export default function UploadReviewModal({
                       className="relative overflow-hidden rounded-md border border-[var(--base-color-brand--umber)]/30"
                       title="Add to character"
                     >
-                      <img src={image.thumbnailUrl ?? image.url} alt="library" className="h-12 w-full object-cover" />
+                      <img
+                        src={image.thumbnailUrl ?? image.url}
+                        alt="library"
+                        className="h-12 w-full object-cover"
+                      />
                     </button>
                   ))}
                 </div>
@@ -370,8 +382,10 @@ export default function UploadReviewModal({
                   {entityType === 'characters' && (
                     <button
                       type="button"
-                      onClick={() => setPrimaryReferenceImageUrl(img.isExisting ? img.preview : img.fileKey)}
-                      className={`absolute top-2 left-2 z-10 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide transition ${
+                      onClick={() =>
+                        setPrimaryReferenceImageUrl(img.isExisting ? img.preview : img.fileKey)
+                      }
+                      className={`absolute top-2 left-2 z-10 rounded-full px-2 py-1 text-[10px] font-semibold tracking-wide uppercase transition ${
                         primaryReferenceImageUrl === (img.isExisting ? img.preview : img.fileKey)
                           ? 'bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
                           : 'bg-[var(--base-color-brand--shell)]/90 text-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--shell)]'

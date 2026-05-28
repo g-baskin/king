@@ -161,7 +161,8 @@ export async function deleteEntity(
     }
 
     store.entities = store.entities.filter(
-      (e) => !(e.id === id && (e.workspaceId ?? 'workspace-ugc') === (workspaceId ?? 'workspace-ugc')),
+      (e) =>
+        !(e.id === id && (e.workspaceId ?? 'workspace-ugc') === (workspaceId ?? 'workspace-ugc')),
     );
     writeJsonAtomic(path, store);
     return true;

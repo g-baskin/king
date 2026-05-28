@@ -239,13 +239,14 @@ async function paginateAll<T>(
   url.searchParams.set('access_token', creds.accessToken);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
 
-  let next: string | undefined = url.toString();
+  let nextUrl: string | undefined = url.toString();
   // Cap at 20 pages to avoid runaway loops on an unexpectedly huge account.
-  for (let i = 0; i < 20 && next; i++) {
-    const res = await fetch(next, { method: 'GET' });
-    const page = await parseJsonOrThrow<FbPage_<T>>(res);
+  for (let i = 0; i < 20; i++) {
+    if (!nextUrl) break;
+    const res: Response = await fetch(nextUrl, { method: 'GET' });
+    const page: FbPage_<T> = await parseJsonOrThrow<FbPage_<T>>(res);
     out.push(...page.data);
-    next = page.paging?.next;
+    nextUrl = page.paging?.next;
   }
   return out;
 }

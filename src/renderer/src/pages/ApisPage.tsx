@@ -7,7 +7,7 @@ interface FacebookSummary {
   adAccountCount: number;
   pageCount: number;
   /** Epoch ms; surfaced as a warning pill when within 5 days. */
-  expiresAt?: number;
+  expiresAt?: number | undefined;
 }
 
 function formatFbSummary(s: FacebookSummary): string {
@@ -36,15 +36,21 @@ interface GoogleAdsSummary {
 }
 
 interface TikTokSummary {
-  shopName?: string;
+  shopName?: string | undefined;
 }
 
 interface ShopeeSummary {
-  shopId?: number;
+  shopId?: number | undefined;
 }
 
 interface AmazonSummary {
-  sellerId?: string;
+  sellerId?: string | undefined;
+}
+
+interface StorefrontBridgeSummary {
+  serverUrl?: string | undefined;
+  printifyConfigured: boolean;
+  printifyShopId?: string | null | undefined;
 }
 
 export default function ApisPage() {
@@ -59,6 +65,8 @@ export default function ApisPage() {
   const [tiktokSummary, setTiktokSummary] = useState<TikTokSummary | null>(null);
   const [shopeeSummary, setShopeeSummary] = useState<ShopeeSummary | null>(null);
   const [amazonSummary, setAmazonSummary] = useState<AmazonSummary | null>(null);
+  const [storefrontBridgeSummary, setStorefrontBridgeSummary] =
+    useState<StorefrontBridgeSummary | null>(null);
 
   const fetchKeys = useCallback(async () => {
     try {
@@ -213,6 +221,32 @@ export default function ApisPage() {
     };
   }, [savedKeys.amazon]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!savedKeys['storefront-bridge'] && !savedKeys['different-tees']) {
+      setStorefrontBridgeSummary(null);
+      return;
+    }
+    if (!window.api.storefrontBridge) return;
+    void (async () => {
+      try {
+        const status = await window.api.storefrontBridge!.status();
+        if (!cancelled) {
+          setStorefrontBridgeSummary({
+            serverUrl: status.serverUrl ?? status.baseUrl,
+            printifyConfigured: status.printify?.configured ?? false,
+            printifyShopId: status.printify?.shopId,
+          });
+        }
+      } catch {
+        if (!cancelled) setStorefrontBridgeSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [savedKeys['storefront-bridge'], savedKeys['different-tees']]);
+
   const saveSimpleToken = async (serviceId: string, value: string) => {
     setSavingService(serviceId);
     try {
@@ -228,7 +262,11 @@ export default function ApisPage() {
 
   const handleDelete = async (serviceId: string) => {
     try {
-      await window.api.apiKeys.delete(serviceId);
+      if (serviceId === 'storefront-bridge' && window.api.storefrontBridge) {
+        await window.api.storefrontBridge.clearCredentials();
+      } else {
+        await window.api.apiKeys.delete(serviceId);
+      }
       // Clear the per-platform summary so a stale identity doesn't linger
       // until the user reconnects.
       if (serviceId === 'facebook') setFbSummary(null);
@@ -238,6 +276,9 @@ export default function ApisPage() {
       else if (serviceId === 'tiktok') setTiktokSummary(null);
       else if (serviceId === 'shopee') setShopeeSummary(null);
       else if (serviceId === 'amazon') setAmazonSummary(null);
+      else if (serviceId === 'storefront-bridge' || serviceId === 'different-tees') {
+        setStorefrontBridgeSummary(null);
+      }
       await fetchKeys();
       toast.success('API key removed.');
     } catch {
@@ -281,6 +322,34 @@ export default function ApisPage() {
       toast.success(`Connected — ${result.shopName}`);
     } catch (err) {
       toast.error(`Shopify: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setSavingService(null);
+    }
+  };
+
+  const handleSaveStorefrontBridge = async (values: Record<string, string>) => {
+    const storefrontBridge = window.api.storefrontBridge;
+    if (!storefrontBridge) {
+      toast.error(
+        'Storefront Bridge is not loaded in this KING window. Fully quit and reopen KING, or restart npm run dev, so the latest Electron preload is used.',
+      );
+      return;
+    }
+    setSavingService('storefront-bridge');
+    try {
+      const result = await storefrontBridge.saveCredentials({
+        baseUrl: values.baseUrl!.trim(),
+        apiToken: values.apiToken!.trim(),
+      });
+      await fetchKeys();
+      setStorefrontBridgeSummary({
+        serverUrl: result.serverUrl,
+        printifyConfigured: result.printify.configured,
+        printifyShopId: result.printify.shopId,
+      });
+      toast.success(`Connected — ${result.serverUrl}`);
+    } catch (err) {
+      toast.error(`Storefront Bridge: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setSavingService(null);
     }
@@ -525,6 +594,46 @@ export default function ApisPage() {
           }
         },
       },
+    },
+    {
+      variant: 'multiField',
+      name: 'Storefront Bridge',
+      description:
+        'Publish King artwork into a storefront that exposes /api/king/status and the Printify catalog',
+      keyUrl: 'http://127.0.0.1:3000',
+      keyUrlLabel: 'Open local storefront',
+      saved: !!savedKeys['storefront-bridge'] || !!savedKeys['different-tees'],
+      maskedKey:
+        savedKeys['storefront-bridge']?.maskedKey ?? savedKeys['different-tees']?.maskedKey,
+      savedSummary: storefrontBridgeSummary
+        ? `${storefrontBridgeSummary.serverUrl ?? 'Storefront'} · Printify ${
+            storefrontBridgeSummary.printifyConfigured ? 'ready' : 'not configured'
+          }${storefrontBridgeSummary.printifyShopId ? ` · Shop ${storefrontBridgeSummary.printifyShopId}` : ''}`
+        : null,
+      saving: savingService === 'storefront-bridge',
+      buttonLabel: 'Connect',
+      footnote:
+        'KING validates by calling {Storefront URL}/api/king/status with Authorization: Bearer <King API token>. Enter the origin only, e.g. http://127.0.0.1:3000 locally or your HTTPS production domain.',
+      fields: [
+        {
+          key: 'baseUrl',
+          label: 'Storefront URL',
+          placeholder: 'http://127.0.0.1:3000 or https://your-storefront.com',
+          required: true,
+          type: 'text',
+          hint: 'Origin only. KING appends /api/king/status during Connect.',
+        },
+        {
+          key: 'apiToken',
+          label: 'King API token',
+          placeholder: 'Paste KING_API_TOKEN from the storefront env',
+          required: true,
+          type: 'password',
+          hint: 'Must exactly match KING_API_TOKEN in differenttees-website .env.local or hosting env.',
+        },
+      ],
+      onSave: handleSaveStorefrontBridge,
+      onDelete: () => handleDelete('storefront-bridge'),
     },
     {
       variant: 'multiField',

@@ -114,6 +114,51 @@ const api = {
     listOrders: () => ipcRenderer.invoke('amazon:listOrders'),
     listCatalogItems: () => ipcRenderer.invoke('amazon:listCatalogItems'),
   },
+  storefrontBridge: {
+    status: () => ipcRenderer.invoke('storefrontBridge:status'),
+    saveCredentials: (input: { baseUrl: string; apiToken: string }) =>
+      ipcRenderer.invoke('storefrontBridge:saveCredentials', input),
+    clearCredentials: () => ipcRenderer.invoke('storefrontBridge:clearCredentials'),
+    listCatalog: (query?: {
+      resource?: 'blueprints' | 'providers' | 'variants';
+      blueprintId?: number;
+      printProviderId?: number;
+      category?: string;
+      search?: string;
+      includeBlueprintId?: number;
+    }) => ipcRenderer.invoke('storefrontBridge:listCatalog', query),
+    uploadArtwork: (input: {
+      imageUrl: string;
+      filename?: string;
+      alt?: string;
+      blueprintId: number;
+      printProviderId: number;
+      removeBackground?: boolean;
+    }) => ipcRenderer.invoke('storefrontBridge:uploadArtwork', input),
+    createProduct: (input: {
+      title: string;
+      description?: string;
+      mediaId: string | number;
+      sourceMediaId?: string | number;
+      blueprintId: number;
+      printProviderId: number;
+      variantIds: number[];
+      retailPricesCents?: Record<string, number>;
+      catalogCategory?: string;
+      tags?: string[];
+      designTitle?: string;
+      prompt?: string;
+      correlationId?: string;
+    }) => ipcRenderer.invoke('storefrontBridge:createProduct', input),
+    listProducts: (limit?: number) => ipcRenderer.invoke('storefrontBridge:listProducts', limit),
+    addProductImage: (input: {
+      productId: string | number;
+      imageUrl: string;
+      filename?: string;
+      alt?: string;
+      setAsFeatured?: boolean;
+    }) => ipcRenderer.invoke('storefrontBridge:addProductImage', input),
+  },
   facebookAds: {
     status: () => ipcRenderer.invoke('facebookAds:status'),
     beginOAuth: () => ipcRenderer.invoke('facebookAds:beginOAuth'),

@@ -16,10 +16,10 @@ interface BaseProps {
   keyUrlLabel: string;
   /** When true, render the connected/saved state and a delete button. */
   saved: boolean;
-  savedSummary?: ReactNode;
-  maskedKey?: string;
+  savedSummary?: ReactNode | undefined;
+  maskedKey?: string | undefined;
   onDelete: () => void;
-  saving?: boolean;
+  saving?: boolean | undefined;
 }
 
 // ------ Simple token --------------------------------------------------------

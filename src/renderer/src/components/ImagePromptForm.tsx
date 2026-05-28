@@ -246,7 +246,11 @@ export default function ImagePromptForm({
               ? character.primaryReferenceIndex
               : 0;
           const primaryUrl = character.referenceImages[primaryIndex];
-          if (primaryUrl && resolvedUrls.length < MAX_REFERENCE_IMAGES && !resolvedUrls.includes(primaryUrl)) {
+          if (
+            primaryUrl &&
+            resolvedUrls.length < MAX_REFERENCE_IMAGES &&
+            !resolvedUrls.includes(primaryUrl)
+          ) {
             resolvedUrls.push(primaryUrl);
           }
         }

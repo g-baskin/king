@@ -96,7 +96,10 @@ function ScrollColumn({
           'shadow-[0_0_12px_-2px_var(--base-color-brand--cinamon)]',
           'scale-105',
         );
-        imgBox?.classList.remove('border-[var(--base-color-brand--umber)]/30', 'bg-[var(--base-color-brand--shell)]');
+        imgBox?.classList.remove(
+          'border-[var(--base-color-brand--umber)]/30',
+          'bg-[var(--base-color-brand--shell)]',
+        );
         focalSpan?.classList.add('text-[var(--base-color-brand--cinamon)]');
         focalSpan?.classList.remove('text-[var(--base-color-brand--umber)]');
         label?.classList.add('text-[var(--base-color-brand--cinamon)]');
@@ -109,7 +112,10 @@ function ScrollColumn({
           'shadow-[0_0_12px_-2px_var(--base-color-brand--cinamon)]',
           'scale-105',
         );
-        imgBox?.classList.add('border-[var(--base-color-brand--umber)]/30', 'bg-[var(--base-color-brand--shell)]');
+        imgBox?.classList.add(
+          'border-[var(--base-color-brand--umber)]/30',
+          'bg-[var(--base-color-brand--shell)]',
+        );
         focalSpan?.classList.remove('text-[var(--base-color-brand--cinamon)]');
         focalSpan?.classList.add('text-[var(--base-color-brand--umber)]');
         label?.classList.remove('text-[var(--base-color-brand--cinamon)]');
@@ -213,7 +219,7 @@ function ScrollColumn({
                 key={String(item)}
                 data-value={item}
                 role="option"
-                className="flex h-[100px] snap-center cursor-pointer flex-col items-center justify-center gap-2 p-2 text-[var(--base-color-brand--bean)] transition-all duration-300 ease-out select-none opacity-35 scale-90 blur-[0.5px]"
+                className="flex h-[100px] scale-90 cursor-pointer snap-center flex-col items-center justify-center gap-2 p-2 text-[var(--base-color-brand--bean)] opacity-35 blur-[0.5px] transition-all duration-300 ease-out select-none"
                 onClick={() => onItemClick(item)}
               >
                 <div
@@ -221,11 +227,7 @@ function ScrollColumn({
                   className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] shadow-inner transition-all duration-300"
                 >
                   {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt=""
-                      className="size-full object-cover opacity-90"
-                    />
+                    <img src={imageUrl} alt="" className="size-full object-cover opacity-90" />
                   ) : columnKey === 'focal' ? (
                     <span
                       data-focal-text="true"
@@ -265,13 +267,12 @@ export default function CinemaControlsModal({
     if (e.target === backdropRef.current) onClose();
   };
 
-  const update =
-    (key: keyof CinemaSettings) => (val: string | number) => {
-      onSettingsChange({
-        ...settings,
-        [key]: key === 'focal' ? Number(val) : val,
-      } as CinemaSettings);
-    };
+  const update = (key: keyof CinemaSettings) => (val: string | number) => {
+    onSettingsChange({
+      ...settings,
+      [key]: key === 'focal' ? Number(val) : val,
+    } as CinemaSettings);
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -298,7 +299,9 @@ export default function CinemaControlsModal({
       />
       <div
         className={`relative z-10 mx-4 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] p-5 shadow-2xl transition-all duration-200 md:p-8 ${
-          isOpen ? 'translate-y-0 scale-100 opacity-100' : 'pointer-events-none translate-y-2 scale-95 opacity-0'
+          isOpen
+            ? 'translate-y-0 scale-100 opacity-100'
+            : 'pointer-events-none translate-y-2 scale-95 opacity-0'
         }`}
         style={{ willChange: 'transform, opacity' }}
         onClick={(e) => e.stopPropagation()}

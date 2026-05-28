@@ -6,6 +6,7 @@ export interface GeneratedImageData {
   aspectRatio: string;
   createdAt: string;
   filename: string;
+  workspaceId?: string;
 }
 
 export interface EntityData {
@@ -31,6 +32,124 @@ export interface CustomAdReferenceData {
 export interface ApiKeyEntry {
   maskedKey: string;
   savedAt: string;
+}
+
+export interface StorefrontBridgeStatusResult {
+  connected: boolean;
+  baseUrl?: string;
+  serverUrl?: string;
+  printify?: {
+    configured: boolean;
+    shopId: string | null;
+  };
+  media?: {
+    publicUrlConfigured: boolean;
+  };
+}
+
+export interface StorefrontBridgeBlueprint {
+  id: number;
+  title: string;
+  brand?: string;
+  model?: string;
+  images?: string[];
+}
+
+export interface StorefrontBridgeProvider {
+  id: number;
+  title: string;
+}
+
+export interface StorefrontBridgeVariant {
+  id: number;
+  title: string;
+  options?: Record<string, string>;
+  placeholders?: Array<{ position: string; width?: number; height?: number }>;
+}
+
+export interface StorefrontBridgeCatalogResponse {
+  resource: string;
+  items?:
+    | StorefrontBridgeBlueprint[]
+    | StorefrontBridgeProvider[]
+    | { variants: StorefrontBridgeVariant[] };
+  total?: number;
+  catalogTotal?: number;
+  categories?: unknown;
+  blueprintId?: number;
+  printProviderId?: number;
+  printSpec?: {
+    width: number;
+    height: number;
+    position: string;
+    safeInsetPct: number;
+    label: string;
+  } | null;
+}
+
+export interface StorefrontBridgeArtworkUploadResult {
+  mediaId: string | number;
+  sourceMediaId: string | number;
+  url: string | null;
+  printSpec: {
+    width: number;
+    height: number;
+    dpi: number;
+    position: string;
+    safeInsetPct: number;
+    label: string;
+    upscaled?: boolean;
+    letterboxed?: boolean;
+    coverCropped?: boolean;
+  };
+  backgroundRemovalSkipped?: boolean;
+  backgroundRemovalReason?: string;
+}
+
+export interface StorefrontBridgeProductCreateResult {
+  printifyProductId: string;
+  payloadProductId: string | number;
+  created: boolean;
+  storefrontPath: string;
+  storefrontUrl: string | null;
+  mockupUrls: string[];
+  mockupsSynced: number;
+  mockupsFailed: number;
+  printifyMockupsPending: boolean;
+  printifyShopId: string;
+  printifyImageCount: number;
+  selectedMockupCount: number;
+  mockupDiagnostic?: string;
+  printSpec: {
+    width: number;
+    height: number;
+    dpi: number;
+    coverCropped: boolean;
+  };
+}
+
+export interface StorefrontBridgeProductSummary {
+  id: string | number;
+  title?: string;
+  slug?: string;
+  status?: string;
+  printifyProductId?: string | null;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  storefrontPath?: string | null;
+  storefrontUrl?: string | null;
+  updatedAt?: string;
+}
+
+export interface StorefrontBridgeProductImageCreateResult {
+  productId: string | number;
+  mediaId: string | number;
+  imageUrl: string | null;
+  imageAlt: string;
+  setAsFeatured: boolean;
+  storefrontPath: string | null;
+  storefrontUrl: string | null;
+  imageCount: number;
 }
 
 export interface FbBusinessRef {
@@ -157,6 +276,7 @@ export interface ElectronAPI {
     list: (
       cursor?: string,
       limit?: number,
+      workspaceId?: string,
     ) => Promise<{
       data: GeneratedImageData[];
       nextCursor: string | null;
@@ -166,6 +286,7 @@ export interface ElectronAPI {
       url: string;
       prompt: string;
       aspectRatio: string;
+      workspaceId?: string;
     }) => Promise<GeneratedImageData>;
     delete: (id: string) => Promise<{ success: boolean }>;
   };
@@ -321,6 +442,60 @@ export interface ElectronAPI {
       Array<{ id: string; status: string; total?: string; purchasedAt: string }>
     >;
     listCatalogItems: () => Promise<Array<{ asin: string; title?: string; brand?: string }>>;
+  };
+  storefrontBridge?: {
+    status: () => Promise<StorefrontBridgeStatusResult>;
+    saveCredentials: (input: { baseUrl: string; apiToken: string }) => Promise<{
+      ok: boolean;
+      service: string;
+      version: number;
+      serverUrl: string;
+      printify: { configured: boolean; shopId: string | null };
+      media: { publicUrlConfigured: boolean };
+    }>;
+    clearCredentials: () => Promise<void>;
+    listCatalog: (query?: {
+      resource?: 'blueprints' | 'providers' | 'variants';
+      blueprintId?: number;
+      printProviderId?: number;
+      category?: string;
+      search?: string;
+      includeBlueprintId?: number;
+    }) => Promise<StorefrontBridgeCatalogResponse>;
+    uploadArtwork: (input: {
+      imageUrl: string;
+      filename?: string;
+      alt?: string;
+      blueprintId: number;
+      printProviderId: number;
+      removeBackground?: boolean;
+    }) => Promise<StorefrontBridgeArtworkUploadResult>;
+    createProduct: (input: {
+      title: string;
+      description?: string;
+      mediaId: string | number;
+      sourceMediaId?: string | number;
+      blueprintId: number;
+      printProviderId: number;
+      variantIds: number[];
+      retailPricesCents?: Record<string, number>;
+      catalogCategory?: string;
+      tags?: string[];
+      designTitle?: string;
+      prompt?: string;
+      correlationId?: string;
+    }) => Promise<StorefrontBridgeProductCreateResult>;
+    listProducts: (limit?: number) => Promise<{
+      items: StorefrontBridgeProductSummary[];
+      total: number;
+    }>;
+    addProductImage: (input: {
+      productId: string | number;
+      imageUrl: string;
+      filename?: string;
+      alt?: string;
+      setAsFeatured?: boolean;
+    }) => Promise<StorefrontBridgeProductImageCreateResult>;
   };
   adReferences: {
     list: () => Promise<CustomAdReferenceData[]>;

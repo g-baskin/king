@@ -540,7 +540,14 @@ export default function CreateAdsPage() {
 
     const characterReferenceUrls = selectedCharacter?.referenceImages.slice(0, 2) ?? [];
     void runGeneration(adForRun, selectedProduct, outputMode, characterReferenceUrls);
-  }, [selectedAd, selectedProduct, runGeneration, selectedStyleImageUrl, aspectRatio, selectedCharacter]);
+  }, [
+    selectedAd,
+    selectedProduct,
+    runGeneration,
+    selectedStyleImageUrl,
+    aspectRatio,
+    selectedCharacter,
+  ]);
 
   // Download a generated ad to the user's filesystem — same mechanism the
   // Image page uses so the two flows stay consistent.
@@ -709,7 +716,11 @@ export default function CreateAdsPage() {
                 compareIds={compareIds}
                 onToggleCompare={(id) =>
                   setCompareIds((prev) =>
-                    prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 2 ? [...prev, id] : prev,
+                    prev.includes(id)
+                      ? prev.filter((x) => x !== id)
+                      : prev.length < 2
+                        ? [...prev, id]
+                        : prev,
                   )
                 }
                 workspaceId={activeWorkspace.id}
@@ -744,7 +755,9 @@ export default function CreateAdsPage() {
                 <button
                   type="button"
                   onClick={() => setStep('animate')}
-                  disabled={results.filter((r) => r.status === 'success').length === 0 || isGenerating}
+                  disabled={
+                    results.filter((r) => r.status === 'success').length === 0 || isGenerating
+                  }
                   className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-5 py-2.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)] disabled:cursor-not-allowed disabled:opacity-60"
                   style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
                 >
@@ -1150,7 +1163,9 @@ function BriefStep({
       </div>
       <div className="space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/35 bg-[var(--base-color-brand--shell)] p-3">
         <div className="space-y-1">
-          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Add character reference (optional)</p>
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">
+            Add character reference (optional)
+          </p>
           {charactersLoading ? (
             <p className="text-[11px] text-[var(--base-color-brand--umber)]">Loading characters…</p>
           ) : characters.length > 0 ? (
@@ -1188,11 +1203,15 @@ function BriefStep({
               })}
             </div>
           ) : (
-            <p className="text-[11px] text-[var(--base-color-brand--umber)]">No character entities found yet.</p>
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">
+              No character entities found yet.
+            </p>
           )}
         </div>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Optional: use Image tab base image as style source</p>
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">
+            Optional: use Image tab base image as style source
+          </p>
           {selectedStyleImageUrl && (
             <button
               type="button"
@@ -1222,13 +1241,19 @@ function BriefStep({
                   }`}
                   title={img.prompt}
                 >
-                  <img src={img.thumbnailUrl ?? img.url} alt="Style source" className="h-16 w-12 object-cover" />
+                  <img
+                    src={img.thumbnailUrl ?? img.url}
+                    alt="Style source"
+                    className="h-16 w-12 object-cover"
+                  />
                 </button>
               );
             })}
           </div>
         ) : (
-          <p className="text-[11px] text-[var(--base-color-brand--umber)]">No images found in Image tab yet.</p>
+          <p className="text-[11px] text-[var(--base-color-brand--umber)]">
+            No images found in Image tab yet.
+          </p>
         )}
       </div>
 
@@ -1382,10 +1407,6 @@ function ResultsStep({
   const [editableShots, setEditableShots] = useState<NonNullable<ResultSlot['talkShot']>[]>([]);
   const [isGeneratingAdSet, setIsGeneratingAdSet] = useState(false);
 
-  // #region agent log
-  fetch('http://127.0.0.1:7930/ingest/21662fbc-5082-4ca7-be36-52d64c92ad71',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3f328c'},body:JSON.stringify({sessionId:'3f328c',location:'CreateAdsPage.tsx:ResultsStep-mount',message:'ResultsStep rendered',data:{workspaceId,workspaceIdType:typeof workspaceId},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-  // #endregion
-
   useEffect(() => {
     setEditableShots(
       results
@@ -1416,7 +1437,12 @@ function ResultsStep({
 
       let createdCount = 0;
       for (const shot of editableShots) {
-        const prompt = buildTalkShotFramePrompt(selectedProduct.name, productBrief, aspectRatio, shot);
+        const prompt = buildTalkShotFramePrompt(
+          selectedProduct.name,
+          productBrief,
+          aspectRatio,
+          shot,
+        );
         const result = await window.api.generate.image({
           prompt,
           aspectRatio,
@@ -1442,7 +1468,8 @@ function ResultsStep({
       }
 
       if (createdCount === 0) toast.error('No frames were generated.');
-      else toast.success(`Generated ${createdCount} talk-to-cam frame${createdCount > 1 ? 's' : ''}.`);
+      else
+        toast.success(`Generated ${createdCount} talk-to-cam frame${createdCount > 1 ? 's' : ''}.`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to generate complete ad set.';
       toast.error(message);
@@ -1462,7 +1489,10 @@ function ResultsStep({
     return (
       <div className="space-y-3">
         <div className="rounded-2xl border-2 border-[var(--base-color-brand--cinamon)] bg-[var(--base-color-brand--champagne)] p-3">
-          <p className="text-center text-xs font-semibold text-[var(--base-color-brand--bean)]" style={{ fontFamily: 'var(--text-color--font-family--heading)' }}>
+          <p
+            className="text-center text-xs font-semibold text-[var(--base-color-brand--bean)]"
+            style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+          >
             Structured talking-head sequence for script + shot execution.
           </p>
           <div className="mt-2 flex justify-center">
@@ -1485,7 +1515,9 @@ function ResultsStep({
                   key={slot.id}
                   className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-4 text-xs text-[var(--base-color-brand--umber)]"
                 >
-                  {slot.status === 'pending' ? 'Generating shot plan…' : slot.error ?? 'Shot plan unavailable.'}
+                  {slot.status === 'pending'
+                    ? 'Generating shot plan…'
+                    : (slot.error ?? 'Shot plan unavailable.')}
                 </div>
               );
             }
@@ -1495,11 +1527,21 @@ function ResultsStep({
                 key={slot.id}
                 className="space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-4"
               >
-                <p className="text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]">{shot.angle}</p>
-                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">Script:</span> {shot.script}</p>
-                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">Framing:</span> {shot.framing}</p>
-                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">B-roll:</span> {shot.broll}</p>
-                <p className="text-xs text-[var(--base-color-brand--bean)]"><span className="font-semibold">On-screen text:</span> {shot.onScreenText}</p>
+                <p className="text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]">
+                  {shot.angle}
+                </p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]">
+                  <span className="font-semibold">Script:</span> {shot.script}
+                </p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]">
+                  <span className="font-semibold">Framing:</span> {shot.framing}
+                </p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]">
+                  <span className="font-semibold">B-roll:</span> {shot.broll}
+                </p>
+                <p className="text-xs text-[var(--base-color-brand--bean)]">
+                  <span className="font-semibold">On-screen text:</span> {shot.onScreenText}
+                </p>
               </div>
             );
           })}
@@ -1576,16 +1618,14 @@ function AnimateStep({
     .filter((slot) => slot.status === 'success' && slot.image)
     .map((slot) => slot.image!);
 
-  const sourceImageUrl = pinnedSourceImageUrl ?? selectedSourceImageUrl ?? successfulImages[0]?.url ?? null;
+  const sourceImageUrl =
+    pinnedSourceImageUrl ?? selectedSourceImageUrl ?? successfulImages[0]?.url ?? null;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7930/ingest/21662fbc-5082-4ca7-be36-52d64c92ad71',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3f328c'},body:JSON.stringify({sessionId:'3f328c',location:'CreateAdsPage.tsx:useEffect-images-list',message:'about to call images.list',data:{workspaceId,workspaceIdType:typeof workspaceId},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-      // #endregion
       try {
-        const page = await window.api.images.list(undefined, 24, workspaceId);
+        const page = await window.api.images.list(undefined, 24);
         if (!cancelled) setLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setLibraryImages([]);
@@ -1596,7 +1636,7 @@ function AnimateStep({
     return () => {
       cancelled = true;
     };
-  }, [workspaceId]);
+  }, []);
 
   useEffect(() => {
     if (!pinnedSourceImageUrl && !selectedSourceImageUrl && successfulImages[0]?.url) {
@@ -1624,7 +1664,9 @@ function AnimateStep({
     }
 
     if (typeof window.api.generate.video !== 'function') {
-      toast.error('Video generation is not loaded in this session. Please restart the app and try again.');
+      toast.error(
+        'Video generation is not loaded in this session. Please restart the app and try again.',
+      );
       return;
     }
 
@@ -1677,7 +1719,9 @@ function AnimateStep({
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">1) Pick source image</p>
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">
+            1) Pick source image
+          </p>
           {sourceImageUrl && (
             <button
               type="button"
@@ -1691,14 +1735,18 @@ function AnimateStep({
               }`}
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
-              {pinnedSourceImageUrl === sourceImageUrl ? 'Pinned source image' : 'Pin source image for session'}
+              {pinnedSourceImageUrl === sourceImageUrl
+                ? 'Pinned source image'
+                : 'Pin source image for session'}
             </button>
           )}
         </div>
 
         {successfulImages.length > 0 && (
           <div className="space-y-1">
-            <p className="text-[11px] text-[var(--base-color-brand--umber)]">From this Create Ads run</p>
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">
+              From this Create Ads run
+            </p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {successfulImages.map((img) => {
                 const active = sourceImageUrl === img.url;
@@ -1726,7 +1774,9 @@ function AnimateStep({
         <div className="space-y-1">
           <p className="text-[11px] text-[var(--base-color-brand--umber)]">From Image library</p>
           {isLibraryLoading ? (
-            <p className="text-[11px] text-[var(--base-color-brand--umber)]">Loading library images…</p>
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">
+              Loading library images…
+            </p>
           ) : libraryImages.length > 0 ? (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {libraryImages.map((img) => {
@@ -1745,13 +1795,19 @@ function AnimateStep({
                     }`}
                     title={img.prompt}
                   >
-                    <img src={img.thumbnailUrl ?? img.url} alt="Library source" className="h-20 w-16 object-cover" />
+                    <img
+                      src={img.thumbnailUrl ?? img.url}
+                      alt="Library source"
+                      className="h-20 w-16 object-cover"
+                    />
                   </button>
                 );
               })}
             </div>
           ) : (
-            <p className="text-[11px] text-[var(--base-color-brand--umber)]">No image-library items found yet.</p>
+            <p className="text-[11px] text-[var(--base-color-brand--umber)]">
+              No image-library items found yet.
+            </p>
           )}
         </div>
 
@@ -1763,7 +1819,9 @@ function AnimateStep({
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">2) Choose prompt preset</p>
+        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">
+          2) Choose prompt preset
+        </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -1855,7 +1913,9 @@ function AnimateStep({
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">3) Duration and generate</p>
+        <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">
+          3) Duration and generate
+        </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -1890,7 +1950,11 @@ function AnimateStep({
             {isGeneratingVideo ? 'Generating video…' : 'Generate Video'}
           </button>
           {videoUrl && (
-            <button type="button" onClick={() => void handleDownloadVideo()} className="btn-shell btn-sm">
+            <button
+              type="button"
+              onClick={() => void handleDownloadVideo()}
+              className="btn-shell btn-sm"
+            >
               Download Video
             </button>
           )}
@@ -1899,14 +1963,21 @@ function AnimateStep({
 
       {videoUrl && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">Generated preview</p>
-          <video src={videoUrl} controls className="w-full rounded-xl border border-[var(--base-color-brand--umber)]/30" />
+          <p className="text-xs font-semibold text-[var(--base-color-brand--bean)]">
+            Generated preview
+          </p>
+          <video
+            src={videoUrl}
+            controls
+            className="w-full rounded-xl border border-[var(--base-color-brand--umber)]/30"
+          />
         </div>
       )}
 
       {productBrief.trim() && (
         <p className="text-xs text-[var(--base-color-brand--umber)]">
-          Brief context included: “{productBrief.trim().slice(0, 140)}{productBrief.trim().length > 140 ? '…' : ''}”
+          Brief context included: “{productBrief.trim().slice(0, 140)}
+          {productBrief.trim().length > 140 ? '…' : ''}”
         </p>
       )}
     </div>

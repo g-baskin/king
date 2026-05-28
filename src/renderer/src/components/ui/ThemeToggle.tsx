@@ -15,7 +15,9 @@ export function ThemeToggle() {
       }`}
       aria-pressed={dark}
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={dark ? 'Dark mode is ON — switch to light mode' : 'Light mode is ON — switch to dark mode'}
+      title={
+        dark ? 'Dark mode is ON — switch to light mode' : 'Light mode is ON — switch to dark mode'
+      }
       style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
     >
       <span

@@ -5,4 +5,5 @@ export interface GeneratedImage {
   prompt: string;
   aspectRatio: string;
   createdAt: string;
+  workspaceId?: string;
 }

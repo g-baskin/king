@@ -188,7 +188,11 @@ export function useEntityManagement({
   const confirmDelete = useCallback(async () => {
     if (!deleteEntityId) return;
     try {
-      const result = await window.api.entities.delete(entityType, deleteEntityId, activeWorkspaceId);
+      const result = await window.api.entities.delete(
+        entityType,
+        deleteEntityId,
+        activeWorkspaceId,
+      );
       if (result.success) {
         setEntities((prev) => prev.filter((e) => e.id !== deleteEntityId));
       }

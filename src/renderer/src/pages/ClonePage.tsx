@@ -104,7 +104,7 @@ export default function ClonePage() {
     return () => {
       cancelled = true;
     };
-  }, [activeWorkspaceId]);
+  }, []);
 
   const selectedCharacter: EntityData | undefined = useMemo(
     () => characters.find((c) => c.id === selectedCharacterId),

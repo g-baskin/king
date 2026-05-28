@@ -10,7 +10,10 @@ interface CharactersPageProps {
   }) => void;
 }
 
-export default function CharactersPage({ onNavigate, onCharacterConsistencyIntent }: CharactersPageProps) {
+export default function CharactersPage({
+  onNavigate,
+  onCharacterConsistencyIntent,
+}: CharactersPageProps) {
   return (
     <EntityManagementPage
       entityType="characters"

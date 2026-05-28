@@ -1453,7 +1453,7 @@ const rawPrompts: Omit<Prompt, 'category'>[] = [
   {
     id: 'ugc-apparel-bed-layout',
     title: 'UGC Bed Layout',
-    description: 'Use case: what I\'m wearing today quick post',
+    description: "Use case: what I'm wearing today quick post",
     image: ugcIphoneLook,
     prompt: `Casual UGC bedroom scene with the product laid on a bed with accessories (cap, watch, sneakers), overhead smartphone angle, soft morning light, real lived-in vibe, clean but not over-styled, 9:16 vertical social format.`,
   },

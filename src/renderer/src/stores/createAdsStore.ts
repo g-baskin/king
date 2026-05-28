@@ -259,11 +259,12 @@ export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
  */
 function buildTalkToCamShots(productName: string, brief: string): TalkToCamShot[] {
   const summary = brief.trim() || `Expert talk-to-camera ad for ${productName}.`;
-  return [
+  const shots: TalkToCamShot[] = [
     {
       angle: 'Hook',
       script: `"If you're struggling with this, ${productName} might be your fastest fix."`,
-      framing: 'Direct-to-camera medium close-up, eye-level, confident delivery in first 2 seconds.',
+      framing:
+        'Direct-to-camera medium close-up, eye-level, confident delivery in first 2 seconds.',
       broll: `Open with expert holding ${productName} near chest level; quick cut to product close-up.`,
       onScreenText: "Stop scrolling: here's the fix",
     },
@@ -288,7 +289,8 @@ function buildTalkToCamShots(productName: string, brief: string): TalkToCamShot[
       broll: `Final hero hold of ${productName} with confident nod; end on clean product hero frame.`,
       onScreenText: 'Try it now',
     },
-  ].map((shot) => ({ ...shot, broll: `${shot.broll} Brief context: ${summary}` }));
+  ];
+  return shots.map((shot) => ({ ...shot, broll: `${shot.broll} Brief context: ${summary}` }));
 }
 
 async function generateSingleSlot(

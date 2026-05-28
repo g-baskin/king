@@ -13,8 +13,10 @@ import { registerGoogleAdsHandlers } from './googleAds';
 import { registerTiktokShopHandlers } from './tiktokShop';
 import { registerShopeeHandlers } from './shopee';
 import { registerAmazonHandlers } from './amazon';
+import { registerStorefrontBridgeHandlers } from './storefrontBridge';
 import { registerUpdaterHandlers } from './updater';
 import { secureHandle } from './validateSender';
+import { getStorefrontBridgeCredentials } from '../services/storefrontBridgeCredentials';
 
 // Hosts the renderer is allowed to open in the user's browser. Keep this in
 // sync with the `keyUrl` / documentation URLs referenced from
@@ -45,8 +47,21 @@ function isAllowedExternalUrl(url: string): boolean {
   } catch {
     return false;
   }
-  if (parsed.protocol !== 'https:') return false;
   const host = parsed.hostname.toLowerCase();
+  const isLocalHost = host === '127.0.0.1' || host === 'localhost' || host === '::1';
+  if (parsed.protocol !== 'https:' && !(parsed.protocol === 'http:' && isLocalHost)) return false;
+
+  const storefrontBridge = getStorefrontBridgeCredentials();
+  if (storefrontBridge) {
+    try {
+      const configured = new URL(storefrontBridge.baseUrl);
+      if (host === configured.hostname.toLowerCase()) return true;
+    } catch {
+      // Ignore malformed saved state; fall through to static allowlist.
+    }
+  }
+
+  if (isLocalHost) return true;
   if (ALLOWED_EXTERNAL_HOSTS.has(host)) return true;
   for (const allowed of ALLOWED_EXTERNAL_HOSTS) {
     if (host.endsWith('.' + allowed)) return true;
@@ -68,6 +83,7 @@ export function registerIpcHandlers(): void {
   registerTiktokShopHandlers();
   registerShopeeHandlers();
   registerAmazonHandlers();
+  registerStorefrontBridgeHandlers();
   registerUpdaterHandlers();
 
   // Renderer errors (from React 19 root-level callbacks) funnel here so they
