@@ -10,7 +10,7 @@ function wrap<A extends unknown[], R>(fn: (...args: A) => Promise<R>): (...args:
     } catch (err) {
       if (err instanceof TelegramApiError) {
         log.warn('[telegram] api error', err.message);
-        const e = new Error(err.message) as Error & { code?: number };
+        const e = new Error(err.message) as Error & { code?: number | undefined };
         e.code = err.errorCode;
         throw e;
       }

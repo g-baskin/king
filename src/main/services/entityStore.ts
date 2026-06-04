@@ -12,7 +12,7 @@ export interface StoredEntity {
   createdAt: string;
   productType?: string;
   primaryReferenceIndex?: number;
-  workspaceId?: string;
+  workspaceId?: string | undefined;
 }
 
 interface EntityStore {
@@ -88,7 +88,7 @@ export async function addEntity(
       createdAt: new Date().toISOString(),
       primaryReferenceIndex: clampedPrimaryIndex,
       ...(productType ? { productType } : {}),
-      workspaceId,
+      ...(workspaceId !== undefined ? { workspaceId } : {}),
     };
     store.entities.push(entity);
     writeJsonAtomic(path, store);

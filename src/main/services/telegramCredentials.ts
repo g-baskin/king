@@ -3,8 +3,8 @@ import { jsonCodec, loadCredentials, saveCredentials, clearCredentials } from '.
 export interface TelegramCredentials {
   botToken: string;
   /** Cached identity from the last `getMe`. */
-  botId?: number;
-  botUsername?: string;
+  botId?: number | undefined;
+  botUsername?: string | undefined;
 }
 
 const SERVICE = 'telegram';

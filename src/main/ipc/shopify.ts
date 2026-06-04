@@ -14,7 +14,7 @@ function wrap<A extends unknown[], R>(fn: (...args: A) => Promise<R>): (...args:
     } catch (err) {
       if (err instanceof ShopifyApiError) {
         log.warn('[shopify] api error', err.message, { status: err.status });
-        const e = new Error(err.message) as Error & { code?: number };
+        const e = new Error(err.message) as Error & { code?: number | undefined };
         e.code = err.status;
         throw e;
       }

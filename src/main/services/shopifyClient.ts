@@ -19,9 +19,9 @@ import type { ShopifyCredentials } from './shopifyCredentials';
 export const SHOPIFY_API_VERSION = '2026-04';
 
 export class ShopifyApiError extends Error {
-  status?: number;
+  status?: number | undefined;
   shopifyErrors?: unknown;
-  constructor(message: string, opts: { status?: number; shopifyErrors?: unknown } = {}) {
+  constructor(message: string, opts: { status?: number | undefined; shopifyErrors?: unknown } = {}) {
     super(message);
     this.name = 'ShopifyApiError';
     this.status = opts.status;
@@ -85,8 +85,8 @@ export interface ShopifyProductSummary {
   id: string;
   title: string;
   status: string;
-  vendor?: string;
-  image?: string;
+  vendor?: string | undefined;
+  image?: string | undefined;
 }
 
 interface ProductsRest {

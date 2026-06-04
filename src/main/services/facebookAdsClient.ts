@@ -142,12 +142,12 @@ export interface EndToEndResult {
 
 export class FacebookApiError extends Error {
   code: number | string;
-  fbtraceId?: string;
-  type?: string;
+  fbtraceId?: string | undefined;
+  type?: string | undefined;
 
   constructor(
     message: string,
-    opts: { code?: number | string; fbtraceId?: string; type?: string } = {},
+    opts: { code?: number | string | undefined; fbtraceId?: string | undefined; type?: string | undefined } = {},
   ) {
     super(message);
     this.name = 'FacebookApiError';
@@ -310,7 +310,7 @@ export async function beginFacebookOAuth(): Promise<{ accessToken: string }> {
  */
 export async function exchangeForLongLivedToken(
   shortLivedToken: string,
-): Promise<{ accessToken: string; expiresAt?: number }> {
+): Promise<{ accessToken: string; expiresAt?: number | undefined }> {
   const appId = process.env.FACEBOOK_APP_ID;
   const appSecret = process.env.FACEBOOK_APP_SECRET;
   if (!appId || !appSecret) {

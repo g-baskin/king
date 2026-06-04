@@ -54,7 +54,7 @@ const SELLER_CENTRAL_BY_REGION: Record<AmazonRegion, string> = {
 };
 
 export class AmazonApiError extends Error {
-  code?: number | string;
+  code?: number | string | undefined;
   details?: unknown;
   constructor(message: string, opts: { code?: number | string; details?: unknown } = {}) {
     super(message);
@@ -212,7 +212,7 @@ async function readJson<T>(response: Response): Promise<T> {
 export interface AmazonOrderRow {
   id: string;
   status: string;
-  total?: string;
+  total?: string | undefined;
   purchasedAt: string;
 }
 
@@ -251,8 +251,8 @@ export async function listOrders(creds: AmazonSpApiCredentials): Promise<AmazonO
 
 export interface AmazonCatalogItem {
   asin: string;
-  title?: string;
-  brand?: string;
+  title?: string | undefined;
+  brand?: string | undefined;
 }
 
 export async function listCatalogItems(

@@ -34,7 +34,7 @@ function wrap<A extends unknown[], R>(fn: (...args: A) => Promise<R>): (...args:
         log.warn('[fb] api error', err.message, { code: err.code, fbtraceId: err.fbtraceId });
         const e = new Error(err.message) as Error & {
           code?: number | string;
-          fbtraceId?: string;
+          fbtraceId?: string | undefined;
         };
         e.code = err.code;
         e.fbtraceId = err.fbtraceId;
@@ -97,7 +97,11 @@ export function registerFacebookAdsHandlers(): void {
     wrap(
       async (
         _event,
-        input: { accessToken: string; defaultAdAccountId?: string; defaultPageId?: string },
+        input: {
+          accessToken: string;
+          defaultAdAccountId?: string | undefined;
+          defaultPageId?: string | undefined;
+        },
       ) => {
         const inputToken = input.accessToken?.trim();
         if (!inputToken) throw new Error('Access token is required');

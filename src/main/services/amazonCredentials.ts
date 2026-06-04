@@ -9,7 +9,7 @@ export interface AmazonSpApiCredentials {
   accessToken: string;
   /** Epoch ms for `accessToken`. */
   expiresAt: number;
-  sellingPartnerId?: string;
+  sellingPartnerId?: string | undefined;
   marketplaceIds: string[];
   region: AmazonRegion;
 }

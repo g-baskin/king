@@ -14,8 +14,8 @@ type RevealProps = {
   /** Starting scale (for a subtle zoom-in effect). */
   scale?: number;
   as?: 'div' | 'section' | 'span' | 'li' | 'header' | 'footer' | 'p';
-  className?: string;
-  style?: HTMLMotionProps<'div'>['style'];
+  className?: string | undefined;
+  style?: HTMLMotionProps<'div'>['style'] | undefined;
 };
 
 /**
@@ -48,8 +48,8 @@ export function Reveal({
 
   return (
     <MotionTag
-      className={className}
-      style={style}
+      {...(className !== undefined ? { className } : {})}
+      {...(style !== undefined ? { style } : {})}
       initial={{ opacity: 0, y, scale }}
       {...(trigger === 'view'
         ? { whileInView: { opacity: 1, y: 0, scale: 1 }, viewport: { once: true, amount: 0.2 } }

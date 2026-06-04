@@ -32,7 +32,7 @@ export interface BeginOAuthResult {
   authUrl: string;
   state: string;
   /** PKCE verifier the caller passes to its token-exchange endpoint. */
-  codeVerifier?: string;
+  codeVerifier?: string | undefined;
   redirectUri: string;
   /** Resolves once the user finishes consent. Rejects on timeout / provider error. */
   callback: Promise<OAuthCallback>;
@@ -41,7 +41,7 @@ export interface BeginOAuthResult {
 export interface BuildAuthUrlContext {
   redirectUri: string;
   state: string;
-  codeChallenge?: string;
+  codeChallenge?: string | undefined;
   scopes: string[];
 }
 

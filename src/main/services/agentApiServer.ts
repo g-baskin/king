@@ -118,9 +118,9 @@ function requireCreds() {
 }
 
 async function fetchImageBytes(input: {
-  imageBase64?: string;
-  imageUrl?: string;
-  filename?: string;
+  imageBase64?: string | undefined;
+  imageUrl?: string | undefined;
+  filename?: string | undefined;
 }): Promise<{ bytes: Buffer; filename: string }> {
   if (input.imageBase64) {
     const base = input.imageBase64.includes(',')

@@ -36,7 +36,7 @@ function appSecret(): string {
 }
 
 export class TikTokApiError extends Error {
-  code?: number | string;
+  code?: number | string | undefined;
   constructor(message: string, code?: number | string) {
     super(message);
     this.name = 'TikTokApiError';
@@ -107,7 +107,7 @@ async function signedFetch(
         headers: rawBody
           ? { 'Content-Type': 'application/json', 'x-tts-access-token': token }
           : { 'x-tts-access-token': token },
-        body: rawBody,
+        ...(rawBody !== undefined ? { body: rawBody } : {}),
       });
     },
   });
@@ -245,7 +245,7 @@ export interface TikTokProductSummary {
   title: string;
   status: string;
   price?: string;
-  image?: string;
+  image?: string | undefined;
 }
 
 export async function listProducts(creds: TikTokShopCredentials): Promise<TikTokProductSummary[]> {
@@ -274,7 +274,7 @@ export async function listProducts(creds: TikTokShopCredentials): Promise<TikTok
 export interface TikTokOrderSummary {
   id: string;
   status: string;
-  total?: string;
+  total?: string | undefined;
   createdAt: string;
 }
 

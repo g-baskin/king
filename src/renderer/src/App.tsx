@@ -34,8 +34,8 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState<PageType>('image');
   const [prefillPrompt, setPrefillPrompt] = useState<string | null>(null);
   const [prefillPromptMeta, setPrefillPromptMeta] = useState<{
-    requiresProduct?: boolean;
-    recommendedEntityType?: 'product' | 'character';
+    requiresProduct?: boolean | undefined;
+    recommendedEntityType?: 'product' | 'character' | undefined;
   } | null>(null);
   const [imageIntent, setImageIntent] = useState<CharacterConsistencyIntent | null>(null);
 

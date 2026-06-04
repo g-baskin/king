@@ -3,11 +3,13 @@ import type { PageType } from '@/App';
 
 interface CharactersPageProps {
   onNavigate: (page: PageType) => void;
-  onCharacterConsistencyIntent?: (payload: {
-    characterEntity: string;
-    prompt: string;
-    templateImageUrl: string;
-  }) => void;
+  onCharacterConsistencyIntent?:
+    | ((payload: {
+        characterEntity: string;
+        prompt: string;
+        templateImageUrl: string;
+      }) => void)
+    | undefined;
 }
 
 export default function CharactersPage({

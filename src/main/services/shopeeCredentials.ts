@@ -7,7 +7,7 @@ export interface ShopeeCredentials {
   expiresAt: number;
   shopId: number;
   /** Region/host suffix, e.g. `partner.shopeemobile.com` (live). */
-  region?: string;
+  region?: string | undefined;
 }
 
 const SERVICE = 'shopee';

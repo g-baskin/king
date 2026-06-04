@@ -11,7 +11,7 @@ import type { TelegramCredentials } from './telegramCredentials';
 const BASE = 'https://api.telegram.org';
 
 export class TelegramApiError extends Error {
-  errorCode?: number;
+  errorCode?: number | undefined;
   constructor(message: string, errorCode?: number) {
     super(message);
     this.name = 'TelegramApiError';
@@ -56,7 +56,7 @@ export interface TelegramUser {
   id: number;
   is_bot: boolean;
   first_name: string;
-  username?: string;
+  username?: string | undefined;
 }
 
 export async function getMe(token: string): Promise<TelegramUser> {

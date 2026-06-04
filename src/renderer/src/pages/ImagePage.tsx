@@ -19,8 +19,8 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 interface ImagePageProps {
   prefillPrompt?: string | null;
   prefillPromptMeta?: {
-    requiresProduct?: boolean;
-    recommendedEntityType?: 'product' | 'character';
+    requiresProduct?: boolean | undefined;
+    recommendedEntityType?: 'product' | 'character' | undefined;
   } | null;
   onPromptConsumed?: () => void;
   imageIntent?: CharacterConsistencyIntent | null;

@@ -42,8 +42,8 @@ export interface Prompt {
   image?: string;
   prompt: string;
   category: PromptCategory;
-  requiresProduct?: boolean;
-  recommendedEntityType?: 'product' | 'character';
+  requiresProduct?: boolean | undefined;
+  recommendedEntityType?: 'product' | 'character' | undefined;
 }
 
 // Import all product prompt images

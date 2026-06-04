@@ -6,8 +6,8 @@ export interface ShopifyCredentials {
   /** Admin API access token (`shpat_…` for Custom Apps). */
   accessToken: string;
   /** Cached shop metadata from validation. */
-  shopName?: string;
-  currency?: string;
+  shopName?: string | undefined;
+  currency?: string | undefined;
 }
 
 const SERVICE = 'shopify';

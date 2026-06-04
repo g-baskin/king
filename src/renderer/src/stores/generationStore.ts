@@ -4,7 +4,7 @@ export interface PendingGeneration {
   id: string;
   type: 'image';
   startedAt: number;
-  prompt?: string;
+  prompt?: string | undefined;
 }
 
 interface GenerationStore {

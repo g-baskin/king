@@ -1279,7 +1279,7 @@ function FormatStep({
 }: {
   aspectRatio: string;
   onAspectRatioChange: (v: string) => void;
-  selectedAd?: AdReference;
+  selectedAd?: AdReference | undefined;
   outputMode: CreateAdsOutputMode;
   onOutputModeChange: (mode: CreateAdsOutputMode) => void;
 }) {
@@ -1393,9 +1393,9 @@ function ResultsStep({
   results: ResultSlot[];
   aspectRatio: string;
   outputMode: CreateAdsOutputMode;
-  selectedAd?: AdReference;
-  selectedProduct?: EntityData;
-  selectedCharacter?: EntityData;
+  selectedAd?: AdReference | undefined;
+  selectedProduct?: EntityData | undefined;
+  selectedCharacter?: EntityData | undefined;
   productBrief: string;
   selectedStyleImageUrl: string | null;
   onOpen: (image: GeneratedImage) => void;
@@ -1581,8 +1581,8 @@ function AnimateStep({
   aspectRatio,
   results,
 }: {
-  selectedProduct?: EntityData;
-  selectedAd?: AdReference;
+  selectedProduct?: EntityData | undefined;
+  selectedAd?: AdReference | undefined;
   productBrief: string;
   aspectRatio: string;
   results: ResultSlot[];

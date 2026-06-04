@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/KenKaiii/king/releases/latest"><img src="https://img.shields.io/github/v/release/KenKaiii/king?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>
+  <a href="https://spdx.org/licenses/AGPL-3.0-or-later.html"><img src="https://img.shields.io/badge/License-AGPL--3.0--or--later-orange.svg?style=for-the-badge" alt="AGPL-3.0-or-later License"></a>
   <a href="https://youtube.com/@kenkaidoesai"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
   <a href="https://skool.com/kenkai"><img src="https://img.shields.io/badge/Skool-Community-7C3AED?style=for-the-badge" alt="Skool"></a>
 </p>

@@ -9,7 +9,7 @@ export interface TikTokShopCredentials {
   expiresAt: number;
   shopCipher: string;
   shopId: string;
-  shopName?: string;
+  shopName?: string | undefined;
   region: TikTokRegion;
 }
 

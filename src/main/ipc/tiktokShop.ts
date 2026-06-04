@@ -19,7 +19,7 @@ function wrap<A extends unknown[], R>(fn: (...args: A) => Promise<R>): (...args:
     } catch (err) {
       if (err instanceof TikTokApiError) {
         log.warn('[tiktok] api error', err.message);
-        const e = new Error(err.message) as Error & { code?: number | string };
+        const e = new Error(err.message) as Error & { code?: number | string | undefined };
         e.code = err.code;
         throw e;
       }

@@ -1,0 +1,125 @@
+Project Directory Tree (depth 5, excluding node_modules/dist/build/etc):
+
+./
+├── library/
+│   ├── knowledge-base/
+│   │   └── wiki/
+│   │       ├── comparisons/
+│   │       ├── concepts/
+│   │       │   ├── image-generation-pipeline.md
+│   │       │   ├── local-file-protocol.md
+│   │       │   ├── renderer-main-ipc-flow.md
+│   │       │   └── secrets-and-credentials.md
+│   │       ├── decisions/
+│   │       ├── entities/
+│   │       │   ├── api-key-store.md
+│   │       │   ├── ipc-generate.md
+│   │       │   ├── ipc-registry.md
+│   │       │   ├── ipc-shopify-handlers.md
+│   │       │   └── main-process-entry.md
+│   │       ├── meta/
+│   │       ├── questions/
+│   │       ├── hot.md
+│   │       ├── index.md
+│   │       ├── log.md
+│   │       └── overview.md
+│   ├── notes/
+│   ├── qa/
+│   └── requirements/
+│       ├── features/
+│       │   └── completed/
+│       └── issues/
+│           └── completed/
+├── scripts/
+│   └── generate-icons.sh
+├── src/
+│   ├── main/
+│   │   ├── ipc/
+│   │   │   ├── adReferences.ts
+│   │   │   ├── amazon.ts
+│   │   │   ├── apiKeys.ts
+│   │   │   ├── entities.ts
+│   │   │   └── facebookAds.ts
+│   │   ├── services/
+│   │   │   ├── adReferenceStore.ts
+│   │   │   ├── agentApiServer.ts
+│   │   │   ├── amazonClient.ts
+│   │   │   ├── amazonCredentials.ts
+│   │   │   └── apiKeyStore.ts
+│   │   └── index.ts
+│   ├── preload/
+│   │   └── index.ts
+│   └── renderer/
+│       ├── public/
+│       │   └── assets/
+│       │       └── cinema/
+│       ├── src/
+│       │   ├── assets/
+│       │   │   ├── ad-references/
+│       │   │   ├── fonts/
+│       │   │   └── prompts/
+│       │   ├── components/
+│       │   │   ├── api/
+│       │   │   ├── entity/
+│       │   │   ├── facebook/
+│       │   │   ├── icons/
+│       │   │   ├── image/
+│       │   │   ├── layout/
+│       │   │   ├── ui/
+│       │   │   ├── ImageDetailPanel.tsx
+│       │   │   └── ImagePromptForm.tsx
+│       │   ├── hooks/
+│       │   │   ├── index.ts
+│       │   │   ├── useDemoMode.ts
+│       │   │   ├── useEntityManagement.ts
+│       │   │   ├── useImages.ts
+│       │   │   └── useThemeMode.ts
+│       │   ├── lib/
+│       │   │   ├── constants/
+│       │   │   ├── mock/
+│       │   │   ├── adReferences.ts
+│       │   │   ├── aspectRatio.ts
+│       │   │   ├── cinema-prompt.ts
+│       │   │   ├── imageHash.ts
+│       │   │   └── imageLoadedCache.ts
+│       │   ├── pages/
+│       │   │   ├── ApisPage.tsx
+│       │   │   ├── CharactersPage.tsx
+│       │   │   ├── ClonePage.tsx
+│       │   │   ├── CreateAdsPage.tsx
+│       │   │   └── FacebookAdsPage.tsx
+│       │   ├── stores/
+│       │   │   ├── cloneStore.ts
+│       │   │   ├── createAdsStore.ts
+│       │   │   ├── facebookAccountStore.ts
+│       │   │   ├── generationStore.ts
+│       │   │   └── imageIntentStore.ts
+│       │   ├── styles/
+│       │   │   ├── tokens.css
+│       │   │   └── ui.css
+│       │   ├── types/
+│       │   │   ├── assets.d.ts
+│       │   │   └── electron.d.ts
+│       │   ├── App.tsx
+│       │   ├── globals.css
+│       │   └── main.tsx
+│       └── index.html
+├── tests/
+│   ├── main/
+│   │   └── services/
+│   │       ├── apiKeyStore.test.ts
+│   │       ├── entityStore.test.ts
+│   │       ├── fileManager.test.ts
+│   │       └── imageStore.test.ts
+│   └── renderer/
+│       ├── lib/
+│       │   ├── constants.test.ts
+│       │   ├── imageLoadedCache.test.ts
+│       │   └── prompts.test.ts
+│       └── stores/
+│           └── generationStore.test.ts
+├── ARCHITECTURE.md
+├── CLAUDE.md
+├── ECOMMERCE_BACKLOG.md
+├── ECOMMERCE_FEATURES_ROADMAP.md
+└── LICENSE

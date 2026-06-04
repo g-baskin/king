@@ -36,7 +36,7 @@ function host(): string {
 }
 
 export class ShopeeApiError extends Error {
-  code?: number | string;
+  code?: number | string | undefined;
   constructor(message: string, code?: number | string) {
     super(message);
     this.name = 'ShopeeApiError';
@@ -86,7 +86,7 @@ async function shopApi<T>(creds: ShopeeCredentials, input: ShopApiInput): Promis
       return fetch(url.toString(), {
         method: input.method,
         headers: input.body ? { 'Content-Type': 'application/json' } : {},
-        body: input.body !== undefined ? JSON.stringify(input.body) : undefined,
+        ...(input.body !== undefined ? { body: JSON.stringify(input.body) } : {}),
       });
     },
   });
@@ -203,7 +203,6 @@ export async function beginShopeeOAuth(): Promise<ShopeeCredentials> {
     refreshToken: tokens.refresh_token,
     expiresAt: Date.now() + (tokens.expire_in ?? 14400) * 1000,
     shopId,
-    region: undefined,
   };
 }
 
@@ -212,9 +211,9 @@ export async function beginShopeeOAuth(): Promise<ShopeeCredentials> {
 export interface ShopeeProductSummary {
   id: number;
   name: string;
-  price?: number;
-  stock?: number;
-  image?: string;
+  price?: number | undefined;
+  stock?: number | undefined;
+  image?: string | undefined;
 }
 
 export async function listProducts(creds: ShopeeCredentials): Promise<ShopeeProductSummary[]> {
@@ -250,7 +249,7 @@ export async function listProducts(creds: ShopeeCredentials): Promise<ShopeeProd
 export interface ShopeeOrderSummary {
   id: string;
   status: string;
-  total?: string;
+  total?: string | undefined;
   createdAt: string;
 }
 

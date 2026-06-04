@@ -6,11 +6,11 @@ export interface GoogleAdsCredentials {
   /** Epoch ms. */
   expiresAt: number;
   /** Manager-account (MCC) id, if the user is operating one. Strips dashes. */
-  loginCustomerId?: string;
+  loginCustomerId?: string | undefined;
   /** Default 10-digit customer id used by `searchCampaigns` etc. */
-  defaultCustomerId?: string;
+  defaultCustomerId?: string | undefined;
   /** All customer ids accessible to the authorised user (cached from `listAccessibleCustomers`). */
-  customerIds?: string[];
+  customerIds?: string[] | undefined;
   scopes: string[];
 }
 

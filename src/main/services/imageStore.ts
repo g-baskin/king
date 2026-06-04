@@ -9,7 +9,7 @@ export interface StoredImage {
   aspectRatio: string;
   createdAt: string;
   filename: string;
-  workspaceId?: string;
+  workspaceId?: string | undefined;
 }
 
 interface ImageStore {

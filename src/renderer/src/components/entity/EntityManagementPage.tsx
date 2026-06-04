@@ -21,11 +21,13 @@ interface EntityManagementPageProps {
   deleteTitle: string;
   deleteMessage: string;
   onNavigate: (page: PageType) => void;
-  onCharacterConsistencyIntent?: (payload: {
-    characterEntity: string;
-    prompt: string;
-    templateImageUrl: string;
-  }) => void;
+  onCharacterConsistencyIntent?:
+    | ((payload: {
+        characterEntity: string;
+        prompt: string;
+        templateImageUrl: string;
+      }) => void)
+    | undefined;
 }
 
 export default function EntityManagementPage({

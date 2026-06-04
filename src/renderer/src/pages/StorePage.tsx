@@ -124,28 +124,28 @@ function demoStates(): {
 interface ProductRow {
   id: string;
   title: string;
-  subtitle?: string;
-  status?: string;
-  price?: string;
-  image?: string;
+  subtitle?: string | undefined;
+  status?: string | undefined;
+  price?: string | undefined;
+  image?: string | undefined;
 }
 
 interface OrderRow {
   id: string;
   label: string;
-  total?: string;
-  status?: string;
-  date?: string;
+  total?: string | undefined;
+  status?: string | undefined;
+  date?: string | undefined;
 }
 
 interface PlatformState {
   /** null = still loading, false = not connected, true = connected. */
   connected: boolean | null;
-  identity?: string;
+  identity?: string | undefined;
   products: ProductRow[];
   orders: OrderRow[];
   loading: boolean;
-  error?: string;
+  error?: string | undefined;
 }
 
 const EMPTY: PlatformState = {
@@ -167,7 +167,7 @@ interface PlatformSectionProps {
   state: PlatformState;
   emptyHint: string;
   onConnect: () => void;
-  onRefresh?: () => void;
+  onRefresh?: (() => void) | undefined;
 }
 
 function PlatformSection({

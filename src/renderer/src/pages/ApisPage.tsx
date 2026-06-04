@@ -360,8 +360,10 @@ export default function ApisPage() {
     try {
       const result = await window.api.facebookAds.saveCredentials({
         accessToken: values.accessToken!.trim(),
-        defaultAdAccountId: values.defaultAdAccountId?.trim() || undefined,
-        defaultPageId: values.defaultPageId?.trim() || undefined,
+        ...(values.defaultAdAccountId?.trim()
+          ? { defaultAdAccountId: values.defaultAdAccountId.trim() }
+          : {}),
+        ...(values.defaultPageId?.trim() ? { defaultPageId: values.defaultPageId.trim() } : {}),
       });
       await fetchKeys();
       setFbSummary({ adAccountCount: result.adAccountCount, pageCount: result.pageCount });

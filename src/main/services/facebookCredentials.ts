@@ -11,12 +11,12 @@ export interface FacebookCredentials {
   accessToken: string;
   /** Default ad account override, e.g. `act_1234567890`. Optional — every
    *  account-scoped API takes an explicit override. */
-  defaultAdAccountId?: string;
+  defaultAdAccountId?: string | undefined;
   /** Default Facebook Page id used as `page_id` in `object_story_spec`. */
-  defaultPageId?: string;
+  defaultPageId?: string | undefined;
   /** Epoch ms when the long-lived token expires (60d window). Absent for
    *  paste-in tokens we couldn't exchange (no FACEBOOK_APP_ID configured). */
-  expiresAt?: number;
+  expiresAt?: number | undefined;
 }
 
 const SERVICE = 'facebook';

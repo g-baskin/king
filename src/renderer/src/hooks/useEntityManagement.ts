@@ -109,7 +109,7 @@ export function useEntityManagement({
         await window.api.entities.create(entityType, {
           name,
           files,
-          productType,
+          ...(productType !== undefined ? { productType } : {}),
           primaryReferenceIndex,
           workspaceId: activeWorkspaceId,
         });
@@ -164,8 +164,8 @@ export function useEntityManagement({
           name,
           existingImages,
           newFiles: newFileBuffers,
-          productType,
-          primaryReferenceIndex,
+          ...(productType !== undefined ? { productType } : {}),
+          ...(primaryReferenceIndex !== undefined ? { primaryReferenceIndex } : {}),
         });
 
         await fetchEntities();

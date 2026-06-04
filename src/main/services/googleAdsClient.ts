@@ -53,7 +53,7 @@ function developerToken(): string {
 }
 
 export class GoogleAdsApiError extends Error {
-  code?: number | string;
+  code?: number | string | undefined;
   details?: unknown;
   constructor(message: string, opts: { code?: number | string; details?: unknown } = {}) {
     super(message);
@@ -189,7 +189,7 @@ async function adsRequest(
       return fetch(`${API_BASE}${path}`, {
         method,
         headers,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       });
     },
   });
@@ -242,7 +242,7 @@ export interface CampaignRow {
   convRate: number;
   cpa: number;
   impressionShare: number;
-  budgetResourceName?: string;
+  budgetResourceName?: string | undefined;
 }
 
 interface SearchStreamResp {

@@ -256,7 +256,7 @@ const GridImageItem = memo(function GridImageItem({
 // Virtuoso's List/Item component types (`React.ComponentType<...>`) accept
 // this shape directly.
 type RefProps = React.HTMLAttributes<HTMLDivElement> & {
-  ref?: React.Ref<HTMLDivElement>;
+  ref?: React.Ref<HTMLDivElement> | undefined;
 };
 
 function GridList({ ref, style, children, ...props }: RefProps) {

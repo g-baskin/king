@@ -1,0 +1,2 @@
+project_name,has_claude_md,github_repo,vercel,supabase,railway,cloudflare,evidence_notes
+King,yes,https://github.com/g-baskin/king.git,no,no,no,no,"TypeScript Electron + React desktop app for ecommerce creative management. Stack: electron-vite, vitest, tailwindcss, fal-ai for image generation. GitHub publish provider in electron-builder (package.json line 182). No cloud platform integrations detected in config files, package.json deps, or GitHub workflows."

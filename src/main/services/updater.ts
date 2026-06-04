@@ -28,15 +28,15 @@ export interface UpdaterStatus {
   stage: UpdaterStage;
   currentVersion: string;
   /** Version string of the available / downloaded update. */
-  updateVersion?: string;
+  updateVersion?: string | undefined;
   /** Release notes (plain string from GitHub). */
-  releaseNotes?: string;
+  releaseNotes?: string | undefined;
   /** Download progress 0–100 (only during 'downloading'). */
-  progress?: number;
+  progress?: number | undefined;
   /** Bytes per second during download. */
-  bytesPerSecond?: number;
+  bytesPerSecond?: number | undefined;
   /** Error message when stage === 'error'. */
-  error?: string;
+  error?: string | undefined;
 }
 
 let latestStatus: UpdaterStatus = {
