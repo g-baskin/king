@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { DeleteIcon } from '@/components/icons';
+import { kingApi } from '@/lib/kingApi';
 
 /**
  * Polymorphic API-key card. Each integration declares a config of one of three
@@ -178,7 +179,7 @@ export function ServiceCard(props: ServiceCardProps) {
               {props.name}
             </h3>
             <button
-              onClick={() => window.api.shell.openExternal(props.keyUrl)}
+              onClick={() => kingApi.shell.openExternal(props.keyUrl)}
               className="cursor-pointer text-xs font-semibold text-[var(--base-color-brand--cinamon)] transition-colors hover:text-[var(--base-color-brand--red)]"
             >
               {props.keyUrlLabel} &rarr;

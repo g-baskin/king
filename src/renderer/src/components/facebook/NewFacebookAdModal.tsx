@@ -12,6 +12,7 @@ import type {
   FbCtaType,
   FbCreateAdResult,
 } from '@/types/electron';
+import { kingApi } from '@/lib/kingApi';
 
 const MAX_BYTES = 15 * 1024 * 1024;
 
@@ -116,8 +117,8 @@ export default function NewFacebookAdModal({
     void (async () => {
       try {
         const [accs, pgs] = await Promise.all([
-          window.api.facebookAds.listAdAccounts(),
-          window.api.facebookAds.listPages(),
+          kingApi.facebookAds.listAdAccounts(),
+          kingApi.facebookAds.listPages(),
         ]);
         if (cancelled) return;
         setAdAccounts(accs);
@@ -148,7 +149,7 @@ export default function NewFacebookAdModal({
     let cancelled = false;
     void (async () => {
       try {
-        const list = await window.api.facebookAds.listCampaigns(adAccountId);
+        const list = await kingApi.facebookAds.listCampaigns(adAccountId);
         if (!cancelled) {
           setCampaigns(list);
           setCampaignChoice('__new');
@@ -175,7 +176,7 @@ export default function NewFacebookAdModal({
     let cancelled = false;
     void (async () => {
       try {
-        const list = await window.api.facebookAds.listAdSets(adAccountId, campaignChoice);
+        const list = await kingApi.facebookAds.listAdSets(adAccountId, campaignChoice);
         if (!cancelled) {
           setAdSets(list);
           setAdSetChoice('__new');
@@ -283,7 +284,7 @@ export default function NewFacebookAdModal({
         .map((s) => s.trim().toUpperCase())
         .filter((s) => s.length > 0);
 
-      const r = await window.api.facebookAds.createAd({
+      const r = await kingApi.facebookAds.createAd({
         adAccountId,
         pageId,
         ...(campaignChoice === '__new'
@@ -759,7 +760,7 @@ export default function NewFacebookAdModal({
                   </div>
                   <button
                     onClick={() =>
-                      window.api.shell.openExternal(
+                      kingApi.shell.openExternal(
                         `https://business.facebook.com/adsmanager/manage/ads?act=${result.adAccountId.replace(
                           /^act_/,
                           '',

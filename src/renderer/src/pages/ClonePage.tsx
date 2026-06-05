@@ -10,6 +10,7 @@ import {
   SUPPORTED_IMAGE_MIME_REGEX,
 } from '@/lib/constants/image-form';
 import type { EntityData } from '@/types/electron';
+import { kingApi } from '@/lib/kingApi';
 
 interface StepDefinition {
   id: CloneStepId;
@@ -93,7 +94,7 @@ export default function ClonePage() {
     let cancelled = false;
     (async () => {
       try {
-        const list = await window.api.entities.list('characters');
+        const list = await kingApi.entities.list('characters');
         if (!cancelled) setCharacters(list);
       } catch {
         if (!cancelled) toast.error("Couldn't load your characters. Please try again.");
@@ -152,7 +153,7 @@ export default function ClonePage() {
   const handleDownload = useCallback(async (url: string, prompt: string) => {
     const filename = `${prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.png`;
     try {
-      const result = await window.api.files.download(url, filename);
+      const result = await kingApi.files.download(url, filename);
       if (result.success) {
         toast.success('Image saved.');
       } else if (!result.cancelled) {
@@ -166,7 +167,7 @@ export default function ClonePage() {
   const handleDelete = useCallback(
     async (id: string) => {
       try {
-        const result = await window.api.images.delete(id);
+        const result = await kingApi.images.delete(id);
         if (result.success) {
           removeResultByImageId(id);
           toast.success('Image deleted.');

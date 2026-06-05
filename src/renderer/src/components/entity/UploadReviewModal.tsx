@@ -8,6 +8,7 @@ import { productTypes } from '@/lib/productTypes';
 import { SUPPORTED_IMAGE_ACCEPT } from '@/lib/constants/image-form';
 import type { GeneratedImageData } from '@/types/electron';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { kingApi } from '@/lib/kingApi';
 
 interface UploadReviewModalProps {
   isOpen: boolean;
@@ -176,7 +177,7 @@ export default function UploadReviewModal({
     if (entityType !== 'characters' || isLibraryLoading) return;
     setIsLibraryLoading(true);
     try {
-      const result = await window.api.images.list(undefined, 24, activeWorkspaceId);
+      const result = await kingApi.images.list(undefined, 24, activeWorkspaceId);
       setLibraryImages(result.data);
     } catch {
       toast.error("Couldn't load image library.");

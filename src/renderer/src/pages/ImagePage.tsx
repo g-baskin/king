@@ -15,6 +15,7 @@ import { useModelStore } from '@/stores/modelStore';
 import type { CharacterConsistencyIntent } from '@/stores/imageIntentStore';
 import type { EntityData } from '@/types/electron';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { kingApi } from '@/lib/kingApi';
 
 interface ImagePageProps {
   prefillPrompt?: string | null;
@@ -114,7 +115,7 @@ export default function ImagePage({
     setPromptNeedsProduct(true);
     void (async () => {
       try {
-        const products = await window.api.entities.list('products', activeWorkspace.id);
+        const products = await kingApi.entities.list('products', activeWorkspace.id);
         setProductOptions(products.map((p) => ({ id: p.id, name: p.name })));
       } catch {
         setProductOptions([]);
@@ -132,8 +133,8 @@ export default function ImagePage({
     void (async () => {
       try {
         const [productList, characterList] = await Promise.all([
-          window.api.entities.list('products', activeWorkspace.id),
-          window.api.entities.list('characters', activeWorkspace.id),
+          kingApi.entities.list('products', activeWorkspace.id),
+          kingApi.entities.list('characters', activeWorkspace.id),
         ]);
         if (!cancelled) {
           setProducts(productList);
@@ -239,7 +240,7 @@ export default function ImagePage({
         const generationId = generationIds[i];
         if (!generationId) continue;
         try {
-          const result = await window.api.generate.image({
+          const result = await kingApi.generate.image({
             prompt: data.prompt,
             aspectRatio: data.aspectRatio,
             resolution: data.resolution,
@@ -255,7 +256,7 @@ export default function ImagePage({
           }
 
           for (const url of result.resultUrls) {
-            const savedImage = await window.api.images.save({
+            const savedImage = await kingApi.images.save({
               url,
               prompt: data.prompt,
               aspectRatio: data.aspectRatio,

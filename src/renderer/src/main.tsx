@@ -2,14 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import App from './App';
+import { kingApi } from './lib/kingApi';
 import './globals.css';
 
 // Route renderer errors through electron-log in main so they land in the same
 // log file as IPC / updater / uncaughtException errors. Swallow IPC failures
 // — we don't want a broken log channel to mask the underlying React error.
-type WindowWithLog = Window & {
-  api?: { log?: { error?: (level: string, message: string, stack?: string) => void } };
-};
 function logToMain(level: 'caught' | 'uncaught' | 'recoverable', error: unknown, info: unknown) {
   try {
     const e = error as Error;
@@ -17,11 +15,9 @@ function logToMain(level: 'caught' | 'uncaught' | 'recoverable', error: unknown,
       typeof (info as { componentStack?: string })?.componentStack === 'string'
         ? (info as { componentStack?: string }).componentStack
         : undefined;
-    (window as WindowWithLog).api?.log?.error?.(
-      level,
-      e?.message ?? String(error),
-      (e?.stack ?? '') + (stack ? '\n' + stack : ''),
-    );
+    void kingApi.log
+      .error(level, e?.message ?? String(error), (e?.stack ?? '') + (stack ? '\n' + stack : ''))
+      .catch(() => undefined);
   } catch {
     /* ignore — error logging must never throw */
   }

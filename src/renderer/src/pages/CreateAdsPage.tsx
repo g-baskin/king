@@ -29,6 +29,7 @@ import {
 import type { CustomAdReferenceData, EntityData, GeneratedImageData } from '@/types/electron';
 import { useImagesStore } from '@/stores/imagesStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { kingApi } from '@/lib/kingApi';
 
 // Image MIME types we accept for custom ad-reference uploads. Matches the
 // formats Gemini's image input handles end-to-end (PNG, JPEG, WebP, HEIC,
@@ -311,7 +312,7 @@ export default function CreateAdsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const list = await window.api.entities.list('products', activeWorkspace.id);
+        const list = await kingApi.entities.list('products', activeWorkspace.id);
         if (!cancelled) setProducts(list);
       } catch {
         if (!cancelled) toast.error("Couldn't load your products. Please try again.");
@@ -328,7 +329,7 @@ export default function CreateAdsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const list = await window.api.entities.list('characters', activeWorkspace.id);
+        const list = await kingApi.entities.list('characters', activeWorkspace.id);
         if (!cancelled) setCharacters(list);
       } catch {
         if (!cancelled) setCharacters([]);
@@ -345,7 +346,7 @@ export default function CreateAdsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const page = await window.api.images.list(undefined, 24, activeWorkspace.id);
+        const page = await kingApi.images.list(undefined, 24, activeWorkspace.id);
         if (!cancelled) setStyleLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setStyleLibraryImages([]);
@@ -371,11 +372,11 @@ export default function CreateAdsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const list = await window.api.adReferences.list();
+        const list = await kingApi.adReferences.list();
         if (!cancelled) setCustomRefs(list);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        void window.api.log.error('warn', `adReferences.list failed: ${message}`);
+        void kingApi.log.error('warn', `adReferences.list failed: ${message}`);
       }
     })();
     return () => {
@@ -411,7 +412,7 @@ export default function CreateAdsPage() {
     }
     try {
       const buffer = await file.arrayBuffer();
-      const created = await window.api.adReferences.create({
+      const created = await kingApi.adReferences.create({
         file: { name: file.name, buffer },
         width: dims.width,
         height: dims.height,
@@ -430,7 +431,7 @@ export default function CreateAdsPage() {
       // collide with bundled defaults; the backend record id is the rest.
       const backendId = adRefId.startsWith('custom-') ? adRefId.slice('custom-'.length) : adRefId;
       try {
-        const result = await window.api.adReferences.delete(backendId);
+        const result = await kingApi.adReferences.delete(backendId);
         if (!result.success) {
           toast.error("Couldn't delete that reference. Please try again.");
           return;
@@ -554,7 +555,7 @@ export default function CreateAdsPage() {
   const handleDownload = useCallback(async (url: string, prompt: string) => {
     const filename = `${prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.png`;
     try {
-      const result = await window.api.files.download(url, filename);
+      const result = await kingApi.files.download(url, filename);
       if (result.success) {
         toast.success('Image saved.');
       } else if (!result.cancelled) {
@@ -570,7 +571,7 @@ export default function CreateAdsPage() {
   const handleDelete = useCallback(
     async (id: string) => {
       try {
-        const result = await window.api.images.delete(id);
+        const result = await kingApi.images.delete(id);
         if (result.success) {
           removeResultByImageId(id);
           toast.success('Image deleted.');
@@ -1443,7 +1444,7 @@ function ResultsStep({
           aspectRatio,
           shot,
         );
-        const result = await window.api.generate.image({
+        const result = await kingApi.generate.image({
           prompt,
           aspectRatio,
           resolution: '2K',
@@ -1457,7 +1458,7 @@ function ResultsStep({
         const firstUrl = result.success ? result.resultUrls?.[0] : undefined;
         if (!firstUrl) continue;
 
-        const saved = await window.api.images.save({
+        const saved = await kingApi.images.save({
           url: firstUrl,
           prompt,
           aspectRatio,
@@ -1625,7 +1626,7 @@ function AnimateStep({
     let cancelled = false;
     (async () => {
       try {
-        const page = await window.api.images.list(undefined, 24);
+        const page = await kingApi.images.list(undefined, 24);
         if (!cancelled) setLibraryImages(extractImageList(page));
       } catch {
         if (!cancelled) setLibraryImages([]);
@@ -1663,7 +1664,7 @@ function AnimateStep({
       return;
     }
 
-    if (typeof window.api.generate.video !== 'function') {
+    if (typeof kingApi.generate.video !== 'function') {
       toast.error(
         'Video generation is not loaded in this session. Please restart the app and try again.',
       );
@@ -1673,7 +1674,7 @@ function AnimateStep({
     setIsGeneratingVideo(true);
     setVideoUrl(null);
     try {
-      const result = await window.api.generate.video({
+      const result = await kingApi.generate.video({
         prompt: videoPrompt.trim(),
         imageUrl: sourceImageUrl,
         aspectRatio,
@@ -1697,7 +1698,7 @@ function AnimateStep({
     if (!videoUrl) return;
     const filename = `create_ads_video_${Date.now()}.mp4`;
     try {
-      const result = await window.api.files.download(videoUrl, filename);
+      const result = await kingApi.files.download(videoUrl, filename);
       if (result.success) toast.success('Video saved.');
       else if (!result.cancelled) toast.error("Couldn't save video.");
     } catch {

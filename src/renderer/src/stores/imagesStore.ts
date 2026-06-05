@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import type { GeneratedImage } from '@/components/image';
+import { kingApi } from '@/lib/kingApi';
 
 const PAGE_SIZE = 18;
 
@@ -52,7 +53,7 @@ export const useImagesStore = create<ImagesStore>()((set, get) => ({
     if (get().hasHydrated && get().hydratedWorkspaceId === (workspaceId ?? null)) return;
     try {
       set({ isLoading: true, error: null });
-      const result = await window.api.images.list(undefined, PAGE_SIZE, workspaceId);
+      const result = await kingApi.images.list(undefined, PAGE_SIZE, workspaceId);
       set({
         images: result.data,
         hasMore: result.hasMore,
@@ -72,7 +73,7 @@ export const useImagesStore = create<ImagesStore>()((set, get) => ({
     if (!hasMore || isLoadingMore || !cursor) return;
     try {
       set({ isLoadingMore: true });
-      const result = await window.api.images.list(cursor, PAGE_SIZE, workspaceId);
+      const result = await kingApi.images.list(cursor, PAGE_SIZE, workspaceId);
       set((state) => ({
         images: [...state.images, ...result.data],
         hasMore: result.hasMore,
@@ -93,7 +94,7 @@ export const useImagesStore = create<ImagesStore>()((set, get) => ({
     // Optimistic remove.
     set((state) => ({ images: state.images.filter((img) => img.id !== id) }));
     try {
-      const result = await window.api.images.delete(id);
+      const result = await kingApi.images.delete(id);
       if (result.success) {
         toast.success('Image deleted.');
       } else {
@@ -109,7 +110,7 @@ export const useImagesStore = create<ImagesStore>()((set, get) => ({
     const idSet = new Set(ids);
     set((state) => ({ images: state.images.filter((img) => !idSet.has(img.id)) }));
 
-    const results = await Promise.allSettled(ids.map((id) => window.api.images.delete(id)));
+    const results = await Promise.allSettled(ids.map((id) => kingApi.images.delete(id)));
     const deleted = results.filter((r) => r.status === 'fulfilled' && r.value.success).length;
     const failed = ids.length - deleted;
 
@@ -125,7 +126,7 @@ export const useImagesStore = create<ImagesStore>()((set, get) => ({
   downloadImage: async (url, prompt) => {
     const filename = `${prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.png`;
     try {
-      const result = await window.api.files.download(url, filename);
+      const result = await kingApi.files.download(url, filename);
       if (result.success) {
         toast.success('Image saved.');
       } else if (!result.cancelled) {

@@ -16,6 +16,7 @@ import {
   type CampaignObjective,
 } from '@/lib/mock/facebookAds';
 import type { PageType } from '@/App';
+import { kingApi } from '@/lib/kingApi';
 
 function RefreshIcon() {
   return (
@@ -335,11 +336,11 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
     let cancelled = false;
     void (async () => {
       try {
-        const status = await window.api.facebookAds.status();
+        const status = await kingApi.facebookAds.status();
         if (cancelled) return;
         setConnected(status.connected);
         if (status.connected) {
-          const accs = await window.api.facebookAds.listAdAccounts();
+          const accs = await kingApi.facebookAds.listAdAccounts();
           if (cancelled) return;
           setAdAccounts(accs);
           const accountId =
@@ -349,7 +350,7 @@ export default function FacebookAdsPage({ onNavigate }: FacebookAdsPageProps) {
           }
           if (accountId) {
             try {
-              const rows = await window.api.facebookAds.listCampaigns(accountId);
+              const rows = await kingApi.facebookAds.listCampaigns(accountId);
               if (cancelled) return;
               // Real Graph API returns campaign metadata only — metrics
               // (spend/CTR/CPC/conversions/ROAS) require a separate ads_insights

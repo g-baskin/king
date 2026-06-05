@@ -11,6 +11,7 @@ import { useModelStore } from '@/stores/modelStore';
 import { useImagesStore } from '@/stores/imagesStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
+import { kingApi } from '@/lib/kingApi';
 
 export type CloneStepId = 'source' | 'character' | 'tweaks' | 'format' | 'results';
 
@@ -190,7 +191,7 @@ async function generateSingleSlot(
 
   try {
     const modelVariant = useModelStore.getState().selectedModel;
-    const result = await window.api.generate.image({
+    const result = await kingApi.generate.image({
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
       resolution: CLONE_RESOLUTION,
@@ -221,7 +222,7 @@ async function generateSingleSlot(
       return;
     }
 
-    const saved = await window.api.images.save({
+    const saved = await kingApi.images.save({
       url: outputUrl,
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,

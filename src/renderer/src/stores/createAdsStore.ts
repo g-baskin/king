@@ -11,6 +11,7 @@ import { useModelStore } from '@/stores/modelStore';
 import { useImagesStore } from '@/stores/imagesStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { EntityData, GeneratedImageData } from '@/types/electron';
+import { kingApi } from '@/lib/kingApi';
 
 export type StepId = 'ad' | 'product' | 'brief' | 'format' | 'results' | 'animate';
 
@@ -323,7 +324,7 @@ async function generateSingleSlot(
   };
 
   try {
-    const result = await window.api.generate.image({
+    const result = await kingApi.generate.image({
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
       resolution: CREATE_ADS_RESOLUTION,
@@ -338,7 +339,7 @@ async function generateSingleSlot(
       return;
     }
 
-    const saved = await window.api.images.save({
+    const saved = await kingApi.images.save({
       url: firstUrl,
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,

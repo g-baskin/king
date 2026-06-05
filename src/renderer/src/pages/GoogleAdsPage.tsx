@@ -13,6 +13,7 @@ import {
 } from '@/lib/mock/googleAds';
 import type { PageType } from '@/App';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { kingApi } from '@/lib/kingApi';
 
 function RefreshIcon() {
   return (
@@ -324,8 +325,8 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
   const [budgetByCampaign, setBudgetByCampaign] = useState<Record<string, string>>({});
 
   const refreshFromApi = useCallback(async () => {
-    if (!window.api.googleAds) return;
-    const rows = await window.api.googleAds.listCampaigns();
+    if (!kingApi.googleAds) return;
+    const rows = await kingApi.googleAds.listCampaigns();
     const mapped: Campaign[] = rows.map((r) => ({
       id: r.id,
       name: r.name,
@@ -366,14 +367,14 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
     let cancelled = false;
     const check = async () => {
       try {
-        const status = await window.api.googleAds?.status();
+        const status = await kingApi.googleAds?.status();
         const isConnected = !!status?.connected;
         if (cancelled) return;
         setConnected(isConnected);
         if (isConnected) {
           try {
             await refreshFromApi();
-            const insights = await window.api.googleAds?.listAudienceInsights();
+            const insights = await kingApi.googleAds?.listAudienceInsights();
             if (insights && insights.length > 0 && !cancelled) setAudienceInsights(insights);
           } catch (err) {
             toast.error(
@@ -398,10 +399,10 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
       const nextStatus = current.status === 'active' ? 'paused' : 'active';
       // Optimistic update.
       setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, status: nextStatus } : c)));
-      if (window.api.googleAds && connected) {
+      if (kingApi.googleAds && connected) {
         try {
-          if (nextStatus === 'paused') await window.api.googleAds.pauseCampaign(id);
-          else await window.api.googleAds.resumeCampaign(id);
+          if (nextStatus === 'paused') await kingApi.googleAds.pauseCampaign(id);
+          else await kingApi.googleAds.resumeCampaign(id);
           toast.success(`${current.name} ${nextStatus === 'active' ? 'resumed' : 'paused'}`);
         } catch (err) {
           // Revert on failure.
@@ -424,10 +425,10 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
       const previous = campaigns.find((c) => c.id === id)?.dailyBudget ?? newBudget;
       setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, dailyBudget: newBudget } : c)));
       const budgetResourceName = budgetByCampaign[id];
-      if (window.api.googleAds && connected && budgetResourceName) {
+      if (kingApi.googleAds && connected && budgetResourceName) {
         const budgetId = budgetResourceName.split('/').pop() ?? '';
         try {
-          await window.api.googleAds.updateBudget(budgetId, Math.round(newBudget * 1_000_000));
+          await kingApi.googleAds.updateBudget(budgetId, Math.round(newBudget * 1_000_000));
           toast.success(`Budget updated to $${newBudget}/day`);
         } catch (err) {
           setCampaigns((prev) =>
@@ -445,7 +446,7 @@ export default function GoogleAdsPage({ onNavigate }: GoogleAdsPageProps) {
   );
 
   const handleRefresh = async () => {
-    if (!window.api.googleAds || !connected) {
+    if (!kingApi.googleAds || !connected) {
       toast.success('Data refreshed');
       return;
     }

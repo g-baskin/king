@@ -7,6 +7,7 @@ import type {
   StorefrontBridgeVariant,
 } from '@/types/electron';
 import type { GeneratedImage } from './types';
+import { kingApi } from '@/lib/kingApi';
 
 type PublishStep = 'idle' | 'uploading' | 'creating';
 type BridgeMode = 'existing' | 'new';
@@ -114,14 +115,14 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
 
   useEffect(() => {
     let cancelled = false;
-    if (!window.api.storefrontBridge) {
+    if (!kingApi.storefrontBridge) {
       setConnected(false);
       return;
     }
 
     void (async () => {
       try {
-        const status = await window.api.storefrontBridge!.status();
+        const status = await kingApi.storefrontBridge!.status();
         if (cancelled) return;
         const bridgeConnected = status.connected;
         const hasPrintify = status.printify?.configured ?? false;
@@ -129,13 +130,13 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
         setPrintifyConfigured(hasPrintify);
         if (!bridgeConnected) return;
 
-        const productResult = await window.api.storefrontBridge!.listProducts(100);
+        const productResult = await kingApi.storefrontBridge!.listProducts(100);
         if (cancelled) return;
         setProducts(productResult.items ?? []);
         setSelectedProductId((current) => current || String(productResult.items?.[0]?.id ?? ''));
 
         if (!hasPrintify) return;
-        const catalog = await window.api.storefrontBridge!.listCatalog({
+        const catalog = await kingApi.storefrontBridge!.listCatalog({
           resource: 'blueprints',
           category: 'tshirt',
         });
@@ -159,11 +160,11 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
     setVariants([]);
     setSelectedProviderId(null);
     setSelectedVariantIds([]);
-    if (!selectedBlueprintId || !window.api.storefrontBridge) return;
+    if (!selectedBlueprintId || !kingApi.storefrontBridge) return;
 
     void (async () => {
       try {
-        const catalog = await window.api.storefrontBridge!.listCatalog({
+        const catalog = await kingApi.storefrontBridge!.listCatalog({
           resource: 'providers',
           blueprintId: selectedBlueprintId,
         });
@@ -184,11 +185,11 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
     let cancelled = false;
     setVariants([]);
     setSelectedVariantIds([]);
-    if (!selectedBlueprintId || !selectedProviderId || !window.api.storefrontBridge) return;
+    if (!selectedBlueprintId || !selectedProviderId || !kingApi.storefrontBridge) return;
 
     void (async () => {
       try {
-        const catalog = await window.api.storefrontBridge!.listCatalog({
+        const catalog = await kingApi.storefrontBridge!.listCatalog({
           resource: 'variants',
           blueprintId: selectedBlueprintId,
           printProviderId: selectedProviderId,
@@ -217,9 +218,9 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
   };
 
   const attachToExistingProduct = async () => {
-    if (!window.api.storefrontBridge || !selectedProductId) return;
+    if (!kingApi.storefrontBridge || !selectedProductId) return;
     setStep('uploading');
-    const attached = await window.api.storefrontBridge.addProductImage({
+    const attached = await kingApi.storefrontBridge.addProductImage({
       productId: selectedProductId,
       imageUrl: image.url,
       alt: title.trim() || selectedProduct?.title || 'Product mockup',
@@ -232,14 +233,14 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
   };
 
   const createNewProduct = async () => {
-    if (!window.api.storefrontBridge || !selectedBlueprintId || !selectedProviderId) return;
+    if (!kingApi.storefrontBridge || !selectedBlueprintId || !selectedProviderId) return;
     const retailCents = Math.max(100, Math.round(Number(priceDollars) * 100));
     const retailPricesCents = Object.fromEntries(
       selectedVariantIds.map((variantId) => [String(variantId), retailCents]),
     );
 
     setStep('uploading');
-    const uploaded = await window.api.storefrontBridge.uploadArtwork({
+    const uploaded = await kingApi.storefrontBridge.uploadArtwork({
       imageUrl: image.url,
       alt: title.trim(),
       blueprintId: selectedBlueprintId,
@@ -248,7 +249,7 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
     });
 
     setStep('creating');
-    const created = await window.api.storefrontBridge.createProduct({
+    const created = await kingApi.storefrontBridge.createProduct({
       title: title.trim(),
       description: description.trim() || title.trim(),
       mediaId: uploaded.mediaId,
@@ -301,7 +302,7 @@ export function StorefrontBridgePublishPanel({ image }: StorefrontBridgePublishP
         {productUrl && (
           <button
             type="button"
-            onClick={() => window.api.shell.openExternal(productUrl)}
+            onClick={() => kingApi.shell.openExternal(productUrl)}
             className="text-xs font-semibold text-[var(--base-color-brand--cinamon)] hover:text-[var(--base-color-brand--red)]"
           >
             Open product →

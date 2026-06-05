@@ -10,6 +10,7 @@ import {
 } from '@/lib/mock/tiktokShop';
 import type { PageType } from '@/App';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { kingApi } from '@/lib/kingApi';
 
 function RefreshIcon() {
   return (
@@ -191,8 +192,8 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
   const [lastSynced, setLastSynced] = useState<Date>(() => new Date());
 
   const refreshFromApi = async () => {
-    if (!window.api.tiktokShop) return;
-    const list = await window.api.tiktokShop.listProducts();
+    if (!kingApi.tiktokShop) return;
+    const list = await kingApi.tiktokShop.listProducts();
     // Real API returns id/title/status/image; metrics (orders/revenue/views/
     // convRate/rating) require separate analytics endpoints — zero them out
     // until those are wired so users see real product names + statuses without
@@ -224,7 +225,7 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
     let cancelled = false;
     void (async () => {
       try {
-        const status = await window.api.tiktokShop?.status();
+        const status = await kingApi.tiktokShop?.status();
         const isConnected = !!status?.connected;
         if (!cancelled) setConnected(isConnected);
         if (isConnected) {
@@ -246,7 +247,7 @@ export default function TiktokShopPage({ onNavigate }: TiktokShopPageProps) {
   }, [demoMode]);
 
   const handleRefresh = async () => {
-    if (window.api.tiktokShop && connected) {
+    if (kingApi.tiktokShop && connected) {
       try {
         await refreshFromApi();
         toast.success('Data refreshed');

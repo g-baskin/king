@@ -11,6 +11,7 @@ import {
 } from '@/lib/mock/shopeeAds';
 import type { PageType } from '@/App';
 import { useDemoMode } from '@/hooks/useDemoMode';
+import { kingApi } from '@/lib/kingApi';
 
 function RefreshIcon() {
   return (
@@ -304,7 +305,7 @@ export default function ShopeeAdsPage({ onNavigate }: ShopeeAdsPageProps) {
     let cancelled = false;
     const check = async () => {
       try {
-        const status = await window.api.shopee?.status();
+        const status = await kingApi.shopee?.status();
         if (!cancelled) setConnected(!!status?.connected);
       } catch {
         if (!cancelled) setConnected(false);

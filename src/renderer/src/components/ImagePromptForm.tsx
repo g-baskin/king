@@ -35,6 +35,7 @@ import {
 } from '@/lib/cinema-prompt';
 import CinemaControlsModal from '@/components/ui/CinemaControlsModal';
 import { useModelStore, type ImageModel } from '@/stores/modelStore';
+import { kingApi } from '@/lib/kingApi';
 
 // Same option list the Settings modal uses — kept in lockstep so the
 // labels don't drift between surfaces.
@@ -181,8 +182,8 @@ export default function ImagePromptForm({
     const fetchEntities = async () => {
       try {
         const [p, c] = await Promise.all([
-          window.api.entities.list('products', activeWorkspaceId),
-          window.api.entities.list('characters', activeWorkspaceId),
+          kingApi.entities.list('products', activeWorkspaceId),
+          kingApi.entities.list('characters', activeWorkspaceId),
         ]);
         setProducts(p);
         setCharacters(c);

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { ApiKeyEntry } from '@/types/electron';
 import { ServiceCard, type ServiceCardProps } from '@/components/api/ServiceCard';
+import { kingApi } from '@/lib/kingApi';
 
 interface FacebookSummary {
   adAccountCount: number;
@@ -70,7 +71,7 @@ export default function ApisPage() {
 
   const fetchKeys = useCallback(async () => {
     try {
-      const keys = await window.api.apiKeys.list();
+      const keys = await kingApi.apiKeys.list();
       setSavedKeys(keys);
     } catch {
       // Silently fail
@@ -91,9 +92,9 @@ export default function ApisPage() {
     void (async () => {
       try {
         const [accounts, pages, status] = await Promise.all([
-          window.api.facebookAds.listAdAccounts(),
-          window.api.facebookAds.listPages(),
-          window.api.facebookAds.status(),
+          kingApi.facebookAds.listAdAccounts(),
+          kingApi.facebookAds.listPages(),
+          kingApi.facebookAds.status(),
         ]);
         if (!cancelled) {
           setFbSummary({
@@ -127,10 +128,10 @@ export default function ApisPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!savedKeys.telegram || !window.api.telegram) return;
+    if (!savedKeys.telegram || !kingApi.telegram) return;
     void (async () => {
       try {
-        const status = await window.api.telegram!.status();
+        const status = await kingApi.telegram!.status();
         if (!cancelled) setTelegramSummary(status.identity ?? null);
       } catch {
         if (!cancelled) setTelegramSummary(null);
@@ -143,10 +144,10 @@ export default function ApisPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!savedKeys.shopify || !window.api.shopify) return;
+    if (!savedKeys.shopify || !kingApi.shopify) return;
     void (async () => {
       try {
-        const status = await window.api.shopify!.status();
+        const status = await kingApi.shopify!.status();
         if (!cancelled) setShopifySummary(status.shop ?? null);
       } catch {
         if (!cancelled) setShopifySummary(null);
@@ -159,10 +160,10 @@ export default function ApisPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!savedKeys['google-ads'] || !window.api.googleAds) return;
+    if (!savedKeys['google-ads'] || !kingApi.googleAds) return;
     void (async () => {
       try {
-        const status = await window.api.googleAds!.status();
+        const status = await kingApi.googleAds!.status();
         if (!cancelled) setGoogleSummary({ customerCount: status.customerIds?.length ?? 0 });
       } catch {
         if (!cancelled) setGoogleSummary(null);
@@ -175,10 +176,10 @@ export default function ApisPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!savedKeys.tiktok || !window.api.tiktokShop) return;
+    if (!savedKeys.tiktok || !kingApi.tiktokShop) return;
     void (async () => {
       try {
-        const status = await window.api.tiktokShop!.status();
+        const status = await kingApi.tiktokShop!.status();
         if (!cancelled) setTiktokSummary({ shopName: status.shopName });
       } catch {
         if (!cancelled) setTiktokSummary(null);
@@ -191,10 +192,10 @@ export default function ApisPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!savedKeys.shopee || !window.api.shopee) return;
+    if (!savedKeys.shopee || !kingApi.shopee) return;
     void (async () => {
       try {
-        const status = await window.api.shopee!.status();
+        const status = await kingApi.shopee!.status();
         if (!cancelled) setShopeeSummary({ shopId: status.shopId });
       } catch {
         if (!cancelled) setShopeeSummary(null);
@@ -207,10 +208,10 @@ export default function ApisPage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!savedKeys.amazon || !window.api.amazon) return;
+    if (!savedKeys.amazon || !kingApi.amazon) return;
     void (async () => {
       try {
-        const status = await window.api.amazon!.status();
+        const status = await kingApi.amazon!.status();
         if (!cancelled) setAmazonSummary({ sellerId: status.sellingPartnerId });
       } catch {
         if (!cancelled) setAmazonSummary(null);
@@ -227,10 +228,10 @@ export default function ApisPage() {
       setStorefrontBridgeSummary(null);
       return;
     }
-    if (!window.api.storefrontBridge) return;
+    if (!kingApi.storefrontBridge) return;
     void (async () => {
       try {
-        const status = await window.api.storefrontBridge!.status();
+        const status = await kingApi.storefrontBridge!.status();
         if (!cancelled) {
           setStorefrontBridgeSummary({
             serverUrl: status.serverUrl ?? status.baseUrl,
@@ -250,7 +251,7 @@ export default function ApisPage() {
   const saveSimpleToken = async (serviceId: string, value: string) => {
     setSavingService(serviceId);
     try {
-      await window.api.apiKeys.set(serviceId, value);
+      await kingApi.apiKeys.set(serviceId, value);
       await fetchKeys();
       toast.success('API key saved.');
     } catch {
@@ -262,10 +263,10 @@ export default function ApisPage() {
 
   const handleDelete = async (serviceId: string) => {
     try {
-      if (serviceId === 'storefront-bridge' && window.api.storefrontBridge) {
-        await window.api.storefrontBridge.clearCredentials();
+      if (serviceId === 'storefront-bridge' && kingApi.storefrontBridge) {
+        await kingApi.storefrontBridge.clearCredentials();
       } else {
-        await window.api.apiKeys.delete(serviceId);
+        await kingApi.apiKeys.delete(serviceId);
       }
       // Clear the per-platform summary so a stale identity doesn't linger
       // until the user reconnects.
@@ -289,13 +290,13 @@ export default function ApisPage() {
   // ---- Per-platform handlers ----
 
   const handleSaveTelegram = async (values: Record<string, string>) => {
-    if (!window.api.telegram) {
+    if (!kingApi.telegram) {
       toast.error('Telegram integration not available.');
       return;
     }
     setSavingService('telegram');
     try {
-      const result = await window.api.telegram.saveToken(values.botToken!.trim());
+      const result = await kingApi.telegram.saveToken(values.botToken!.trim());
       await fetchKeys();
       setTelegramSummary({ username: result.username, id: result.id });
       toast.success(`Connected — @${result.username}`);
@@ -307,13 +308,13 @@ export default function ApisPage() {
   };
 
   const handleSaveShopify = async (values: Record<string, string>) => {
-    if (!window.api.shopify) {
+    if (!kingApi.shopify) {
       toast.error('Shopify integration not available.');
       return;
     }
     setSavingService('shopify');
     try {
-      const result = await window.api.shopify.saveCredentials({
+      const result = await kingApi.shopify.saveCredentials({
         shopDomain: values.shopDomain!.trim(),
         accessToken: values.accessToken!.trim(),
       });
@@ -328,7 +329,7 @@ export default function ApisPage() {
   };
 
   const handleSaveStorefrontBridge = async (values: Record<string, string>) => {
-    const storefrontBridge = window.api.storefrontBridge;
+    const storefrontBridge = kingApi.storefrontBridge;
     if (!storefrontBridge) {
       toast.error(
         'Storefront Bridge is not loaded in this KING window. Fully quit and reopen KING, or restart npm run dev, so the latest Electron preload is used.',
@@ -358,7 +359,7 @@ export default function ApisPage() {
   const handleSaveFacebook = async (values: Record<string, string>) => {
     setSavingService('facebook');
     try {
-      const result = await window.api.facebookAds.saveCredentials({
+      const result = await kingApi.facebookAds.saveCredentials({
         accessToken: values.accessToken!.trim(),
         ...(values.defaultAdAccountId?.trim()
           ? { defaultAdAccountId: values.defaultAdAccountId.trim() }
@@ -379,10 +380,10 @@ export default function ApisPage() {
 
   const handleConnectOAuth = async (serviceId: 'google-ads' | 'tiktok' | 'shopee' | 'amazon') => {
     const apis = {
-      'google-ads': window.api.googleAds,
-      tiktok: window.api.tiktokShop,
-      shopee: window.api.shopee,
-      amazon: window.api.amazon,
+      'google-ads': kingApi.googleAds,
+      tiktok: kingApi.tiktokShop,
+      shopee: kingApi.shopee,
+      amazon: kingApi.amazon,
     } as const;
     const target = apis[serviceId];
     if (!target) {
@@ -582,7 +583,7 @@ export default function ApisPage() {
         onConnect: async () => {
           setSavingService('facebook');
           try {
-            const result = await window.api.facebookAds.beginOAuth();
+            const result = await kingApi.facebookAds.beginOAuth();
             await fetchKeys();
             setFbSummary({
               adAccountCount: result.adAccountCount,

@@ -4,6 +4,7 @@ import { RefreshIcon } from '@/components/icons';
 import { useDemoMode } from '@/hooks/useDemoMode';
 import type { PageType } from '@/App';
 import { shopifyDemo, shopeeDemo, tiktokDemo, amazonDemo } from '@/lib/mock/storeData';
+import { kingApi } from '@/lib/kingApi';
 
 /**
  * Demo mode is controlled globally via the `useDemoMode` hook (master toggle
@@ -379,20 +380,20 @@ export default function StorePage({ onNavigate }: StorePageProps) {
   // ---- Per-platform fetchers ----
 
   const loadShopify = useCallback(async () => {
-    if (!window.api.shopify) {
+    if (!kingApi.shopify) {
       setShopify({ ...EMPTY, connected: false });
       return;
     }
     setShopify((s) => ({ ...s, loading: true, error: undefined }));
     try {
-      const status = await window.api.shopify.status();
+      const status = await kingApi.shopify.status();
       if (!status.connected) {
         setShopify({ ...EMPTY, connected: false });
         return;
       }
       const [products, orders] = await Promise.all([
-        window.api.shopify.listProducts(50).catch(() => []),
-        window.api.shopify.listOrders(20).catch(() => []),
+        kingApi.shopify.listProducts(50).catch(() => []),
+        kingApi.shopify.listOrders(20).catch(() => []),
       ]);
       setShopify({
         connected: true,
@@ -425,20 +426,20 @@ export default function StorePage({ onNavigate }: StorePageProps) {
   }, []);
 
   const loadShopee = useCallback(async () => {
-    if (!window.api.shopee) {
+    if (!kingApi.shopee) {
       setShopee({ ...EMPTY, connected: false });
       return;
     }
     setShopee((s) => ({ ...s, loading: true, error: undefined }));
     try {
-      const status = await window.api.shopee.status();
+      const status = await kingApi.shopee.status();
       if (!status.connected) {
         setShopee({ ...EMPTY, connected: false });
         return;
       }
       const [products, orders] = await Promise.all([
-        window.api.shopee.listProducts().catch(() => []),
-        window.api.shopee.listOrders().catch(() => []),
+        kingApi.shopee.listProducts().catch(() => []),
+        kingApi.shopee.listOrders().catch(() => []),
       ]);
       setShopee({
         connected: true,
@@ -470,20 +471,20 @@ export default function StorePage({ onNavigate }: StorePageProps) {
   }, []);
 
   const loadTiktok = useCallback(async () => {
-    if (!window.api.tiktokShop) {
+    if (!kingApi.tiktokShop) {
       setTiktok({ ...EMPTY, connected: false });
       return;
     }
     setTiktok((s) => ({ ...s, loading: true, error: undefined }));
     try {
-      const status = await window.api.tiktokShop.status();
+      const status = await kingApi.tiktokShop.status();
       if (!status.connected) {
         setTiktok({ ...EMPTY, connected: false });
         return;
       }
       const [products, orders] = await Promise.all([
-        window.api.tiktokShop.listProducts().catch(() => []),
-        window.api.tiktokShop.listOrders().catch(() => []),
+        kingApi.tiktokShop.listProducts().catch(() => []),
+        kingApi.tiktokShop.listOrders().catch(() => []),
       ]);
       setTiktok({
         connected: true,
@@ -515,20 +516,20 @@ export default function StorePage({ onNavigate }: StorePageProps) {
   }, []);
 
   const loadAmazon = useCallback(async () => {
-    if (!window.api.amazon) {
+    if (!kingApi.amazon) {
       setAmazon({ ...EMPTY, connected: false });
       return;
     }
     setAmazon((s) => ({ ...s, loading: true, error: undefined }));
     try {
-      const status = await window.api.amazon.status();
+      const status = await kingApi.amazon.status();
       if (!status.connected) {
         setAmazon({ ...EMPTY, connected: false });
         return;
       }
       const [items, orders] = await Promise.all([
-        window.api.amazon.listCatalogItems().catch(() => []),
-        window.api.amazon.listOrders().catch(() => []),
+        kingApi.amazon.listCatalogItems().catch(() => []),
+        kingApi.amazon.listOrders().catch(() => []),
       ]);
       setAmazon({
         connected: true,

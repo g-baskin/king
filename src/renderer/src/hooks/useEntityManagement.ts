@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { EntityData } from '@/types/electron';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { kingApi } from '@/lib/kingApi';
 
 export type EntityType = 'characters' | 'products';
 
@@ -58,7 +59,7 @@ export function useEntityManagement({
 
   const fetchEntities = useCallback(async () => {
     try {
-      const data = await window.api.entities.list(entityType, activeWorkspaceId);
+      const data = await kingApi.entities.list(entityType, activeWorkspaceId);
       setEntities(data);
     } catch (err) {
       const label = entityType === 'products' ? 'products' : 'characters';
@@ -106,7 +107,7 @@ export function useEntityManagement({
           ? Math.max(0, normalizedImageUrls.indexOf(primaryReferenceImageUrl))
           : 0;
 
-        await window.api.entities.create(entityType, {
+        await kingApi.entities.create(entityType, {
           name,
           files,
           ...(productType !== undefined ? { productType } : {}),
@@ -160,7 +161,7 @@ export function useEntityManagement({
           ? Math.max(0, imageOrderKeys.indexOf(primaryReferenceImageUrl))
           : undefined;
 
-        await window.api.entities.update(entityType, id, {
+        await kingApi.entities.update(entityType, id, {
           name,
           existingImages,
           newFiles: newFileBuffers,
@@ -188,7 +189,7 @@ export function useEntityManagement({
   const confirmDelete = useCallback(async () => {
     if (!deleteEntityId) return;
     try {
-      const result = await window.api.entities.delete(
+      const result = await kingApi.entities.delete(
         entityType,
         deleteEntityId,
         activeWorkspaceId,

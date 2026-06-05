@@ -3,6 +3,7 @@ import type { UpdaterStatus } from '@/types/electron';
 import { CloseIcon, DownloadIcon, RefreshIcon } from '@/components/icons';
 import SelectDropdown from '@/components/ui/SelectDropdown';
 import { useModelStore, type ImageModel } from '@/stores/modelStore';
+import { kingApi } from '@/lib/kingApi';
 
 const MODEL_OPTIONS: { value: ImageModel; label: string }[] = [
   { value: 'nano_banana_pro', label: 'Nano Banana Pro' },
@@ -63,11 +64,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   useEffect(() => {
     let cancelled = false;
 
-    void window.api.update.getStatus().then((initial) => {
+    void kingApi.update.getStatus().then((initial) => {
       if (!cancelled) setStatus(initial);
     });
 
-    const unsubscribe = window.api.update.onStatus((next) => {
+    const unsubscribe = kingApi.update.onStatus((next) => {
       setStatus(next);
     });
 
@@ -78,15 +79,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   }, []);
 
   const handleCheck = () => {
-    void window.api.update.check();
+    void kingApi.update.check();
   };
 
   const handleDownload = () => {
-    void window.api.update.download();
+    void kingApi.update.download();
   };
 
   const handleInstall = () => {
-    void window.api.update.install();
+    void kingApi.update.install();
   };
 
   const isChecking = status.stage === 'checking';
