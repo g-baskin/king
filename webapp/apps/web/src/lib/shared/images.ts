@@ -12,6 +12,12 @@ export interface WebImageRecord {
   workspaceId?: string;
 }
 
+export interface CreateUploadedImageInput {
+  file: File;
+  prompt: string;
+  aspectRatio: string;
+}
+
 export interface CreateImageRecordInput {
   workspaceId: string;
   storageKey: string;

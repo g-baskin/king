@@ -1,4 +1,9 @@
-import type { ListImagesInput, ListImagesResult } from '../shared/images';
+import type {
+  CreateUploadedImageInput,
+  ListImagesInput,
+  ListImagesResult,
+  WebImageRecord,
+} from '../shared/images';
 
 export interface WebKingApiOptions {
   baseUrl?: string;
@@ -14,6 +19,15 @@ export class WebKingApi {
     this.fetchImpl = options.fetchImpl ?? fetch;
   }
 
+  async createImage(input: CreateUploadedImageInput): Promise<WebImageRecord> {
+    const form = new FormData();
+    form.set('file', input.file);
+    form.set('prompt', input.prompt);
+    form.set('aspectRatio', input.aspectRatio);
+
+    return this.requestForm<WebImageRecord>('/api/images', form);
+  }
+
   async listImages(input: ListImagesInput = {}): Promise<ListImagesResult> {
     const params = new URLSearchParams();
     if (input.cursor) params.set('cursor', input.cursor);
@@ -24,17 +38,26 @@ export class WebKingApi {
     return this.request<ListImagesResult>(`/api/images${suffix}`);
   }
 
-  async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
-      ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...init.headers,
-      },
-    });
+  async requestForm<T>(path: string, body: FormData): Promise<T> {
+    return this.request<T>(path, { method: 'POST', body }, false);
+  }
+
+  async request<T>(path: string, init: RequestInit = {}, useJsonHeaders = true): Promise<T> {
+    const requestInit: RequestInit = useJsonHeaders
+      ? {
+          ...init,
+          headers: {
+            'Content-Type': 'application/json',
+            ...init.headers,
+          },
+        }
+      : init;
+
+    const response = await this.fetchImpl(`${this.baseUrl}${path}`, requestInit);
 
     if (!response.ok) {
-      throw new Error(`King API request failed: ${response.status}`);
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(body?.error ?? `King API request failed: ${response.status}`);
     }
 
     return (await response.json()) as T;
