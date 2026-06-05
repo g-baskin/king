@@ -1,6 +1,6 @@
 # Decision 0003: Database and object storage
 
-Status: Proposed
+Status: Accepted
 
 ## Context
 
@@ -8,13 +8,13 @@ King Desktop stores metadata as local JSON files and images under Electron `user
 
 ## Recommendation
 
-Use a database for metadata and object storage for image/video bytes.
+Use Supabase Postgres for metadata and Supabase Storage for image/video bytes in the first web version.
 
 Preferred first production shape:
 
 ```text
-Postgres database
-Cloudflare R2 or S3-compatible object storage
+Supabase Postgres database
+Supabase Storage buckets
 Signed URLs for private previews
 Public asset URLs only for publish-ready assets that require public fetch access
 ```
@@ -39,11 +39,14 @@ Public asset URLs only for publish-ready assets that require public fetch access
 - Generate short-lived signed URLs for private display.
 - Generate public URLs only when platform publishing requires `https://` fetchable media.
 
-## Candidate stacks
+## Selected stack
 
-- Neon Postgres + Cloudflare R2
-- Supabase Postgres + Supabase Storage
-- AWS RDS/S3 for a more enterprise AWS path
+Supabase Postgres + Supabase Storage is selected for the first web version because it pairs naturally with Supabase Auth, reduces integration surface, and gives the fastest path to authenticated image metadata plus object storage.
+
+## Alternatives considered
+
+- Neon Postgres + Cloudflare R2: strong control and pricing, but requires more integration work.
+- AWS RDS/S3: enterprise-friendly, but too much setup for the first vertical slice.
 
 ## Security requirements
 

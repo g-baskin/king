@@ -1,6 +1,6 @@
 # Decision 0002: Auth and workspace tenancy
 
-Status: Proposed
+Status: Accepted
 
 ## Context
 
@@ -8,7 +8,7 @@ King Desktop is local-first and effectively single-user. King Web will hold gene
 
 ## Recommendation
 
-Add authenticated users and workspace-scoped access before moving any real image data, platform credentials, or publishing actions into the web backend.
+Use Supabase Auth for the first web version, paired with Supabase Postgres and Storage from Decision 0003. Add authenticated users and workspace-scoped access before moving any real image data, platform credentials, or publishing actions into the web backend.
 
 Initial model:
 
@@ -37,13 +37,12 @@ session -> user -> workspace membership -> resource ownership
 - Credential mutation and platform publish actions should be audit logged.
 - Browser responses must never include raw platform access tokens.
 
-## Candidate providers
+## Selected provider
 
-- Better Auth: good control and framework fit.
-- Auth.js: established Next.js integration.
-- Supabase Auth: fastest if Supabase is selected for DB/storage.
-- Clerk: fastest hosted UX, higher vendor coupling.
+Supabase Auth is selected for the first web version because it aligns with the selected Postgres and Storage provider, keeps setup fast, and supports row-level security policies tied to authenticated users.
 
-## Deferred decision
+## Alternatives considered
 
-Pick the actual provider after database/storage selection so auth can align with the persistence layer.
+- Better Auth: more control, but more setup before the first vertical slice.
+- Auth.js: established Next.js integration, but separate database/storage wiring still needed.
+- Clerk: fast hosted UX, but higher vendor coupling and separate data/storage stack.
