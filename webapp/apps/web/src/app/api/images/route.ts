@@ -57,12 +57,13 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: 'Prompt and aspect ratio are required' }, { status: 400 });
     }
 
-    const upload = await uploadWorkspaceImage({ workspaceId: workspace.workspaceId, file });
     const repository = createImagesRepository();
 
     if (!repository.create) {
       return Response.json({ error: 'Image creation is not available' }, { status: 503 });
     }
+
+    const upload = await uploadWorkspaceImage({ workspaceId: workspace.workspaceId, file });
 
     try {
       const image = await repository.create({

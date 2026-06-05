@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from './supabaseServer';
 export const IMAGE_BUCKET = 'images';
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const SIGNED_URL_TTL_SECONDS = 60 * 10;
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 export class ImageStorageError extends Error {
   readonly status: number;
@@ -23,8 +24,8 @@ function safeFilename(name: string): string {
 }
 
 export function validateImageFile(file: File): void {
-  if (!file.type.startsWith('image/')) {
-    throw new ImageStorageError(400, 'Only image uploads are supported');
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new ImageStorageError(400, 'Only JPEG, PNG, WebP, and GIF uploads are supported');
   }
 
   if (file.size <= 0) {
