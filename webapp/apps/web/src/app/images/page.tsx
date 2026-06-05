@@ -1,9 +1,35 @@
 import Link from 'next/link';
+import { WebAuthError, requireWorkspaceContext } from '@/lib/server/authContext';
+import { getSupabasePublicEnv } from '@/lib/server/env';
 import { createImagesRepository } from '@/lib/server/imagesRepository';
 
-export default async function ImagesPage() {
+async function loadImages() {
   const repository = createImagesRepository();
-  const images = (await repository.list({ limit: 24 })).data;
+
+  if (!getSupabasePublicEnv()) {
+    return {
+      mode: 'placeholder' as const,
+      images: (await repository.list({ limit: 24 })).data,
+    };
+  }
+
+  try {
+    const workspace = await requireWorkspaceContext();
+    return {
+      mode: 'authenticated' as const,
+      images: (await repository.list({ limit: 24, workspaceId: workspace.workspaceId })).data,
+    };
+  } catch (error) {
+    if (error instanceof WebAuthError) {
+      return { mode: 'auth-required' as const, images: [], message: error.message };
+    }
+
+    throw error;
+  }
+}
+
+export default async function ImagesPage() {
+  const result = await loadImages();
 
   return (
     <main style={{ minHeight: '100vh', padding: '40px 20px' }}>
@@ -20,11 +46,32 @@ export default async function ImagesPage() {
               Web image gallery contract.
             </h1>
             <p style={{ maxWidth: 680, color: '#5f4739', fontSize: 18, lineHeight: 1.7 }}>
-              Placeholder data proves the browser route, shared image types, and API response shape before
-              database and object storage are introduced.
+              {result.mode === 'placeholder'
+                ? 'Placeholder data proves the browser route, shared image types, and API response shape before database and object storage are introduced.'
+                : 'Authenticated workspace data is loaded through the server repository seam.'}
             </p>
           </div>
         </div>
+
+        {result.mode === 'auth-required' ? (
+          <div
+            style={{
+              marginTop: 32,
+              border: '1px solid rgba(89, 55, 38, 0.18)',
+              borderRadius: 24,
+              background: 'rgba(255, 252, 244, 0.82)',
+              padding: 24,
+            }}
+          >
+            <h2 style={{ margin: 0, color: '#241711' }}>Sign in required</h2>
+            <p style={{ color: '#5f4739', lineHeight: 1.6 }}>
+              {result.message}. Supabase is configured, so image data is now workspace-scoped.
+            </p>
+            <Link href="/login" style={{ color: '#8c4d20', fontWeight: 800 }}>
+              Go to login setup
+            </Link>
+          </div>
+        ) : null}
 
         <div
           style={{
@@ -34,7 +81,7 @@ export default async function ImagesPage() {
             marginTop: 32,
           }}
         >
-          {images.map((image) => (
+          {result.images.map((image) => (
             <article
               key={image.id}
               style={{

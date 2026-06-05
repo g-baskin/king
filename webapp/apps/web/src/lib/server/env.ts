@@ -1,6 +1,6 @@
 export interface SupabasePublicEnv {
   url: string;
-  anonKey: string;
+  publishableKey: string;
 }
 
 function readNonEmptyEnv(name: string): string | null {
@@ -10,8 +10,10 @@ function readNonEmptyEnv(name: string): string | null {
 
 export function getSupabasePublicEnv(): SupabasePublicEnv | null {
   const url = readNonEmptyEnv('NEXT_PUBLIC_SUPABASE_URL');
-  const anonKey = readNonEmptyEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  const publishableKey =
+    readNonEmptyEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') ??
+    readNonEmptyEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
-  if (!url || !anonKey) return null;
-  return { url, anonKey };
+  if (!url || !publishableKey) return null;
+  return { url, publishableKey };
 }

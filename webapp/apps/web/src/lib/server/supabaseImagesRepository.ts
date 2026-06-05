@@ -23,7 +23,7 @@ function mapImageRow(row: ImageRow): WebImageRecord {
 
 export class SupabaseImagesRepository implements ImagesRepository {
   async list(input: ListImagesInput): Promise<ListImagesResult> {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     if (!supabase) {
       throw new Error('Supabase is not configured');
     }

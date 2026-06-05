@@ -1,3 +1,5 @@
+import { WebAuthError, requireWorkspaceContext } from '@/lib/server/authContext';
+import { getSupabasePublicEnv } from '@/lib/server/env';
 import { createImagesRepository } from '@/lib/server/imagesRepository';
 import type { ListImagesInput } from '@/lib/shared/images';
 
@@ -10,8 +12,22 @@ export async function GET(request: Request): Promise<Response> {
 
   if (cursor) input.cursor = cursor;
   if (Number.isFinite(limit) && limit > 0) input.limit = limit;
-  if (workspaceId) input.workspaceId = workspaceId;
 
-  const repository = createImagesRepository();
-  return Response.json(await repository.list(input));
+  try {
+    if (getSupabasePublicEnv()) {
+      const workspace = await requireWorkspaceContext(workspaceId ?? undefined);
+      input.workspaceId = workspace.workspaceId;
+    } else if (workspaceId) {
+      input.workspaceId = workspaceId;
+    }
+
+    const repository = createImagesRepository();
+    return Response.json(await repository.list(input));
+  } catch (error) {
+    if (error instanceof WebAuthError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
+
+    throw error;
+  }
 }

@@ -1,6 +1,14 @@
 export interface Database {
   public: {
     Tables: {
+      workspace_members: {
+        Row: {
+          workspace_id: string;
+          user_id: string;
+          role: 'owner' | 'admin' | 'member';
+          created_at: string;
+        };
+      };
       images: {
         Row: {
           id: string;
