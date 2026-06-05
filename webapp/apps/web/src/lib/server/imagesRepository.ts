@@ -1,4 +1,6 @@
+import { getSupabasePublicEnv } from './env';
 import { listPlaceholderImages } from './placeholderImages';
+import { SupabaseImagesRepository } from './supabaseImagesRepository';
 import type { ListImagesInput, ListImagesResult } from '../shared/images';
 
 export interface ImagesRepository {
@@ -12,5 +14,9 @@ export class PlaceholderImagesRepository implements ImagesRepository {
 }
 
 export function createImagesRepository(): ImagesRepository {
+  if (getSupabasePublicEnv()) {
+    return new SupabaseImagesRepository();
+  }
+
   return new PlaceholderImagesRepository();
 }

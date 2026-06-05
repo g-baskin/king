@@ -9,7 +9,7 @@ Start with `MIGRATION_PLAN.md`. The first implementation milestone is to make th
 - Migration plan exists in `webapp/MIGRATION_PLAN.md`.
 - Next.js was selected in `docs/decisions/0001-web-stack.md`.
 - A minimal web app scaffold exists in `webapp/apps/web`.
-- The scaffold includes a browser shell page, `/images`, `/api/health`, `/api/images`, an image repository seam, and a `WebKingApi` fetch client.
+- The scaffold includes a browser shell page, `/images`, `/api/health`, `/api/images`, an image repository seam, Supabase skeleton, and a `WebKingApi` fetch client.
 
 ## Run locally
 
@@ -21,7 +21,7 @@ npm run dev:web
 
 ## Next implementation steps
 
-1. Select auth, database, and object storage providers from the proposed decision docs.
-2. Replace `PlaceholderImagesRepository` with authenticated database/object-storage backing.
-3. Add auth/workspace ownership before any real user data or platform credentials move server-side.
+1. Add auth session handling and workspace ownership to the web API routes.
+2. Replace placeholder fallback with authenticated Supabase image reads once auth is wired.
+3. Add Supabase Storage upload/signed URL support for generated assets.
 4. Continue implementing `WebKingApi` methods over authenticated HTTP routes.

@@ -21,9 +21,14 @@ Then open `http://localhost:3000`.
 - Health route at `/api/health`.
 - Placeholder image-list route at `/api/images`.
 - Image repository seam in `src/lib/server/imagesRepository.ts`.
+- Supabase client/env skeleton with placeholder fallback when env vars are absent.
 - Web API fetch client scaffold in `src/lib/api/webKingApi.ts`.
-- No production auth, database, object storage, or platform publishing yet.
+- No production auth UI, object storage uploads, or platform publishing yet.
+
+## Supabase
+
+Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` plus `NEXT_PUBLIC_SUPABASE_ANON_KEY` to activate `SupabaseImagesRepository`. Without those env vars, the app keeps using placeholder images.
 
 ## Next slice
 
-Select providers and replace placeholder image data with authenticated database/object-storage backing.
+Add auth session handling and workspace-scoped image reads before storing real user data.
