@@ -1,3 +1,5 @@
+import type { ListImagesInput, ListImagesResult } from '../shared/images';
+
 export interface WebKingApiOptions {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
@@ -10,6 +12,16 @@ export class WebKingApi {
   constructor(options: WebKingApiOptions = {}) {
     this.baseUrl = options.baseUrl ?? '';
     this.fetchImpl = options.fetchImpl ?? fetch;
+  }
+
+  async listImages(input: ListImagesInput = {}): Promise<ListImagesResult> {
+    const params = new URLSearchParams();
+    if (input.cursor) params.set('cursor', input.cursor);
+    if (input.limit !== undefined) params.set('limit', String(input.limit));
+    if (input.workspaceId) params.set('workspaceId', input.workspaceId);
+
+    const suffix = params.size > 0 ? `?${params.toString()}` : '';
+    return this.request<ListImagesResult>(`/api/images${suffix}`);
   }
 
   async request<T>(path: string, init: RequestInit = {}): Promise<T> {
