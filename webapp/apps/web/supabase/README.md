@@ -22,9 +22,12 @@ The first schema includes:
 - `workspaces`
 - `workspace_members`
 - `images`
-- row-level security enabled for all three tables
-- read policies scoped by workspace membership
+- private Supabase Storage bucket `images`
+- row-level security enabled for workspace metadata tables
+- read/create policies scoped by workspace membership
 
 The schema includes bootstrap insert policies so an authenticated user can create their first workspace and owner membership from `/api/workspaces/bootstrap`.
 
-Storage buckets, signed URL generation, and credential tables are intentionally deferred until image upload flows are wired.
+Uploaded objects are stored under `<workspaceId>/<uuid>-<filename>` so storage policies can authorize access from workspace membership.
+
+Credential tables are intentionally deferred until platform publishing flows are wired.

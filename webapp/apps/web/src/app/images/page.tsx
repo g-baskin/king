@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ImageUploadForm } from './ImageUploadForm';
 import { LogoutButton } from './LogoutButton';
 import { WebAuthError, requireWorkspaceContext } from '@/lib/server/authContext';
 import { getSupabasePublicEnv } from '@/lib/server/env';
@@ -54,6 +55,8 @@ export default async function ImagesPage() {
           </div>
           {result.mode === 'authenticated' ? <LogoutButton /> : null}
         </div>
+
+        {result.mode === 'authenticated' ? <ImageUploadForm /> : null}
 
         {result.mode === 'auth-required' ? (
           <div

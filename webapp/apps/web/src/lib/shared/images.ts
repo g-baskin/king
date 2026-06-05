@@ -12,6 +12,19 @@ export interface WebImageRecord {
   workspaceId?: string;
 }
 
+export interface CreateImageRecordInput {
+  workspaceId: string;
+  storageKey: string;
+  publicUrl?: string | null;
+  thumbnailUrl?: string | null;
+  prompt: string;
+  aspectRatio: string;
+  width?: number | null;
+  height?: number | null;
+  mimeType?: string | null;
+  filename: string;
+}
+
 export interface ListImagesInput {
   cursor?: string;
   limit?: number;

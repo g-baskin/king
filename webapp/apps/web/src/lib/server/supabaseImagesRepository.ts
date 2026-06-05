@@ -1,9 +1,19 @@
 import type { ImagesRepository } from './imagesRepository';
 import { createSupabaseServerClient } from './supabaseServer';
-import type { ListImagesInput, ListImagesResult, WebImageRecord } from '../shared/images';
+import type {
+  CreateImageRecordInput,
+  ListImagesInput,
+  ListImagesResult,
+  WebImageRecord,
+} from '../shared/images';
 import type { Database } from '../shared/supabase';
 
 type ImageRow = Database['public']['Tables']['images']['Row'];
+
+export interface ImageAssetRecord {
+  storageKey: string;
+  publicUrl: string | null;
+}
 
 function mapImageRow(row: ImageRow): WebImageRecord {
   return {
@@ -22,6 +32,79 @@ function mapImageRow(row: ImageRow): WebImageRecord {
 }
 
 export class SupabaseImagesRepository implements ImagesRepository {
+  async getAssetById(id: string): Promise<ImageAssetRecord | null> {
+    const supabase = await createSupabaseServerClient();
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    const { data, error } = await supabase
+      .from('images')
+      .select('storage_key, public_url')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to load image asset: ${error.message}`);
+    }
+
+    const row = data as { storage_key: string; public_url: string | null } | null;
+    return row ? { storageKey: row.storage_key, publicUrl: row.public_url } : null;
+  }
+
+  async create(input: CreateImageRecordInput): Promise<WebImageRecord> {
+    const supabase = await createSupabaseServerClient();
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    const { data, error } = await supabase
+      .from('images')
+      .insert({
+        workspace_id: input.workspaceId,
+        storage_key: input.storageKey,
+        public_url: input.publicUrl ?? null,
+        thumbnail_url: input.thumbnailUrl ?? null,
+        prompt: input.prompt,
+        aspect_ratio: input.aspectRatio,
+        width: input.width ?? null,
+        height: input.height ?? null,
+        mime_type: input.mimeType ?? null,
+        filename: input.filename,
+      })
+      .select(
+        'id, workspace_id, storage_key, public_url, thumbnail_url, prompt, aspect_ratio, width, height, mime_type, filename, created_at',
+      )
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create image: ${error.message}`);
+    }
+
+    return mapImageRow(data as ImageRow);
+  }
+
+  async getById(id: string): Promise<WebImageRecord | null> {
+    const supabase = await createSupabaseServerClient();
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    const { data, error } = await supabase
+      .from('images')
+      .select(
+        'id, workspace_id, storage_key, public_url, thumbnail_url, prompt, aspect_ratio, width, height, mime_type, filename, created_at',
+      )
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to load image: ${error.message}`);
+    }
+
+    return data ? mapImageRow(data as ImageRow) : null;
+  }
+
   async list(input: ListImagesInput): Promise<ListImagesResult> {
     const supabase = await createSupabaseServerClient();
     if (!supabase) {

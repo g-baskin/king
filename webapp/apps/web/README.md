@@ -24,7 +24,7 @@ Then open `http://localhost:3000`.
 - Supabase client/env skeleton with placeholder fallback only when env vars are absent.
 - Workspace-scoped image reads when Supabase is configured.
 - Web API fetch client scaffold in `src/lib/api/webKingApi.ts`.
-- No production auth UI, object storage uploads, or platform publishing yet.
+- No platform publishing yet.
 
 ## Supabase
 
@@ -38,4 +38,4 @@ When Supabase env vars are absent, `/images` and `/api/images` use placeholder i
 
 ## Next slice
 
-Add protected-route polish, better auth errors, and Supabase Storage upload/signed URL support.
+Add protected-route polish, better auth errors, and generated-image pipeline integration with the upload/storage APIs.
