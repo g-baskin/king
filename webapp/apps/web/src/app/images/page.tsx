@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoutButton } from './LogoutButton';
 import { WebAuthError, requireWorkspaceContext } from '@/lib/server/authContext';
 import { getSupabasePublicEnv } from '@/lib/server/env';
 import { createImagesRepository } from '@/lib/server/imagesRepository';
@@ -51,6 +52,7 @@ export default async function ImagesPage() {
                 : 'Authenticated workspace data is loaded through the server repository seam.'}
             </p>
           </div>
+          {result.mode === 'authenticated' ? <LogoutButton /> : null}
         </div>
 
         {result.mode === 'auth-required' ? (

@@ -21,7 +21,7 @@ npm run dev:web
 
 ## Next implementation steps
 
-1. Add the real Supabase sign-in form/OAuth flow and workspace bootstrap action.
+1. Add protected-route polish and better auth error handling.
 2. Replace placeholder fallback with authenticated Supabase image reads once auth is configured.
 3. Add Supabase Storage upload/signed URL support for generated assets.
 4. Continue implementing `WebKingApi` methods over authenticated HTTP routes.

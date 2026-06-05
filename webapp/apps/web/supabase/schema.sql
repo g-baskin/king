@@ -6,6 +6,7 @@ create extension if not exists "pgcrypto";
 create table if not exists public.workspaces (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  created_by uuid not null references auth.users(id) on delete cascade default auth.uid(),
   created_at timestamptz not null default now()
 );
 
@@ -36,6 +37,15 @@ alter table public.workspaces enable row level security;
 alter table public.workspace_members enable row level security;
 alter table public.images enable row level security;
 
+create policy "authenticated users can create workspaces"
+  on public.workspaces for insert
+  to authenticated
+  with check (created_by = auth.uid());
+
+create policy "creators can read their workspaces"
+  on public.workspaces for select
+  using (created_by = auth.uid());
+
 create policy "members can read their workspaces"
   on public.workspaces for select
   using (
@@ -48,6 +58,18 @@ create policy "members can read their workspaces"
 create policy "users can read their own memberships"
   on public.workspace_members for select
   using (user_id = auth.uid());
+
+create policy "workspace creators can add their owner membership"
+  on public.workspace_members for insert
+  to authenticated
+  with check (
+    user_id = auth.uid()
+    and role = 'owner'
+    and exists (
+      select 1 from public.workspaces w
+      where w.id = workspace_id and w.created_by = auth.uid()
+    )
+  );
 
 create policy "members can read workspace images"
   on public.images for select

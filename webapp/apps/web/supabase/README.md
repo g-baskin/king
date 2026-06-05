@@ -25,4 +25,6 @@ The first schema includes:
 - row-level security enabled for all three tables
 - read policies scoped by workspace membership
 
-Write policies, storage buckets, signed URL generation, and credential tables are intentionally deferred until auth/workspace flows are wired.
+The schema includes bootstrap insert policies so an authenticated user can create their first workspace and owner membership from `/api/workspaces/bootstrap`.
+
+Storage buckets, signed URL generation, and credential tables are intentionally deferred until image upload flows are wired.

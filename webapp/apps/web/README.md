@@ -34,8 +34,8 @@ Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` plus `NEX
 
 When Supabase env vars are absent, `/images` and `/api/images` use placeholder images. When Supabase env vars are present, image reads require a signed-in Supabase user with a `workspace_members` row.
 
-`/login` is currently a setup placeholder; the actual sign-in form/OAuth flow is the next slice.
+`/login` supports Supabase email/password sign-in and account creation. Successful authentication calls `/api/workspaces/bootstrap`, which creates a default workspace and owner membership when needed.
 
 ## Next slice
 
-Add the real Supabase sign-in flow and workspace bootstrap action.
+Add protected-route polish, better auth errors, and Supabase Storage upload/signed URL support.

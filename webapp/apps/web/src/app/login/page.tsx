@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LoginForm } from './LoginForm';
 
 export default function LoginPage() {
   return (
@@ -23,14 +24,10 @@ export default function LoginPage() {
           Supabase login comes next.
         </h1>
         <p style={{ color: '#5f4739', fontSize: 18, lineHeight: 1.7 }}>
-          Supabase is now the accepted provider path, and server routes can require a workspace
-          context. The next implementation slice should add the actual sign-in form and callback flow.
+          Sign in with a Supabase email/password account. After authentication, King bootstraps a
+          default workspace membership if the account does not have one yet.
         </p>
-        <ol style={{ color: '#3c2a20', lineHeight: 1.7, paddingLeft: 22 }}>
-          <li>Enable a Supabase Auth provider in the Supabase dashboard.</li>
-          <li>Create a sign-in form or OAuth button using the browser Supabase client.</li>
-          <li>Create a workspace and `workspace_members` row for the signed-in user.</li>
-        </ol>
+        <LoginForm />
       </section>
     </main>
   );
