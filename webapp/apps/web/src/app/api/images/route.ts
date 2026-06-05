@@ -1,7 +1,7 @@
-import { listPlaceholderImages } from '@/lib/server/placeholderImages';
+import { createImagesRepository } from '@/lib/server/imagesRepository';
 import type { ListImagesInput } from '@/lib/shared/images';
 
-export function GET(request: Request): Response {
+export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const input: ListImagesInput = {};
   const cursor = url.searchParams.get('cursor');
@@ -12,5 +12,6 @@ export function GET(request: Request): Response {
   if (Number.isFinite(limit) && limit > 0) input.limit = limit;
   if (workspaceId) input.workspaceId = workspaceId;
 
-  return Response.json(listPlaceholderImages(input));
+  const repository = createImagesRepository();
+  return Response.json(await repository.list(input));
 }

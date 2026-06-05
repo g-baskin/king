@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { listPlaceholderImages } from '@/lib/server/placeholderImages';
+import { createImagesRepository } from '@/lib/server/imagesRepository';
 
-export default function ImagesPage() {
-  const images = listPlaceholderImages({ limit: 24 }).data;
+export default async function ImagesPage() {
+  const repository = createImagesRepository();
+  const images = (await repository.list({ limit: 24 })).data;
 
   return (
     <main style={{ minHeight: '100vh', padding: '40px 20px' }}>
