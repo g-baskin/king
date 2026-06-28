@@ -10,20 +10,20 @@ export function ThemeToggle() {
       onClick={() => setTheme(dark ? 'light' : 'dark')}
       className={`flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide transition-colors ${
         dark
-          ? 'border-[#2f7ea3] bg-[#0b1d2a] text-white hover:bg-[#123247]'
+          ? 'border-[var(--base-color-brand--cinamon)]/40 bg-[rgba(47,124,255,0.12)] text-[var(--base-color-brand--bean)] hover:bg-[rgba(47,124,255,0.2)]'
           : 'border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--umber)] hover:bg-[var(--base-color-brand--champagne)]'
       }`}
       aria-pressed={dark}
-      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={dark ? 'Switch to warm mode' : 'Switch to studio mode'}
       title={
-        dark ? 'Dark mode is ON — switch to light mode' : 'Light mode is ON — switch to dark mode'
+        dark ? 'Studio mode is ON — switch to warm mode' : 'Warm mode is ON — switch to studio mode'
       }
       style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
     >
       <span
         aria-hidden="true"
         className={`relative inline-block h-3.5 w-7 rounded-full transition-colors ${
-          dark ? 'bg-[#2f7ea3]' : 'bg-[var(--base-color-brand--umber)]/40'
+          dark ? 'bg-[var(--base-color-brand--cinamon)]' : 'bg-[var(--base-color-brand--umber)]/40'
         }`}
       >
         <span
@@ -32,7 +32,7 @@ export function ThemeToggle() {
           }`}
         />
       </span>
-      <span>{dark ? 'Dark' : 'Light'}</span>
+      <span>{dark ? 'Studio' : 'Warm'}</span>
     </button>
   );
 }

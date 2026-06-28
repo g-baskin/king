@@ -95,7 +95,7 @@ export default function ImageDetailOverlay({
 
   return (
     <div
-      className={`fixed inset-0 z-50 grid bg-[var(--base-color-brand--bean)]/80 backdrop-blur-sm transition-all duration-200 ease-out ${
+      className={`fixed inset-0 z-50 grid bg-black/86 backdrop-blur-md transition-all duration-200 ease-out ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       style={{
@@ -149,7 +149,7 @@ export default function ImageDetailOverlay({
             type="button"
             onClick={goPrev}
             disabled={!hasPrev}
-            className="absolute top-1/2 left-4 z-[60] -translate-y-1/2 rounded-full bg-black/45 px-3 py-2 text-white disabled:opacity-30"
+            className="absolute top-1/2 left-4 z-[60] -translate-y-1/2 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-white backdrop-blur disabled:opacity-30"
             aria-label="Previous image"
           >
             ‹
@@ -158,7 +158,7 @@ export default function ImageDetailOverlay({
             type="button"
             onClick={goNext}
             disabled={!hasNext}
-            className="absolute top-1/2 right-[396px] z-[60] -translate-y-1/2 rounded-full bg-black/45 px-3 py-2 text-white disabled:opacity-30"
+            className="absolute top-1/2 right-[396px] z-[60] -translate-y-1/2 rounded-full border border-white/10 bg-black/55 px-3 py-2 text-white backdrop-blur disabled:opacity-30"
             aria-label="Next image"
           >
             ›

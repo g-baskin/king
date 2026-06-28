@@ -173,10 +173,10 @@ export default function ImageDetailPanel({
   };
 
   return (
-    <section className="grid h-full min-h-0 grid-rows-[auto_1fr] border-l border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]">
+    <section className="grid h-full min-h-0 grid-rows-[auto_1fr] border-l border-white/[0.08] bg-[rgba(16,19,26,0.94)] shadow-[inset_1px_0_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
       <header className="grid grid-cols-[1fr_auto] px-3 pt-4 pb-6">
         <div className="flex items-center gap-3">
-          <div className="relative size-10 overflow-hidden rounded-full bg-[var(--base-color-brand--shell)]">
+          <div className="relative size-10 overflow-hidden rounded-full border border-white/[0.1] bg-[rgba(255,255,255,0.035)]">
             <img src={image.url} alt="thumbnail" className="size-full object-cover" />
           </div>
           <div>
@@ -194,7 +194,7 @@ export default function ImageDetailPanel({
         <button
           type="button"
           onClick={onClose}
-          className="flex size-10 items-center justify-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-[var(--base-color-brand--shell)] hover:text-[var(--base-color-brand--bean)]"
+          className="flex size-10 items-center justify-center rounded-full text-[var(--base-color-brand--umber)] transition-colors hover:bg-white/[0.06] hover:text-[var(--base-color-brand--bean)]"
         >
           <CloseIcon />
         </button>
@@ -204,7 +204,7 @@ export default function ImageDetailPanel({
         <div className="hide-scrollbar overflow-y-auto">
           <div className="flex flex-col gap-4 px-3 py-4">
             {/* Prompt Section */}
-            <section className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)]">
+            <section className="rounded-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
                   <span className="text-[var(--base-color-brand--umber)]">
@@ -217,7 +217,7 @@ export default function ImageDetailPanel({
                 <button
                   type="button"
                   onClick={copyPrompt}
-                  className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+                  className="rounded-full border border-white/[0.1] bg-[rgba(255,255,255,0.035)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--cinamon)]/60 hover:bg-[rgba(47,124,255,0.12)]"
                 >
                   Copy
                 </button>
@@ -232,7 +232,7 @@ export default function ImageDetailPanel({
             <StorefrontBridgePublishPanel image={image} />
 
             {/* Information Section */}
-            <section className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)]">
+            <section className="rounded-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="flex items-center gap-2 px-4 py-3">
                 <span className="text-[var(--base-color-brand--umber)]">
                   <InfoIcon />
@@ -252,7 +252,7 @@ export default function ImageDetailPanel({
             </section>
 
             {/* Additional Section (Collapsible) */}
-            <section className="rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)]">
+            <section className="rounded-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <button
                 type="button"
                 onClick={() => setIsAdditionalOpen(!isAdditionalOpen)}
@@ -308,7 +308,7 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onRecreate(image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition-all hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5 active:shadow-[0_1px_0_0_var(--base-color-brand--dark-red)]"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--cream)]/20 bg-[linear-gradient(135deg,var(--base-color-brand--cinamon),var(--base-color-brand--red))] text-sm font-semibold tracking-wide text-white shadow-[0_18px_38px_-22px_var(--base-color-brand--cinamon)] transition-all hover:brightness-110 active:translate-y-0.5 active:shadow-[0_8px_18px_-14px_var(--base-color-brand--cinamon)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <RecreateIcon />
@@ -318,7 +318,7 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onDownload(image.url, image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-[rgba(255,255,255,0.035)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--cinamon)]/60 hover:bg-[rgba(47,124,255,0.12)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <DownloadIcon />
@@ -328,7 +328,7 @@ export default function ImageDetailPanel({
             <button
               type="button"
               onClick={() => onDelete(image.id)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--dark-red)] hover:bg-[var(--base-color-brand--dark-red)] hover:text-[var(--base-color-brand--shell)]"
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-[rgba(255,255,255,0.035)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--status--error)] hover:bg-[color-mix(in_srgb,var(--status--error)_18%,transparent)] hover:text-white"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <DeleteIcon />

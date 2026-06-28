@@ -61,34 +61,34 @@
 }
 
 :root {
-  /* ---------- Brand palette ---------- */
+  /* ---------- Cinematic Creative Studio palette ---------- */
 
-  /* Pastel brand surfaces */
-  --base-color-brand--cream: #ffee8c;
-  --base-color-brand--blush: #ffcbd6;
+  /* Studio glow accents */
+  --base-color-brand--cream: #75e1ff;
+  --base-color-brand--blush: #8b5cf6;
 
   /* Body / page surfaces */
-  --base-color-brand--shell: #fff8e0;
-  --base-color-brand--champagne: #fff1b8;
-  --base-color-brand--light-pink: #ffdde3;
-  --base-color-brand--dark-pink: #ff94ac;
-  --base-color-brand--safron: #ffee8c;
+  --base-color-brand--shell: #08090d;
+  --base-color-brand--champagne: #10131a;
+  --base-color-brand--light-pink: #151a24;
+  --base-color-brand--dark-pink: #1b2230;
+  --base-color-brand--safron: #1f6fff;
 
-  /* Darks: warm cocoa tones */
-  --base-color-brand--bean: #33201a;
-  --base-color-brand--umber: #7a4432;
-  --base-color-brand--text-darker: #2a1912;
+  /* Text / muted structure */
+  --base-color-brand--bean: #f7f8ff;
+  --base-color-brand--umber: #8892a8;
+  --base-color-brand--text-darker: #f7f8ff;
 
   /* Accents (CTAs) */
-  --base-color-brand--cinamon: #d93a63;
-  --base-color-brand--red: #b82a57;
-  --base-color-brand--dark-red: #821a3c;
+  --base-color-brand--cinamon: #2f7cff;
+  --base-color-brand--red: #7c3cff;
+  --base-color-brand--dark-red: #173d92;
 
-  /* Status colors — warm-harmonized for ad dashboards */
-  --status--success: #5a7f3a;
-  --status--warning: #c9821f;
-  --status--error: #821a3c;
-  --status--muted: #7a4432;
+  /* Status colors — cool studio signals */
+  --status--success: #2dd4bf;
+  --status--warning: #f6b73c;
+  --status--error: #ff4d7d;
+  --status--muted: #8892a8;
 
   --base-color-brand--transparent: #fff0;
   --base-color-neutral--white: #fff;
@@ -109,9 +109,12 @@
   --border-color--border-secondary: var(--base-color-brand--shell);
 
   /* Fonts */
-  --text-color--font-family--heading: Rocaone, 'Arial Rounded MT Bold', Arial, sans-serif;
-  --text-color--font-family--display: Genty, Rocaone, 'Arial Rounded MT Bold', Arial, sans-serif;
-  --text-color--font-family--body: Helveticaneue, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --text-color--font-family--heading:
+    Inter, Helveticaneue, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --text-color--font-family--display:
+    Inter, Helveticaneue, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --text-color--font-family--body:
+    Inter, Helveticaneue, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
   /* Sizes */
   --size--875rem: 0.875em;
@@ -136,38 +139,74 @@
   --radius--2rem: var(--size--2rem);
 }
 
+:root[data-theme='light'] {
+  --base-color-brand--shell: #fff8e0;
+  --base-color-brand--champagne: #fff1b8;
+  --base-color-brand--light-pink: #ffdde3;
+  --base-color-brand--dark-pink: #ff94ac;
+  --base-color-brand--safron: #ffee8c;
+
+  --base-color-brand--bean: #33201a;
+  --base-color-brand--umber: #7a4432;
+  --base-color-brand--text-darker: #2a1912;
+
+  --base-color-brand--cinamon: #d93a63;
+  --base-color-brand--red: #b82a57;
+  --base-color-brand--dark-red: #821a3c;
+
+  --status--success: #5a7f3a;
+  --status--warning: #c9821f;
+  --status--error: #821a3c;
+  --status--muted: #7a4432;
+
+  --text-color--text-primary: var(--base-color-brand--text-darker);
+  --text-color--text-secondary: var(--base-color-brand--bean);
+  --text-color--text-tertiary: var(--base-color-brand--shell);
+  --text-color--text-success: var(--base-color-brand--shell);
+  --text-color--text-error: var(--base-color-brand--shell);
+
+  --background-color--background-primary: var(--base-color-brand--shell);
+  --background-color--background-secondary: var(--base-color-brand--champagne);
+  --background-color--background-tertiary: var(--base-color-brand--bean);
+  --background-color--background-success: var(--base-color-brand--dark-pink);
+  --background-color--background-error: var(--base-color-brand--dark-red);
+
+  --border-color--border-primary: var(--base-color-brand--umber);
+  --border-color--border-secondary: var(--base-color-brand--shell);
+}
+
 :root[data-theme='dark'] {
-  --base-color-brand--shell: #000000;
-  --base-color-brand--champagne: #03070a;
-  --base-color-brand--light-pink: #061018;
-  --base-color-brand--dark-pink: #0b1d2a;
-  --base-color-brand--safron: #123247;
+  --base-color-brand--shell: #08090d;
+  --base-color-brand--champagne: #10131a;
+  --base-color-brand--light-pink: #151a24;
+  --base-color-brand--dark-pink: #1b2230;
+  --base-color-brand--safron: #1f6fff;
 
-  --base-color-brand--bean: #ffffff;
-  --base-color-brand--umber: #2f7ea3;
-  --base-color-brand--text-darker: #ffffff;
+  --base-color-brand--bean: #f7f8ff;
+  --base-color-brand--umber: #8892a8;
+  --base-color-brand--text-darker: #f7f8ff;
 
-  --base-color-brand--cinamon: #2f7ea3;
-  --base-color-brand--red: #256b8b;
-  --base-color-brand--dark-red: #1b526c;
+  --base-color-brand--cinamon: #2f7cff;
+  --base-color-brand--red: #7c3cff;
+  --base-color-brand--dark-red: #173d92;
 
-  --status--success: #2f7ea3;
-  --status--warning: #2f7ea3;
-  --status--error: #2f7ea3;
-  --status--muted: #2f7ea3;
+  --status--success: #2dd4bf;
+  --status--warning: #f6b73c;
+  --status--error: #ff4d7d;
+  --status--muted: #8892a8;
 
-  --text-color--text-primary: #ffffff;
-  --text-color--text-secondary: #ffffff;
-  --text-color--text-tertiary: #ffffff;
-  --text-color--text-success: #ffffff;
-  --text-color--text-error: #ffffff;
+  --text-color--text-primary: #f7f8ff;
+  --text-color--text-secondary: #f7f8ff;
+  --text-color--text-tertiary: #f7f8ff;
+  --text-color--text-success: #f7f8ff;
+  --text-color--text-error: #f7f8ff;
 
-  --background-color--background-primary: #000000;
-  --background-color--background-secondary: #03070a;
-  --background-color--background-tertiary: #000000;
+  --background-color--background-primary: #08090d;
+  --background-color--background-secondary: #10131a;
+  --background-color--background-tertiary: #05060a;
   --background-color--background-success: #123247;
-  --background-color--background-error: #123247;
+  --background-color--background-error: #2a1020;
 
-  --border-color--border-primary: #2f7ea3;
-  --border-color--border-secondary: #123247;
+  --border-color--border-primary: #263044;
+  --border-color--border-secondary: #151a24;
 }

@@ -5,6 +5,13 @@ import App from './App';
 import { kingApi } from './lib/kingApi';
 import './globals.css';
 
+try {
+  const theme = window.localStorage.getItem('king:themeMode:v2') === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+} catch {
+  document.documentElement.setAttribute('data-theme', 'dark');
+}
+
 // Route renderer errors through electron-log in main so they land in the same
 // log file as IPC / updater / uncaughtException errors. Swallow IPC failures
 // — we don't want a broken log channel to mask the underlying React error.
@@ -41,15 +48,15 @@ createRoot(document.getElementById('root')!, {
     <App />
     <Toaster
       position="top-right"
-      theme="light"
+      theme="dark"
       toastOptions={{
         style: {
-          background: '#fff8e0',
-          border: '1px solid rgba(122, 68, 50, 0.35)',
-          color: '#2a1912',
-          fontFamily: 'Helveticaneue, "Helvetica Neue", Helvetica, Arial, sans-serif',
+          background: 'rgba(16, 19, 26, 0.94)',
+          border: '1px solid rgba(117, 225, 255, 0.22)',
+          color: '#f7f8ff',
+          fontFamily: 'Inter, Helveticaneue, "Helvetica Neue", Helvetica, Arial, sans-serif',
           borderRadius: '9999px',
-          boxShadow: '0 8px 24px -8px rgba(51, 32, 26, 0.25)',
+          boxShadow: '0 18px 48px -24px rgba(47, 124, 255, 0.45)',
         },
       }}
     />

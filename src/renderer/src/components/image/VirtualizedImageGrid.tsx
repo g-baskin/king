@@ -94,10 +94,10 @@ const GridImageItem = memo(function GridImageItem({
 
   return (
     <div
-      className={`group relative aspect-square cursor-pointer overflow-hidden border bg-[var(--base-color-brand--champagne)] transition-shadow ${
+      className={`group relative aspect-square cursor-pointer overflow-hidden rounded-[1.35rem] border bg-[rgba(255,255,255,0.035)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--base-color-brand--cinamon)]/45 hover:shadow-[0_20px_44px_-32px_rgba(47,124,255,0.75)] ${
         isSelected
-          ? 'border-[var(--base-color-brand--cinamon)] ring-2 ring-[var(--base-color-brand--cinamon)] ring-inset'
-          : 'border-[var(--base-color-brand--umber)]/20'
+          ? 'border-[var(--base-color-brand--cinamon)] ring-2 ring-[var(--base-color-brand--cinamon)]/70 ring-inset'
+          : 'border-white/[0.08]'
       }`}
       style={{ contain: 'layout style paint' }}
       onClick={handleClick}
@@ -127,12 +127,12 @@ const GridImageItem = memo(function GridImageItem({
         className="absolute inset-0 size-full object-cover"
       />
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--base-color-brand--bean)]/70 via-transparent to-transparent opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/82 via-black/10 to-transparent opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
 
       {/* Persistent cinamon tint when selected — gives the card a clearly
           different look regardless of whether it's hovered. */}
       {isSelected && (
-        <div className="pointer-events-none absolute inset-0 bg-[var(--base-color-brand--cinamon)]/15" />
+        <div className="pointer-events-none absolute inset-0 bg-[var(--base-color-brand--cinamon)]/16" />
       )}
 
       {/* Selection checkbox — always visible when the card is selected,
@@ -149,8 +149,8 @@ const GridImageItem = memo(function GridImageItem({
           onClick={handleSelect}
           className={`flex size-5 items-center justify-center rounded border-2 transition-colors ${
             isSelected
-              ? 'border-[var(--base-color-brand--shell)] bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
-              : 'border-[var(--base-color-brand--shell)]/80 bg-[var(--base-color-brand--bean)]/40 hover:border-[var(--base-color-brand--shell)] hover:bg-[var(--base-color-brand--bean)]/60'
+              ? 'border-[var(--base-color-brand--cream)] bg-[var(--base-color-brand--cinamon)] text-white'
+              : 'border-white/70 bg-black/40 hover:border-[var(--base-color-brand--cream)] hover:bg-black/60'
           }`}
         >
           {isSelected && (
@@ -170,7 +170,7 @@ const GridImageItem = memo(function GridImageItem({
       <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
         <button
           onClick={handleEdit}
-          className="flex size-8 items-center justify-center rounded-full bg-[var(--base-color-brand--bean)]/80 text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--cinamon)]"
+          className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white backdrop-blur transition-colors hover:bg-[var(--base-color-brand--cinamon)]"
           title="Edit"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -192,7 +192,7 @@ const GridImageItem = memo(function GridImageItem({
         </button>
         <button
           onClick={handleDownload}
-          className="flex size-8 items-center justify-center rounded-full bg-[var(--base-color-brand--bean)]/80 text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--bean)]"
+          className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white backdrop-blur transition-colors hover:bg-[var(--base-color-brand--cinamon)]"
           title="Download"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -221,7 +221,7 @@ const GridImageItem = memo(function GridImageItem({
         </button>
         <button
           onClick={handleDelete}
-          className="flex size-8 items-center justify-center rounded-full bg-[var(--base-color-brand--bean)]/80 text-[var(--base-color-brand--shell)] transition-colors hover:bg-[var(--base-color-brand--dark-red)]"
+          className="flex size-8 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white backdrop-blur transition-colors hover:bg-[var(--status--error)]"
           title="Delete"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -267,7 +267,7 @@ function GridList({ ref, style, children, ...props }: RefProps) {
       className="grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
       style={{
         display: 'grid',
-        gap: '6px',
+        gap: '12px',
         ...style,
       }}
     >
@@ -350,7 +350,7 @@ export default function VirtualizedImageGrid({
     (_index: number, item: GridItemType) => {
       if (item.isPending) {
         return (
-          <div className="size-full overflow-hidden border border-[var(--base-color-brand--umber)]/20 bg-[var(--base-color-brand--champagne)]">
+          <div className="size-full overflow-hidden rounded-[1.35rem] border border-white/[0.08] bg-[rgba(255,255,255,0.035)]">
             <div className="skeleton-loader size-full" />
           </div>
         );

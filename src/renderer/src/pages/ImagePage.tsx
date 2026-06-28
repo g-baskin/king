@@ -305,7 +305,7 @@ export default function ImagePage({
                 : 'pointer-events-none -translate-y-3 opacity-0'
             }`}
           >
-            <div className="flex items-center gap-2 rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] py-1.5 pr-1.5 pl-4 shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]">
+            <div className="flex items-center gap-2 rounded-full border border-white/[0.1] bg-[rgba(16,19,26,0.86)] py-1.5 pr-1.5 pl-4 shadow-[0_18px_48px_-28px_rgba(47,124,255,0.45)] backdrop-blur-xl">
               <span
                 className="text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
                 style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
@@ -333,7 +333,7 @@ export default function ImagePage({
             </div>
           </div>
 
-          <div className="h-full">
+          <div className="h-full rounded-[2rem] border border-white/[0.06] bg-[rgba(255,255,255,0.018)] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             {isLoading ? (
               <div className="flex h-full w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
@@ -365,7 +365,7 @@ export default function ImagePage({
         {/* end scrollable gallery */}
 
         {promptNeedsProduct && (
-          <div className="mx-6 mb-2 rounded-2xl border-2 border-[var(--base-color-brand--cinamon)] bg-[color-mix(in_srgb,var(--base-color-brand--cinamon)_18%,var(--base-color-brand--champagne))] p-3 shadow-[0_10px_24px_-10px_rgba(0,0,0,0.45)]">
+          <div className="mx-6 mb-2 rounded-2xl border border-[var(--base-color-brand--cinamon)]/45 bg-[color-mix(in_srgb,var(--base-color-brand--cinamon)_18%,transparent)] p-3 shadow-[0_18px_44px_-28px_var(--base-color-brand--cinamon)] backdrop-blur-xl">
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--text-color--text-tertiary)]"
@@ -405,11 +405,11 @@ export default function ImagePage({
         )}
 
         {productsLoading || charactersLoading ? (
-          <div className="mx-6 mb-2 rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--champagne)] px-4 py-2 text-xs text-[var(--base-color-brand--umber)]">
+          <div className="mx-6 mb-2 rounded-2xl border border-white/[0.08] bg-[rgba(16,19,26,0.76)] px-4 py-2 text-xs text-[var(--base-color-brand--umber)] backdrop-blur-xl">
             Loading products and characters...
           </div>
         ) : (
-          <div className="mx-6 mb-2 space-y-2 rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--champagne)] px-3 py-2">
+          <div className="mx-6 mb-2 space-y-2 rounded-2xl border border-white/[0.08] bg-[rgba(16,19,26,0.76)] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
             {products.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
                 <span

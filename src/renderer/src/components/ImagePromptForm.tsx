@@ -437,7 +437,7 @@ export default function ImagePromptForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto w-full shrink-0 rounded-none border-t border-[var(--base-color-brand--umber)]/20 bg-[var(--base-color-brand--champagne)] px-6 py-4 shadow-[0_-8px_32px_-8px_rgba(51,32,26,0.12)]"
+      className="mx-auto w-full shrink-0 rounded-none border-t border-white/[0.08] bg-[rgba(8,9,13,0.92)] px-6 py-4 shadow-[0_-24px_70px_-46px_rgba(47,124,255,0.75)] backdrop-blur-xl"
     >
       <fieldset className="flex gap-3">
         {/* Left section */}
@@ -447,7 +447,7 @@ export default function ImagePromptForm({
             <div className="flex flex-wrap items-center gap-2">
               {referenceImages.map((img) => (
                 <div key={img.id} className="group relative shrink-0">
-                  <div className="relative size-14 rounded-xl bg-[var(--base-color-brand--shell)]">
+                  <div className="relative size-14 overflow-hidden rounded-xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)]">
                     {img.isLoading ? (
                       <div className="skeleton-loader size-full rounded-xl" />
                     ) : (
@@ -460,7 +460,7 @@ export default function ImagePromptForm({
                         <button
                           type="button"
                           onClick={() => removeReferenceImage(img.id)}
-                          className="absolute -top-3 -right-3 z-10 grid h-6 w-6 items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/60 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)] xl:opacity-0 xl:group-hover:opacity-100"
+                          className="absolute -top-3 -right-3 z-10 grid h-6 w-6 items-center justify-center rounded-full border border-white/[0.16] bg-[rgba(16,19,26,0.92)] text-[var(--base-color-brand--bean)] transition hover:border-[var(--base-color-brand--cinamon)] hover:text-[var(--base-color-brand--cream)] xl:opacity-0 xl:group-hover:opacity-100"
                         >
                           <CloseIcon />
                         </button>
@@ -470,11 +470,11 @@ export default function ImagePromptForm({
                 </div>
               ))}
               {referenceImages.length < MAX_REFERENCE_IMAGES && (
-                <div className="relative size-14 shrink-0 rounded-xl border border-dashed border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)]">
+                <div className="relative size-14 shrink-0 rounded-xl border border-dashed border-[var(--base-color-brand--cinamon)]/45 bg-[rgba(47,124,255,0.08)]">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="grid size-full cursor-pointer items-center justify-center text-[var(--base-color-brand--umber)] transition hover:text-[var(--base-color-brand--bean)] active:opacity-60"
+                    className="grid size-full cursor-pointer items-center justify-center text-[var(--base-color-brand--cream)] transition hover:text-[var(--base-color-brand--bean)] active:opacity-60"
                   >
                     <ImageAddIcon />
                   </button>
@@ -497,7 +497,7 @@ export default function ImagePromptForm({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="relative -top-[5.5px] grid h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] transition hover:border-[var(--base-color-brand--cinamon)] hover:text-[var(--base-color-brand--cinamon)]"
+                className="relative -top-[5.5px] grid h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--base-color-brand--cinamon)]/45 bg-[rgba(47,124,255,0.08)] text-[var(--base-color-brand--cream)] transition hover:border-[var(--base-color-brand--cream)] hover:text-[var(--base-color-brand--bean)]"
                 title="Add reference images (max 8)"
               >
                 <PlusIcon />
@@ -535,7 +535,7 @@ export default function ImagePromptForm({
 
             {!isGpt && (
               <>
-                <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-medium text-[var(--base-color-brand--bean)] select-none">
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.08] bg-[rgba(255,255,255,0.035)] px-2.5 py-1 text-xs font-medium text-[var(--base-color-brand--bean)] select-none">
                   <input
                     type="checkbox"
                     checked={cinemaModifiersEnabled}
@@ -548,7 +548,7 @@ export default function ImagePromptForm({
                   type="button"
                   disabled={!cinemaModifiersEnabled}
                   onClick={() => setCinemaModalOpen(true)}
-                  className="flex max-w-[200px] min-w-0 flex-col items-start rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-left transition hover:border-[var(--base-color-brand--cinamon)]/50 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="flex max-w-[200px] min-w-0 flex-col items-start rounded-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)] px-3 py-1.5 text-left transition hover:border-[var(--base-color-brand--cinamon)]/50 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <span className="w-full truncate text-[9px] font-bold tracking-wide text-[var(--base-color-brand--umber)] uppercase">
                     {cinemaSettings.camera}
@@ -568,7 +568,7 @@ export default function ImagePromptForm({
             />
 
             {/* Image count selector */}
-            <div className="flex h-10 items-center gap-1 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3">
+            <div className="flex h-10 items-center gap-1 rounded-full border border-white/[0.08] bg-[rgba(255,255,255,0.035)] px-3">
               <button
                 type="button"
                 onClick={decrementCount}
@@ -621,7 +621,7 @@ export default function ImagePromptForm({
             type="submit"
             disabled={isImagesLoading}
             tabIndex={-1}
-            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-2.5 text-sm font-semibold tracking-wide text-[var(--base-color-brand--shell)] shadow-[0_4px_0_0_var(--base-color-brand--dark-red)] transition-all duration-150 hover:bg-[var(--base-color-brand--red)] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_var(--base-color-brand--dark-red)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-[var(--base-color-brand--shell)]/70 disabled:shadow-[0_4px_0_0_var(--base-color-brand--bean)]"
+            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--cream)]/20 bg-[linear-gradient(135deg,var(--base-color-brand--cinamon),var(--base-color-brand--red))] px-2.5 text-sm font-semibold tracking-wide text-white shadow-[0_20px_44px_-24px_var(--base-color-brand--cinamon)] transition-all duration-150 hover:brightness-110 focus:outline-none active:translate-y-0.5 active:shadow-[0_10px_24px_-18px_var(--base-color-brand--cinamon)] disabled:cursor-not-allowed disabled:bg-[var(--base-color-brand--umber)] disabled:text-white/60 disabled:shadow-none"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             <div className="flex items-center gap-2">

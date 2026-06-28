@@ -53,7 +53,7 @@ export default memo(function SelectDropdown({
       <button
         type="button"
         onClick={handleToggle}
-        className={`flex items-center justify-between gap-2 rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--text-color--text-primary)] transition hover:border-[var(--base-color-brand--bean)] ${size === 'sm' ? 'h-6 px-3 text-xs' : 'h-10 px-4 text-sm'} ${fullWidth ? 'w-full' : ''}`}
+        className={`flex items-center justify-between gap-2 rounded-full border border-white/[0.08] bg-[rgba(255,255,255,0.035)] text-[var(--text-color--text-primary)] transition hover:border-[var(--base-color-brand--cinamon)]/55 hover:bg-[rgba(47,124,255,0.1)] ${size === 'sm' ? 'h-6 px-3 text-xs' : 'h-10 px-4 text-sm'} ${fullWidth ? 'w-full' : ''}`}
       >
         <div className="flex items-center gap-2">
           {icon}
@@ -62,7 +62,7 @@ export default memo(function SelectDropdown({
         <ChevronDownIcon />
       </button>
       {isOpen && (
-        <div className="hide-scrollbar absolute bottom-full left-0 z-50 mb-2 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-1 pt-2 pb-2 shadow-lg">
+        <div className="hide-scrollbar absolute bottom-full left-0 z-50 mb-2 flex max-h-72 min-w-[240px] flex-col overflow-y-auto rounded-2xl border border-white/[0.1] bg-[rgba(16,19,26,0.96)] px-1 pt-2 pb-2 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.85)] backdrop-blur-xl">
           {options.map((option) => {
             if (option.disabled) {
               return (
@@ -89,13 +89,13 @@ export default memo(function SelectDropdown({
                 <div className="group flex w-full items-center gap-1">
                   {showIcons && (
                     <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md p-1 text-[var(--base-color-brand--umber)]/60 transition group-hover:bg-[var(--base-color-brand--shell)] ${isSelected ? 'bg-[var(--base-color-brand--shell)]' : 'bg-transparent'}`}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md p-1 text-[var(--base-color-brand--umber)]/80 transition group-hover:bg-white/[0.06] ${isSelected ? 'bg-white/[0.08]' : 'bg-transparent'}`}
                     >
                       {optionIcon}
                     </div>
                   )}
                   <div
-                    className={`flex h-8 flex-1 items-center justify-between rounded-md px-2 text-[var(--base-color-brand--bean)] transition group-hover:bg-[var(--base-color-brand--shell)] ${isSelected ? 'bg-[var(--base-color-brand--shell)]' : ''}`}
+                    className={`flex h-8 flex-1 items-center justify-between rounded-md px-2 text-[var(--base-color-brand--bean)] transition group-hover:bg-white/[0.06] ${isSelected ? 'bg-[rgba(47,124,255,0.16)]' : ''}`}
                   >
                     <span className="text-sm text-[var(--text-color--text-primary)]">
                       {option.label}

@@ -57,21 +57,21 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const activeAdsLabel = adsItems.find((item) => item.page === currentPage)?.label;
 
   const navButtonClass = (active: boolean) =>
-    `rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+    `rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide transition-all ${
       active
-        ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
-        : 'border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)] hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]'
+        ? 'border-[var(--base-color-brand--cinamon)]/70 bg-[color-mix(in_srgb,var(--base-color-brand--cinamon)_24%,transparent)] text-[var(--base-color-brand--bean)] shadow-[0_0_28px_-14px_var(--base-color-brand--cinamon)]'
+        : 'border-[var(--base-color-brand--umber)]/30 bg-[rgba(255,255,255,0.025)] text-[var(--base-color-brand--umber)] hover:border-[var(--base-color-brand--cinamon)]/60 hover:bg-[rgba(47,124,255,0.12)] hover:text-[var(--base-color-brand--bean)]'
     }`;
 
   return (
     <>
       {/* Draggable title bar area — sits behind the native traffic light buttons */}
-      <div className="drag-region h-7 shrink-0 bg-[var(--background-color--background-primary)]" />
+      <div className="drag-region h-7 shrink-0 border-b border-white/[0.03] bg-[rgba(8,9,13,0.92)]" />
       {/* Actual header content below the title bar */}
-      <header className="flex h-14 shrink-0 items-center border-b border-[var(--border-color--border-primary)]/30 bg-[var(--background-color--background-primary)] px-4">
+      <header className="flex h-14 shrink-0 items-center border-b border-white/[0.08] bg-[rgba(8,9,13,0.88)] px-4 shadow-[0_18px_48px_-38px_rgba(47,124,255,0.8)] backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <h1
-            className="text-2xl leading-none font-black tracking-tight text-[var(--base-color-brand--bean)]"
+            className="gradient-shift text-2xl leading-none font-black tracking-tight"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
             King
@@ -79,7 +79,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           {/* Version badge next to the wordmark. Version is baked in at build
               time so it renders immediately, with no IPC dependency. */}
           <span
-            className="inline-flex items-center rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] px-2 py-0.5 text-[10px] font-bold tracking-wider text-[var(--base-color-brand--bean)]"
+            className="inline-flex items-center rounded-full border border-[var(--base-color-brand--cinamon)]/30 bg-[rgba(47,124,255,0.12)] px-2 py-0.5 text-[10px] font-bold tracking-wider text-[var(--base-color-brand--cream)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             title={`King v${APP_VERSION}`}
           >
@@ -90,7 +90,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           <select
             value={activeWorkspaceId}
             onChange={(e) => setActiveWorkspace(e.target.value)}
-            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
+            className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[rgba(255,255,255,0.025)] px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             title="Active workspace"
           >
@@ -103,7 +103,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           <button
             type="button"
             onClick={() => setWorkspaceModalOpen(true)}
-            className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-2.5 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)]"
+            className="rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[rgba(255,255,255,0.025)] px-2.5 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition hover:border-[var(--base-color-brand--cinamon)]/60 hover:bg-[rgba(47,124,255,0.12)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             title="Create workspace"
           >
@@ -137,7 +137,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             {adsOpen && (
               <div
                 role="menu"
-                className="absolute top-full left-0 z-50 mt-2 flex min-w-[180px] flex-col overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-1 shadow-lg"
+                className="absolute top-full left-0 z-50 mt-2 flex min-w-[180px] flex-col overflow-hidden rounded-2xl border border-white/[0.1] bg-[rgba(16,19,26,0.96)] p-1 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.85)] backdrop-blur-xl"
               >
                 {adsItems.map(({ page, label }) => {
                   const active = currentPage === page;
@@ -151,8 +151,8 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
                       }}
                       className={`rounded-xl px-3 py-2 text-left text-xs font-semibold tracking-wide transition-colors ${
                         active
-                          ? 'bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
-                          : 'text-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--shell)]'
+                          ? 'bg-[rgba(47,124,255,0.18)] text-[var(--base-color-brand--bean)]'
+                          : 'text-[var(--base-color-brand--umber)] hover:bg-white/[0.05] hover:text-[var(--base-color-brand--bean)]'
                       }`}
                       style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
                     >
@@ -192,7 +192,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           <button
             onClick={() => setSettingsOpen(true)}
             aria-label="Open settings"
-            className="flex items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] p-2 text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
+            className="flex items-center justify-center rounded-full border border-[var(--base-color-brand--umber)]/30 bg-[rgba(255,255,255,0.025)] p-2 text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--cinamon)]/60 hover:bg-[rgba(47,124,255,0.12)] hover:text-[var(--base-color-brand--cream)]"
           >
             <SettingsIcon className="h-4 w-4" />
           </button>
@@ -200,8 +200,8 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
       </header>
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
       {workspaceModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-4 shadow-xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-white/[0.1] bg-[rgba(16,19,26,0.96)] p-4 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.85)]">
             <h2
               className="text-base font-bold text-[var(--base-color-brand--bean)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}

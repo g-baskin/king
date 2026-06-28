@@ -8,9 +8,25 @@ body {
 }
 
 body {
-  background: var(--background-color--background-primary);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(47, 124, 255, 0.2), transparent 34rem),
+    radial-gradient(circle at 82% 12%, rgba(124, 60, 255, 0.16), transparent 30rem),
+    linear-gradient(180deg, #0b0d13 0%, var(--background-color--background-primary) 42%);
   color: var(--text-color--text-primary);
   font-family: var(--text-color--font-family--body);
+}
+
+body::before {
+  pointer-events: none;
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent 62%);
 }
 
 /* ----- Themed scrollbars -----
@@ -20,7 +36,8 @@ body {
    Opt out per-element with the `.hide-scrollbar` utility. */
 * {
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: var(--base-color-brand--umber) var(--base-color-brand--champagne);
+  scrollbar-color: color-mix(in srgb, var(--base-color-brand--cinamon) 72%, transparent)
+    var(--base-color-brand--champagne);
 }
 
 *::-webkit-scrollbar {
@@ -31,11 +48,11 @@ body {
 
 *::-webkit-scrollbar-track {
   background-color: var(--base-color-brand--champagne);
-  border-left: 1px solid color-mix(in srgb, var(--base-color-brand--umber) 18%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--base-color-brand--cinamon) 18%, transparent);
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--base-color-brand--umber) 60%, transparent);
+  background-color: color-mix(in srgb, var(--base-color-brand--cinamon) 68%, transparent);
   border: 3px solid var(--base-color-brand--champagne);
   border-radius: 100vw;
   background-clip: padding-box;
@@ -43,11 +60,11 @@ body {
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: var(--base-color-brand--umber);
+  background-color: var(--base-color-brand--cinamon);
 }
 
 *::-webkit-scrollbar-thumb:active {
-  background-color: var(--base-color-brand--bean);
+  background-color: var(--base-color-brand--red);
 }
 
 *::-webkit-scrollbar-corner {
@@ -133,17 +150,15 @@ select,
   animation: step-fade-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Legacy gradient wordmark — kept as no-op utility in case it is still referenced.
-   In Clensae the wordmark is plain bean ink Genty, so this class is now a simple
-   display-font color helper. */
 .gradient-shift {
   font-family: var(--text-color--font-family--display);
-  color: var(--base-color-brand--bean);
-  background: none;
-  -webkit-text-fill-color: currentColor;
+  color: transparent;
+  background: linear-gradient(100deg, #f7f8ff 0%, #75e1ff 42%, #8b5cf6 100%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Skeleton shimmer animation (warm-pastel variant) */
+/* Skeleton shimmer animation (cinematic studio variant) */
 @keyframes shimmer {
   0% {
     background-position: 200% 0;
@@ -165,7 +180,7 @@ select,
 .skeleton-loader {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(90deg, #ffe9bf 0%, #fff8e0 50%, #ffe9bf 100%);
+  background: linear-gradient(90deg, #0d1118 0%, #1b2637 48%, #0d1118 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -177,7 +192,7 @@ select,
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.45) 50%,
+    rgba(117, 225, 255, 0.18) 50%,
     transparent 100%
   );
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
@@ -196,25 +211,30 @@ select,
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: var(--base-color-brand--cinamon);
+  background: linear-gradient(
+    135deg,
+    var(--base-color-brand--cinamon),
+    var(--base-color-brand--red)
+  );
   color: var(--text-color--text-tertiary);
   font-family: var(--text-color--font-family--heading);
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0.04em;
   border-radius: 100vw;
-  box-shadow: 0 4px 0 0 var(--base-color-brand--dark-red);
+  box-shadow: 0 14px 34px -18px
+    color-mix(in srgb, var(--base-color-brand--cinamon) 80%, transparent);
   transition: all 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background-color: var(--base-color-brand--red);
+  filter: brightness(1.1);
 }
 
 .btn-primary:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 0 var(--base-color-brand--dark-red);
+  box-shadow: 0 8px 20px -16px color-mix(in srgb, var(--base-color-brand--cinamon) 80%, transparent);
 }
 
 .btn-primary:disabled {
@@ -228,7 +248,11 @@ select,
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: var(--base-color-brand--cinamon);
+  background: linear-gradient(
+    135deg,
+    var(--base-color-brand--cinamon),
+    var(--base-color-brand--red)
+  );
   color: var(--text-color--text-tertiary);
   font-family: var(--text-color--font-family--heading);
   font-size: 0.8125rem;
@@ -236,18 +260,19 @@ select,
   text-transform: none;
   letter-spacing: 0.04em;
   border-radius: 100vw;
-  box-shadow: 0 3px 0 0 var(--base-color-brand--dark-red);
+  box-shadow: 0 12px 28px -18px
+    color-mix(in srgb, var(--base-color-brand--cinamon) 80%, transparent);
   transition: all 150ms ease;
   cursor: pointer;
 }
 
 .btn-primary-sm:hover {
-  background-color: var(--base-color-brand--red);
+  filter: brightness(1.1);
 }
 
 .btn-primary-sm:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 0 var(--base-color-brand--dark-red);
+  box-shadow: 0 8px 18px -16px color-mix(in srgb, var(--base-color-brand--cinamon) 80%, transparent);
 }
 
 /* macOS traffic light padding */

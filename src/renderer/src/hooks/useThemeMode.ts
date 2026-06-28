@@ -2,16 +2,16 @@ import { useEffect, useState, useCallback } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
 
-export const THEME_KEY = 'king:themeMode';
+export const THEME_KEY = 'king:themeMode:v2';
 const CHANGE_EVENT = 'king:themeMode:change';
 
 function readTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   try {
     const stored = window.localStorage.getItem(THEME_KEY);
-    return stored === 'dark' ? 'dark' : 'light';
+    return stored === 'light' ? 'light' : 'dark';
   } catch {
-    return 'light';
+    return 'dark';
   }
 }
 
@@ -43,12 +43,12 @@ export function useThemeMode(): [ThemeMode, (next: ThemeMode) => void] {
   useEffect(() => {
     const handleCustom = (e: Event) => {
       const detail = (e as CustomEvent<ChangeDetail>).detail;
-      setTheme(detail?.theme === 'dark' ? 'dark' : 'light');
+      setTheme(detail?.theme === 'light' ? 'light' : 'dark');
     };
 
     const handleStorage = (e: StorageEvent) => {
       if (e.key === THEME_KEY) {
-        setTheme(e.newValue === 'dark' ? 'dark' : 'light');
+        setTheme(e.newValue === 'light' ? 'light' : 'dark');
       }
     };
 

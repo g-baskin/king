@@ -53,7 +53,7 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-[radial-gradient(circle_at_20%_0%,rgba(47,124,255,0.14),transparent_32rem),radial-gradient(circle_at_84%_12%,rgba(124,60,255,0.12),transparent_30rem),var(--background-color--background-primary)]">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
       {currentPage === 'image' && (
         <ImagePage
