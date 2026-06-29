@@ -147,7 +147,11 @@ export class FacebookApiError extends Error {
 
   constructor(
     message: string,
-    opts: { code?: number | string | undefined; fbtraceId?: string | undefined; type?: string | undefined } = {},
+    opts: {
+      code?: number | string | undefined;
+      fbtraceId?: string | undefined;
+      type?: string | undefined;
+    } = {},
   ) {
     super(message);
     this.name = 'FacebookApiError';

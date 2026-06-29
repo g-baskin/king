@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { CloseIcon, DeleteIcon } from '@/components/icons';
 import ImagePromptForm from '@/components/ImagePromptForm';
@@ -44,6 +44,7 @@ export default function ImagePage({
   const pendingCount = pendingImageGenerations.length;
   const selectedModel = useModelStore((s) => s.selectedModel);
   const activeWorkspace = useWorkspaceStore((s) => s.activeWorkspace);
+  const imagePageRef = useRef<HTMLElement | null>(null);
 
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
@@ -71,26 +72,27 @@ export default function ImagePage({
   const [charactersLoading, setCharactersLoading] = useState(true);
   const [selectedProductEntity, setSelectedProductEntity] = useState<string>('none');
   const [selectedCharacterEntity, setSelectedCharacterEntity] = useState<string>('none');
-  const [consistencyTemplateImageUrl, setConsistencyTemplateImageUrl] = useState<string | null>(
-    null,
-  );
+  const [consistencyReferenceImageUrls, setConsistencyReferenceImageUrls] = useState<string[]>([]);
+  const [consistencyAspectRatio, setConsistencyAspectRatio] = useState<string | null>(null);
 
   // Handle cross-page intent from Characters tab (Generate button).
   useEffect(() => {
     const resolvedIntent = imageIntent ?? null;
 
-    console.info('[intent] image page effect', { imageIntent, resolvedIntent });
     if (!resolvedIntent || resolvedIntent.type !== 'character-consistency-sheet') return;
 
     setRecreateData({ prompt: resolvedIntent.prompt });
     setIntentPrompt(resolvedIntent.prompt);
     setPromptFormSeed((prev) => prev + 1);
-    setSelectedCharacterEntity(resolvedIntent.characterEntity);
-    setPromptNeedsCharacter(true);
-    setConsistencyTemplateImageUrl(resolvedIntent.templateImageUrl ?? null);
+    setForceEntitySelection(null);
+    setSelectedProductEntity('none');
+    setSelectedCharacterEntity('none');
+    setPromptNeedsCharacter(false);
+    setConsistencyReferenceImageUrls(resolvedIntent.referenceImageUrls);
+    setConsistencyAspectRatio(resolvedIntent.shotCount === 15 ? '16:9' : '1:1');
 
     onImageIntentConsumed?.();
-    toast.success('Character consistency prompt loaded.');
+    toast.success(`${resolvedIntent.shotCount}-shot character card prompt loaded.`);
   }, [imageIntent, onImageIntentConsumed]);
 
   const {
@@ -158,7 +160,9 @@ export default function ImagePage({
   }, [activeWorkspace.id]);
   const selectedCount = selectedImages.size;
 
-  const clearSelection = useCallback(() => setSelectedImages(new Set()), []);
+  const clearSelection = useCallback(() => {
+    setSelectedImages(new Set());
+  }, []);
 
   const handleBatchDeleteClick = useCallback(() => {
     if (selectedCount === 0) return;
@@ -216,6 +220,24 @@ export default function ImagePage({
 
   const handleEdit = useCallback((imageUrl: string) => {
     setEditData({ imageUrl });
+  }, []);
+
+  useEffect(() => {
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      if (imagePageRef.current) imagePageRef.current.scrollTop = 0;
+    };
+
+    resetScroll();
+    const animationFrame = window.requestAnimationFrame(resetScroll);
+    const timer = window.setTimeout(resetScroll, 250);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(timer);
+    };
   }, []);
 
   const handleGenerate = (data: {
@@ -284,16 +306,20 @@ export default function ImagePage({
     generateImages().catch((error) => {
       console.error('Unhandled error in image generation:', error);
       toast.error('Something went wrong. Please try again.');
-      generationIds.forEach((id) => removeImageGeneration(id));
+      generationIds.forEach((id) => {
+        removeImageGeneration(id);
+      });
     });
   };
 
   return (
     <>
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        {/* Scrollable image gallery — flex-1 so the form below always stays
-            on screen regardless of window height. */}
-        <div className="relative min-h-0 flex-1 px-4 pt-4">
+      <section
+        ref={imagePageRef}
+        className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto_auto] overflow-clip"
+      >
+        {/* Scrollable image gallery — this row absorbs spare height. */}
+        <div className="relative min-h-0 px-4 pt-4">
           {/* Selection toolbar — slides down from the top-right of the image
             grid whenever at least one image is selected. Contains a count,
             a delete action, and a clear-selection button. */}
@@ -364,141 +390,185 @@ export default function ImagePage({
         </div>
         {/* end scrollable gallery */}
 
-        {promptNeedsProduct && (
-          <div className="mx-6 mb-2 rounded-2xl border border-[var(--base-color-brand--cinamon)]/45 bg-[color-mix(in_srgb,var(--base-color-brand--cinamon)_18%,transparent)] p-3 shadow-[0_18px_44px_-28px_var(--base-color-brand--cinamon)] backdrop-blur-xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--text-color--text-tertiary)]"
-                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-              >
-                Recommended
-              </span>
-              <span
-                className="text-xs font-semibold text-[var(--text-color--text-primary)]"
-                style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-              >
-                This prompt works best with a product.
-              </span>
-              {productOptions.map((product) => (
+        <div className="min-h-0">
+          {promptNeedsProduct && (
+            <div className="mx-6 mb-2 rounded-2xl border border-[var(--base-color-brand--cinamon)]/45 bg-[color-mix(in_srgb,var(--base-color-brand--cinamon)_18%,transparent)] p-3 shadow-[0_18px_44px_-28px_var(--base-color-brand--cinamon)] backdrop-blur-xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--text-color--text-tertiary)]"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  Recommended
+                </span>
+                <span
+                  className="text-xs font-semibold text-[var(--text-color--text-primary)]"
+                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                >
+                  This prompt works best with a product.
+                </span>
+                {productOptions.map((product) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => {
+                      const entityValue = `product:${product.id}`;
+                      setSelectedProductEntity(entityValue);
+                      setForceEntitySelection(null);
+                      setPromptNeedsProduct(false);
+                      toast.success(`Selected ${product.name} for this prompt.`);
+                    }}
+                    className="rounded-full border border-[var(--base-color-brand--cinamon)] bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--text-color--text-primary)] hover:bg-[var(--base-color-brand--cinamon)] hover:text-[var(--text-color--text-tertiary)]"
+                  >
+                    {product.name}
+                  </button>
+                ))}
                 <button
-                  key={product.id}
                   type="button"
                   onClick={() => {
-                    setForceEntitySelection(`product:${product.id}`);
                     setPromptNeedsProduct(false);
-                    toast.success(`Selected ${product.name} for this prompt.`);
                   }}
-                  className="rounded-full border border-[var(--base-color-brand--cinamon)] bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--text-color--text-primary)] hover:bg-[var(--base-color-brand--cinamon)] hover:text-[var(--text-color--text-tertiary)]"
+                  className="rounded-full border border-[var(--base-color-brand--cinamon)]/65 bg-transparent px-3 py-1 text-xs font-semibold text-[var(--text-color--text-primary)] hover:bg-[var(--base-color-brand--shell)]"
                 >
-                  {product.name}
+                  Use without product
                 </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setPromptNeedsProduct(false)}
-                className="rounded-full border border-[var(--base-color-brand--cinamon)]/65 bg-transparent px-3 py-1 text-xs font-semibold text-[var(--text-color--text-primary)] hover:bg-[var(--base-color-brand--shell)]"
-              >
-                Use without product
-              </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {productsLoading || charactersLoading ? (
-          <div className="mx-6 mb-2 rounded-2xl border border-white/[0.08] bg-[rgba(16,19,26,0.76)] px-4 py-2 text-xs text-[var(--base-color-brand--umber)] backdrop-blur-xl">
-            Loading products and characters...
-          </div>
-        ) : (
-          <div className="mx-6 mb-2 space-y-2 rounded-2xl border border-white/[0.08] bg-[rgba(16,19,26,0.76)] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
-            {products.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="rounded-full bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]"
-                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-                >
-                  Products
-                </span>
-                <span className="text-xs text-[var(--base-color-brand--umber)]">
-                  Tap to add product references.
-                </span>
-                {products.map((product) => {
-                  const entityValue = `product:${product.id}`;
-                  const active = selectedProductEntity === entityValue;
-                  return (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedProductEntity(entityValue);
-                        toast.success(`Selected ${product.name} product references.`);
-                      }}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                        active
-                          ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
-                          : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
-                      }`}
-                    >
-                      {product.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {characters.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="rounded-full bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]"
-                  style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
-                >
-                  Characters
-                </span>
-                <span className="text-xs text-[var(--base-color-brand--umber)]">
-                  Tap to add character references.
-                </span>
-                {promptNeedsCharacter && (
-                  <span className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-[10px] font-bold tracking-wide text-[var(--text-color--text-tertiary)]">
-                    Recommended for this prompt
+          {productsLoading || charactersLoading ? (
+            <div className="mx-6 mb-2 rounded-2xl border border-white/[0.08] bg-[rgba(16,19,26,0.76)] px-4 py-2 text-xs text-[var(--base-color-brand--umber)] backdrop-blur-xl">
+              Loading products and characters...
+            </div>
+          ) : (
+            <div className="mx-6 mb-2 space-y-2 rounded-2xl border border-white/[0.08] bg-[rgba(16,19,26,0.76)] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
+              {products.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="rounded-full bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]"
+                    style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                  >
+                    Products
                   </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setSelectedCharacterEntity('none')}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                    selectedCharacterEntity === 'none'
-                      ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
-                      : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
-                  }`}
-                >
-                  None
-                </button>
-                {characters.map((character) => {
-                  const entityValue = `character:${character.id}`;
-                  const active = selectedCharacterEntity === entityValue;
-                  return (
-                    <button
-                      key={character.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCharacterEntity(entityValue);
+                  <span className="text-xs text-[var(--base-color-brand--umber)]">
+                    Tap to add product references. Tap again to remove.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedProductEntity !== 'none') {
+                        setSelectedProductEntity('none');
+                        setForceEntitySelection(null);
+                        toast.success('Product references removed.');
+                      }
+                    }}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                      selectedProductEntity === 'none'
+                        ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                        : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                    }`}
+                  >
+                    None
+                  </button>
+                  {products.map((product) => {
+                    const entityValue = `product:${product.id}`;
+                    const active = selectedProductEntity === entityValue;
+                    return (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => {
+                          if (active) {
+                            setSelectedProductEntity('none');
+                            setForceEntitySelection(null);
+                            toast.success(`${product.name} product references removed.`);
+                            return;
+                          }
+
+                          setSelectedProductEntity(entityValue);
+                          setForceEntitySelection(null);
+                          toast.success(`Selected ${product.name} product references.`);
+                        }}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                          active
+                            ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                            : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                        }`}
+                      >
+                        {product.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {characters.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="rounded-full bg-[var(--base-color-brand--shell)] px-2.5 py-1 text-xs font-bold tracking-wide text-[var(--base-color-brand--bean)]"
+                    style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
+                  >
+                    Characters
+                  </span>
+                  <span className="text-xs text-[var(--base-color-brand--umber)]">
+                    Tap to add character references. Tap again to remove.
+                  </span>
+                  {promptNeedsCharacter && (
+                    <span className="rounded-full bg-[var(--base-color-brand--cinamon)] px-2.5 py-1 text-[10px] font-bold tracking-wide text-[var(--text-color--text-tertiary)]">
+                      Recommended for this prompt
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedCharacterEntity !== 'none') {
+                        setSelectedCharacterEntity('none');
                         setPromptNeedsCharacter(false);
-                        toast.success(`Selected ${character.name} character references.`);
-                      }}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                        active
-                          ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
-                          : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
-                      }`}
-                      title={character.name}
-                    >
-                      {character.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+                        toast.success('Character references removed.');
+                      }
+                    }}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                      selectedCharacterEntity === 'none'
+                        ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                        : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                    }`}
+                  >
+                    None
+                  </button>
+                  {characters.map((character) => {
+                    const entityValue = `character:${character.id}`;
+                    const active = selectedCharacterEntity === entityValue;
+                    return (
+                      <button
+                        key={character.id}
+                        type="button"
+                        onClick={() => {
+                          if (active) {
+                            setSelectedCharacterEntity('none');
+                            setPromptNeedsCharacter(false);
+                            toast.success(`${character.name} character references removed.`);
+                            return;
+                          }
+
+                          setSelectedCharacterEntity(entityValue);
+                          setPromptNeedsCharacter(false);
+                          toast.success(`Selected ${character.name} character references.`);
+                        }}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                          active
+                            ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
+                            : 'border-[var(--base-color-brand--umber)]/45 bg-[var(--base-color-brand--shell)] text-[var(--base-color-brand--bean)]'
+                        }`}
+                        title={character.name}
+                      >
+                        {character.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <ImagePromptForm
           key={promptFormSeed}
@@ -508,19 +578,22 @@ export default function ImagePage({
           forceEntitySelection={forceEntitySelection}
           selectedProductOverride={selectedProductEntity}
           selectedCharacterOverride={selectedCharacterEntity}
-          additionalReferenceImageUrls={
-            consistencyTemplateImageUrl ? [consistencyTemplateImageUrl] : []
-          }
+          additionalReferenceImageUrls={consistencyReferenceImageUrls}
           intentPrompt={intentPrompt}
+          initialAspectRatio={consistencyAspectRatio}
+          disableCinemaModifiers={!!intentPrompt}
+          submitLabel={intentPrompt ? 'Generate card' : 'Generate'}
+          mentionImages={generatedImages}
         />
-      </div>
-      {/* end flex-col wrapper */}
+      </section>
 
       {selectedImage && (
         <ImageDetailOverlay
           image={selectedImage}
           images={generatedImages}
-          onClose={() => setSelectedImage(null)}
+          onClose={() => {
+            setSelectedImage(null);
+          }}
           onDelete={(id) => {
             handleDelete(id);
             setSelectedImage(null);
@@ -538,7 +611,9 @@ export default function ImagePage({
         title="Delete Image"
         message="Are you sure you want to delete this image? This action cannot be undone."
         onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteConfirmId(null)}
+        onCancel={() => {
+          setDeleteConfirmId(null);
+        }}
       />
 
       <DeleteConfirmationModal
@@ -546,7 +621,9 @@ export default function ImagePage({
         title={`Delete ${selectedCount} image${selectedCount === 1 ? '' : 's'}`}
         message={batchDeleteMessage}
         onConfirm={confirmBatchDelete}
-        onCancel={() => setBatchDeleteOpen(false)}
+        onCancel={() => {
+          setBatchDeleteOpen(false);
+        }}
       />
     </>
   );

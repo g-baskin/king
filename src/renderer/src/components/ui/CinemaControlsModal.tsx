@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CloseIcon } from '@/components/icons';
 import {
   APERTURES,
@@ -14,9 +15,97 @@ export interface CinemaControlsModalProps {
   onClose: () => void;
   settings: CinemaSettings;
   onSettingsChange: (next: CinemaSettings) => void;
+  onApply?: () => void;
 }
 
 type ColumnKey = 'camera' | 'lens' | 'focal' | 'aperture';
+
+function getFocalPreviewLabel(focal: number): string {
+  if (focal <= 14) return 'Ultra-wide field';
+  if (focal <= 24) return 'Wide field';
+  if (focal <= 35) return 'Natural field';
+  if (focal <= 50) return 'Standard field';
+  return 'Portrait compression';
+}
+
+function FocalLengthPreview({ focal }: { focal: number }) {
+  const spread = Math.max(10, Math.min(44, 52 - focal * 0.45));
+  const topY = 32 - spread;
+  const bottomY = 32 + spread;
+
+  return (
+    <div className="relative grid size-full place-items-center overflow-hidden bg-[radial-gradient(circle_at_20%_50%,rgba(255,214,160,0.24),transparent_36%),linear-gradient(135deg,rgba(76,43,24,0.18),rgba(16,19,26,0.04))]">
+      <svg aria-hidden="true" viewBox="0 0 100 64" className="h-full w-full">
+        <path
+          d={`M18 32 L86 ${topY} L86 ${bottomY} Z`}
+          className="fill-[var(--base-color-brand--cinamon)]/20 stroke-[var(--base-color-brand--cinamon)]/65"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <circle cx="18" cy="32" r="5" className="fill-[var(--base-color-brand--bean)]" />
+        <line
+          x1="18"
+          y1="32"
+          x2="86"
+          y2="32"
+          className="stroke-[var(--base-color-brand--umber)]/50"
+          strokeDasharray="4 4"
+          strokeWidth="1.5"
+        />
+      </svg>
+      <span className="absolute right-2 bottom-2 rounded-full bg-[var(--base-color-brand--shell)]/85 px-2 py-0.5 text-[10px] font-bold text-[var(--base-color-brand--bean)] shadow-sm">
+        {focal}mm
+      </span>
+    </div>
+  );
+}
+
+function SelectionPreviewCard({
+  title,
+  value,
+  columnKey,
+}: {
+  title: string;
+  value: string | number;
+  columnKey: ColumnKey;
+}) {
+  const imageUrl = CINEMA_ASSET_URLS[String(value)];
+  const detail =
+    columnKey === 'focal'
+      ? getFocalPreviewLabel(Number(value))
+      : columnKey === 'aperture'
+        ? 'Depth of field'
+        : columnKey === 'lens'
+          ? 'Optics character'
+          : 'Camera body';
+
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--champagne)]/70 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
+      <div className="size-16 shrink-0 overflow-hidden rounded-xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--shell)] shadow-inner">
+        {columnKey === 'focal' ? (
+          <FocalLengthPreview focal={Number(value)} />
+        ) : imageUrl ? (
+          <img src={imageUrl} alt="" className="size-full object-cover" />
+        ) : (
+          <div className="grid size-full place-items-center text-lg font-bold text-[var(--base-color-brand--umber)]">
+            {String(value).slice(0, 1)}
+          </div>
+        )}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[9px] font-bold tracking-[0.18em] text-[var(--base-color-brand--umber)] uppercase">
+          {title}
+        </div>
+        <div className="truncate text-sm font-semibold text-[var(--base-color-brand--bean)]">
+          {value}
+        </div>
+        <div className="truncate text-[11px] font-medium text-[var(--base-color-brand--umber)]">
+          {detail}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ScrollColumn({
   title,
@@ -46,7 +135,9 @@ function ScrollColumn({
       target?.scrollIntoView({ block: 'center' });
       list.dispatchEvent(new Event('scroll'));
     }, 100);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- initial snap only; value sync handled below
   }, []);
 
@@ -60,7 +151,9 @@ function ScrollColumn({
       target?.scrollIntoView({ block: 'center' });
       list.dispatchEvent(new Event('scroll'));
     }, 60);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [value]);
 
   const handleScroll = useCallback(() => {
@@ -181,6 +274,7 @@ function ScrollColumn({
   };
 
   const onItemClick = (item: string | number) => {
+    onChange(item);
     const list = listRef.current;
     if (!list) return;
     const target = Array.from(list.children).find(
@@ -190,16 +284,16 @@ function ScrollColumn({
   };
 
   return (
-    <div className="group relative flex w-[130px] shrink-0 snap-center flex-col items-center md:w-[150px]">
+    <div className="group relative flex w-[160px] shrink-0 snap-center flex-col items-center md:w-[180px]">
       <div
         className="mb-2 text-center text-[9px] font-bold tracking-[0.18em] text-[var(--base-color-brand--umber)] uppercase"
         style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
       >
         {title}
       </div>
-      <div className="relative h-[min(40vh,280px)] w-full overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--shell)] shadow-lg md:h-[300px]">
-        <div className="pointer-events-none absolute top-0 right-0 left-0 z-20 h-24 bg-gradient-to-b from-[var(--base-color-brand--champagne)] via-[var(--base-color-brand--champagne)]/50 to-transparent" />
-        <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-20 h-24 bg-gradient-to-t from-[var(--base-color-brand--champagne)] via-[var(--base-color-brand--champagne)]/50 to-transparent" />
+      <div className="relative h-[min(44vh,320px)] w-full overflow-hidden rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--shell)] shadow-lg md:h-[320px]">
+        <div className="pointer-events-none absolute top-0 right-0 left-0 z-20 h-20 bg-gradient-to-b from-[var(--base-color-brand--champagne)] via-[var(--base-color-brand--champagne)]/50 to-transparent" />
+        <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-20 h-20 bg-gradient-to-t from-[var(--base-color-brand--champagne)] via-[var(--base-color-brand--champagne)]/50 to-transparent" />
         <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 h-[72px] w-[85%] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--base-color-brand--cinamon)]/10 bg-[var(--base-color-brand--cinamon)]/[0.04]" />
 
         <div
@@ -211,7 +305,7 @@ function ScrollColumn({
           onMouseUp={onMouseUp}
           onMouseMove={onMouseMove}
         >
-          <div style={{ height: 'calc(50% - 50px)' }} />
+          <div style={{ height: 'calc(50% - 56px)' }} />
           {items.map((item) => {
             const imageUrl = CINEMA_ASSET_URLS[String(item)];
             return (
@@ -219,8 +313,19 @@ function ScrollColumn({
                 key={String(item)}
                 data-value={item}
                 role="option"
-                className="flex h-[100px] scale-90 cursor-pointer snap-center flex-col items-center justify-center gap-2 p-2 text-[var(--base-color-brand--bean)] opacity-35 blur-[0.5px] transition-all duration-300 ease-out select-none"
-                onClick={() => onItemClick(item)}
+                aria-selected={String(item) === String(value)}
+                tabIndex={0}
+                title={String(item)}
+                className="flex h-28 scale-90 cursor-pointer snap-center flex-col items-center justify-center gap-2 p-2 text-[var(--base-color-brand--bean)] opacity-35 blur-[0.5px] transition-all duration-300 ease-out select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--base-color-brand--cinamon)]"
+                onClick={() => {
+                  onItemClick(item);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onItemClick(item);
+                  }
+                }}
               >
                 <div
                   data-imgbox="true"
@@ -241,14 +346,14 @@ function ScrollColumn({
                 </div>
                 <span
                   data-label="true"
-                  className="max-w-full truncate px-1 text-center text-[9px] leading-tight font-bold tracking-wider uppercase md:text-[10px]"
+                  className="max-w-[8.5rem] px-1 text-center text-[9px] leading-[1.15] font-bold tracking-wide break-words whitespace-normal uppercase md:max-w-[9.75rem] md:text-[10px]"
                 >
                   {item}
                 </span>
               </div>
             );
           })}
-          <div style={{ height: 'calc(50% - 50px)' }} />
+          <div style={{ height: 'calc(50% - 56px)' }} />
         </div>
       </div>
     </div>
@@ -260,19 +365,26 @@ export default function CinemaControlsModal({
   onClose,
   settings,
   onSettingsChange,
+  onApply,
 }: CinemaControlsModalProps) {
   const backdropRef = useRef<HTMLDivElement>(null);
+  const [draftSettings, setDraftSettings] = useState(settings);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === backdropRef.current) onClose();
   };
 
   const update = (key: keyof CinemaSettings) => (val: string | number) => {
-    onSettingsChange({
-      ...settings,
+    setDraftSettings((current) => ({
+      ...current,
       [key]: key === 'focal' ? Number(val) : val,
-    } as CinemaSettings);
+    }));
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setDraftSettings(settings);
+  }, [isOpen, settings]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -280,33 +392,29 @@ export default function CinemaControlsModal({
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
   }, [isOpen, onClose]);
 
-  return (
+  if (!isOpen) return null;
+
+  return createPortal(
     <div
       ref={backdropRef}
-      className={`fixed inset-0 z-[100] flex items-center justify-center transition-opacity duration-200 ${
-        isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
-      }`}
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto p-4 pt-6"
       style={{ willChange: 'opacity' }}
       onClick={handleBackdropClick}
     >
+      <div className="fixed inset-0 bg-[var(--base-color-brand--bean)]/55 backdrop-blur-md" />
       <div
-        className={`absolute inset-0 bg-[var(--base-color-brand--bean)]/55 backdrop-blur-md transition-opacity duration-200 ${
-          isOpen ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
-      <div
-        className={`relative z-10 mx-4 flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] p-5 shadow-2xl transition-all duration-200 md:p-8 ${
-          isOpen
-            ? 'translate-y-0 scale-100 opacity-100'
-            : 'pointer-events-none translate-y-2 scale-95 opacity-0'
-        }`}
+        className="relative z-10 flex max-h-[calc(100vh-3rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] p-5 shadow-2xl md:p-6"
         style={{ willChange: 'transform, opacity' }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
       >
-        <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h2
               className="text-lg font-semibold text-[var(--base-color-brand--bean)] md:text-xl"
@@ -328,47 +436,74 @@ export default function CinemaControlsModal({
           </button>
         </div>
 
-        <div className="hide-scrollbar flex min-h-0 w-full snap-x justify-start gap-3 overflow-x-auto py-4 md:justify-center md:gap-6 md:py-6">
+        <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <SelectionPreviewCard title="Camera" value={draftSettings.camera} columnKey="camera" />
+          <SelectionPreviewCard title="Lens" value={draftSettings.lens} columnKey="lens" />
+          <SelectionPreviewCard
+            title="Focal length"
+            value={draftSettings.focal}
+            columnKey="focal"
+          />
+          <SelectionPreviewCard
+            title="Aperture"
+            value={draftSettings.aperture}
+            columnKey="aperture"
+          />
+        </div>
+
+        <div className="hide-scrollbar flex min-h-0 w-full flex-1 snap-x justify-start gap-3 overflow-x-auto overflow-y-hidden py-2 md:justify-center md:gap-5 md:py-3">
           <ScrollColumn
             title="Camera"
             items={CAMERAS}
             columnKey="camera"
-            value={settings.camera}
+            value={draftSettings.camera}
             onChange={update('camera')}
           />
           <ScrollColumn
             title="Lens"
             items={LENSES}
             columnKey="lens"
-            value={settings.lens}
+            value={draftSettings.lens}
             onChange={update('lens')}
           />
           <ScrollColumn
             title="Focal length"
             items={FOCAL_LENGTHS}
             columnKey="focal"
-            value={settings.focal}
+            value={draftSettings.focal}
             onChange={update('focal')}
           />
           <ScrollColumn
             title="Aperture"
             items={APERTURES}
             columnKey="aperture"
-            value={settings.aperture}
+            value={draftSettings.aperture}
             onChange={update('aperture')}
           />
         </div>
 
-        <div className="mt-4 flex justify-end border-t border-[var(--base-color-brand--umber)]/20 pt-4">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--base-color-brand--umber)]/20 pt-4">
+          <div className="min-w-0 text-xs text-[var(--base-color-brand--umber)]">
+            <span className="font-semibold text-[var(--base-color-brand--bean)]">
+              Current input:
+            </span>{' '}
+            {draftSettings.camera} · {draftSettings.lens} · {draftSettings.focal}mm ·{' '}
+            {draftSettings.aperture}
+          </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              onSettingsChange(draftSettings);
+              onApply?.();
+              onClose();
+            }}
             className="rounded-full border-none bg-[var(--base-color-brand--cinamon)] px-6 py-2 text-sm font-semibold text-[var(--base-color-brand--shell)] shadow-[0_3px_0_0_var(--base-color-brand--dark-red)] transition hover:bg-[var(--base-color-brand--red)] active:translate-y-0.5"
           >
-            Done
+            Apply to image input
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

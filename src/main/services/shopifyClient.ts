@@ -21,7 +21,10 @@ export const SHOPIFY_API_VERSION = '2026-04';
 export class ShopifyApiError extends Error {
   status?: number | undefined;
   shopifyErrors?: unknown;
-  constructor(message: string, opts: { status?: number | undefined; shopifyErrors?: unknown } = {}) {
+  constructor(
+    message: string,
+    opts: { status?: number | undefined; shopifyErrors?: unknown } = {},
+  ) {
     super(message);
     this.name = 'ShopifyApiError';
     this.status = opts.status;
