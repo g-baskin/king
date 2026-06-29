@@ -28,33 +28,98 @@ function getFocalPreviewLabel(focal: number): string {
   return 'Portrait compression';
 }
 
-function FocalLengthPreview({ focal }: { focal: number }) {
-  const spread = Math.max(10, Math.min(44, 52 - focal * 0.45));
-  const topY = 32 - spread;
-  const bottomY = 32 + spread;
+function getAperturePreviewLabel(aperture: string): string {
+  if (aperture === 'f/1.4') return 'Creamy shallow focus';
+  if (aperture === 'f/4') return 'Balanced focus falloff';
+  return 'Deep-focus clarity';
+}
+
+function getLensPreviewLabel(lens: string): string {
+  if (lens.includes('Tilt')) return 'Selective focus plane and miniature edge blur';
+  if (lens === 'Compact Anamorphic') return 'Wide squeeze, oval bokeh, compact flare';
+  if (lens === 'Classic Anamorphic') return 'Widescreen compression, oval bokeh, blue streaks';
+  if (lens.includes('Macro')) return 'Close-focus magnification with shallow falloff';
+  if (lens.includes('Swirl')) return 'Curved field edges and circular background motion';
+  if (lens.includes('Halation') || lens.includes('Diffusion'))
+    return 'Glowing highlights and softened microcontrast';
+  if (lens.includes('Clinical')) return 'Crisp microcontrast, clean edges, minimal aberration';
+  if (lens.includes('70s')) return 'Lower contrast, warm vintage flare response';
+  if (lens.includes('Vintage')) return 'Soft contrast and imperfect glass texture';
+  if (lens.includes('Warm')) return 'Warm skin tones and gentle highlight bloom';
+  return 'Clean contrast, controlled focus, polished rendering';
+}
+
+function getLensPreviewBadge(lens: string): string {
+  if (lens.includes('Tilt')) return 'Tilt';
+  if (lens.includes('Anamorphic')) return 'Flare';
+  if (lens.includes('Macro')) return 'Macro';
+  if (lens.includes('Swirl')) return 'Swirl';
+  if (lens.includes('Halation') || lens.includes('Diffusion')) return 'Glow';
+  if (lens.includes('Clinical')) return 'Sharp';
+  if (lens.includes('Vintage') || lens.includes('70s') || lens.includes('Warm')) return 'Warm';
+  return 'Prime';
+}
+
+const OUTPUT_PREVIEW_FALLBACK_URLS: Record<ColumnKey, string> = {
+  camera: '/assets/cinema/output-previews/camera.jpg',
+  lens: '/assets/cinema/output-previews/lens.jpg',
+  focal: '/assets/cinema/output-previews/focal.jpg',
+  aperture: '/assets/cinema/output-previews/aperture.jpg',
+};
+
+function getCameraPreviewBadge(camera: string): string {
+  if (camera.includes('70mm')) return '70mm';
+  if (camera.includes('16mm')) return 'Film';
+  if (camera.includes('S35')) return 'S35';
+  if (camera.includes('8K')) return '8K';
+  if (camera.includes('Full-Frame')) return 'FF';
+  return 'LF';
+}
+
+function getOutputPreviewBadge(columnKey: ColumnKey, value: string | number): string {
+  if (columnKey === 'camera') return getCameraPreviewBadge(String(value));
+  if (columnKey === 'lens') return getLensPreviewBadge(String(value));
+  if (columnKey === 'focal') return `${value}mm`;
+  return String(value);
+}
+
+function getOutputPreviewSlug(value: string | number): string {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function getRealOutputPhotoUrl(columnKey: ColumnKey, value: string | number): string {
+  return `/assets/cinema/output-previews/${columnKey}-${getOutputPreviewSlug(value)}.jpg`;
+}
+
+function OutputPhotoPreview({
+  columnKey,
+  value,
+}: {
+  columnKey: ColumnKey;
+  value: string | number;
+}) {
+  const valueText = String(value);
+  const badge = getOutputPreviewBadge(columnKey, value);
+  const photoUrl = getRealOutputPhotoUrl(columnKey, value);
 
   return (
-    <div className="relative grid size-full place-items-center overflow-hidden bg-[radial-gradient(circle_at_20%_50%,rgba(255,214,160,0.24),transparent_36%),linear-gradient(135deg,rgba(76,43,24,0.18),rgba(16,19,26,0.04))]">
-      <svg aria-hidden="true" viewBox="0 0 100 64" className="h-full w-full">
-        <path
-          d={`M18 32 L86 ${topY} L86 ${bottomY} Z`}
-          className="fill-[var(--base-color-brand--cinamon)]/20 stroke-[var(--base-color-brand--cinamon)]/65"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-        <circle cx="18" cy="32" r="5" className="fill-[var(--base-color-brand--bean)]" />
-        <line
-          x1="18"
-          y1="32"
-          x2="86"
-          y2="32"
-          className="stroke-[var(--base-color-brand--umber)]/50"
-          strokeDasharray="4 4"
-          strokeWidth="1.5"
-        />
-      </svg>
-      <span className="absolute right-2 bottom-2 rounded-full bg-[var(--base-color-brand--shell)]/85 px-2 py-0.5 text-[10px] font-bold text-[var(--base-color-brand--bean)] shadow-sm">
-        {focal}mm
+    <div className="relative size-full overflow-hidden bg-[var(--base-color-brand--bean)]">
+      <img
+        key={`${columnKey}-${valueText}`}
+        src={photoUrl}
+        alt={`${valueText} example output`}
+        className="size-full object-cover"
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.src = OUTPUT_PREVIEW_FALLBACK_URLS[columnKey];
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_36%,rgba(42,24,17,0.5))]" />
+      <span className="absolute right-1.5 bottom-1.5 rounded-full bg-[var(--base-color-brand--shell)]/90 px-1.5 py-0.5 text-[9px] font-bold text-[var(--base-color-brand--bean)] shadow-sm">
+        {badge}
       </span>
     </div>
   );
@@ -69,29 +134,17 @@ function SelectionPreviewCard({
   value: string | number;
   columnKey: ColumnKey;
 }) {
-  const imageUrl = CINEMA_ASSET_URLS[String(value)];
   const detail =
     columnKey === 'focal'
       ? getFocalPreviewLabel(Number(value))
       : columnKey === 'aperture'
-        ? 'Depth of field'
+        ? getAperturePreviewLabel(String(value))
         : columnKey === 'lens'
-          ? 'Optics character'
+          ? getLensPreviewLabel(String(value))
           : 'Camera body';
 
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--champagne)]/70 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
-      <div className="size-16 shrink-0 overflow-hidden rounded-xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--shell)] shadow-inner">
-        {columnKey === 'focal' ? (
-          <FocalLengthPreview focal={Number(value)} />
-        ) : imageUrl ? (
-          <img src={imageUrl} alt="" className="size-full object-cover" />
-        ) : (
-          <div className="grid size-full place-items-center text-lg font-bold text-[var(--base-color-brand--umber)]">
-            {String(value).slice(0, 1)}
-          </div>
-        )}
-      </div>
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_30%] items-center gap-3 rounded-2xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--champagne)]/70 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
       <div className="min-w-0">
         <div className="text-[9px] font-bold tracking-[0.18em] text-[var(--base-color-brand--umber)] uppercase">
           {title}
@@ -99,9 +152,12 @@ function SelectionPreviewCard({
         <div className="truncate text-sm font-semibold text-[var(--base-color-brand--bean)]">
           {value}
         </div>
-        <div className="truncate text-[11px] font-medium text-[var(--base-color-brand--umber)]">
+        <div className="text-[11px] leading-snug font-medium text-[var(--base-color-brand--umber)]">
           {detail}
         </div>
+      </div>
+      <div className="h-16 min-w-0 overflow-hidden rounded-xl border border-[var(--base-color-brand--umber)]/25 bg-[var(--base-color-brand--shell)] shadow-inner">
+        <OutputPhotoPreview columnKey={columnKey} value={value} />
       </div>
     </div>
   );

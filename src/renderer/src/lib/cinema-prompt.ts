@@ -13,17 +13,24 @@ export const CAMERA_MAP: Record<string, string> = {
 };
 
 export const LENS_MAP: Record<string, string> = {
-  'Creative Tilt Lens': 'creative tilt lens effect',
-  'Compact Anamorphic': 'compact anamorphic lens',
-  'Extreme Macro': 'extreme macro lens',
-  '70s Cinema Prime': '1970s cinema prime lens',
-  'Classic Anamorphic': 'classic anamorphic lens',
-  'Premium Modern Prime': 'premium modern prime lens',
-  'Warm Cinema Prime': 'warm-toned cinema prime lens',
-  'Swirl Bokeh Portrait': 'swirl bokeh portrait lens',
-  'Vintage Prime': 'vintage prime lens',
-  'Halation Diffusion': 'halation diffusion filter',
-  'Clinical Sharp Prime': 'ultra-sharp clinical prime lens',
+  'Creative Tilt Lens': 'creative tilt lens, selective focus plane, miniature-like edge blur',
+  'Compact Anamorphic':
+    'compact anamorphic lens, wider cinematic squeeze, oval bokeh, horizontal flares',
+  'Extreme Macro': 'extreme macro lens, close-focus magnification, very shallow focus falloff',
+  '70s Cinema Prime': '1970s cinema prime lens, warm lower-contrast glass, vintage flare response',
+  'Classic Anamorphic':
+    'classic anamorphic lens, widescreen compression, oval bokeh, blue streak flares',
+  'Premium Modern Prime':
+    'premium modern prime lens, clean contrast, controlled focus, polished rendering',
+  'Warm Cinema Prime':
+    'warm-toned cinema prime lens, flattering skin tones, gentle highlight bloom',
+  'Swirl Bokeh Portrait':
+    'swirl bokeh portrait lens, curved field edges, circular background motion',
+  'Vintage Prime':
+    'vintage prime lens, soft contrast, imperfect glass texture, organic focus rolloff',
+  'Halation Diffusion': 'halation diffusion filter, glowing highlights, softened microcontrast',
+  'Clinical Sharp Prime':
+    'ultra-sharp clinical prime lens, crisp microcontrast, precise edges, minimal aberration',
 };
 
 /** Focal length (mm) → perspective phrase */
