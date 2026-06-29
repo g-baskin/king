@@ -1,6 +1,15 @@
 import { getImagesJsonPath } from './paths';
 import { readJson, writeJsonAtomic, withJsonLock } from './atomicJson';
 
+export type StoredImageModelProvider = 'kie' | 'fal';
+export type StoredImageModelVariant =
+  | 'kie_auto'
+  | 'kie_gpt4o'
+  | 'kie_flux_kontext_pro'
+  | 'kie_flux_kontext_max'
+  | 'nano_banana_pro'
+  | 'gpt_image_2';
+
 export interface StoredImage {
   id: string;
   url: string;
@@ -10,6 +19,9 @@ export interface StoredImage {
   createdAt: string;
   filename: string;
   workspaceId?: string | undefined;
+  modelProvider?: StoredImageModelProvider;
+  modelVariant?: StoredImageModelVariant;
+  effectiveModelVariant?: StoredImageModelVariant;
 }
 
 interface ImageStore {

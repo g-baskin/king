@@ -408,7 +408,7 @@ export default function ApisPage() {
     {
       variant: 'simpleToken',
       name: 'fal.ai',
-      description: 'Powers AI image generation',
+      description: 'Powers legacy AI image generation routes',
       keyUrl: 'https://fal.ai/dashboard/keys',
       keyUrlLabel: 'Get your key',
       placeholder: 'Paste your fal.ai key here',
@@ -417,6 +417,19 @@ export default function ApisPage() {
       saving: savingService === 'fal',
       onSave: (v) => saveSimpleToken('fal', v),
       onDelete: () => handleDelete('fal'),
+    },
+    {
+      variant: 'simpleToken',
+      name: 'KIE.ai',
+      description: 'Powers image generation and the model marketplace',
+      keyUrl: 'https://kie.ai/api-key',
+      keyUrlLabel: 'Get your key',
+      placeholder: 'Paste your KIE.ai API key',
+      saved: !!savedKeys.kie,
+      maskedKey: savedKeys.kie?.maskedKey,
+      saving: savingService === 'kie',
+      onSave: (v) => saveSimpleToken('kie', v),
+      onDelete: () => handleDelete('kie'),
     },
     {
       variant: 'simpleToken',
@@ -603,8 +616,8 @@ export default function ApisPage() {
       name: 'Storefront Bridge',
       description:
         'Publish King artwork into a storefront that exposes /api/king/status and the Printify catalog',
-      keyUrl: 'http://127.0.0.1:3000',
-      keyUrlLabel: 'Open local storefront',
+      keyUrl: 'https://your-storefront.com',
+      keyUrlLabel: 'Open storefront',
       saved: !!savedKeys['storefront-bridge'] || !!savedKeys['different-tees'],
       maskedKey:
         savedKeys['storefront-bridge']?.maskedKey ?? savedKeys['different-tees']?.maskedKey,
@@ -616,12 +629,12 @@ export default function ApisPage() {
       saving: savingService === 'storefront-bridge',
       buttonLabel: 'Connect',
       footnote:
-        'KING validates by calling {Storefront URL}/api/king/status with Authorization: Bearer <King API token>. Enter the origin only, e.g. http://127.0.0.1:3000 locally or your HTTPS production domain.',
+        'KING validates by calling {Storefront URL}/api/king/status with Authorization: Bearer <King API token>. Enter the origin only, e.g. your HTTPS production domain.',
       fields: [
         {
           key: 'baseUrl',
           label: 'Storefront URL',
-          placeholder: 'http://127.0.0.1:3000 or https://your-storefront.com',
+          placeholder: 'https://your-storefront.com',
           required: true,
           type: 'text',
           hint: 'Origin only. KING appends /api/king/status during Connect.',

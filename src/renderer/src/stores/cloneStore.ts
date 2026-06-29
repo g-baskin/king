@@ -88,18 +88,31 @@ const INITIAL_STATE = {
 export const useCloneStore = create<CloneStore>()((set, get) => ({
   ...INITIAL_STATE,
 
-  setStep: (step) => set({ step }),
-  setSourceImage: (sourceImage) => set({ sourceImage }),
-  setSelectedCharacterId: (selectedCharacterId) => set({ selectedCharacterId }),
-  setTweaks: (tweaks) => set({ tweaks }),
-  setAspectRatio: (aspectRatio) => set({ aspectRatio }),
+  setStep: (step) => {
+    set({ step });
+  },
+  setSourceImage: (sourceImage) => {
+    set({ sourceImage });
+  },
+  setSelectedCharacterId: (selectedCharacterId) => {
+    set({ selectedCharacterId });
+  },
+  setTweaks: (tweaks) => {
+    set({ tweaks });
+  },
+  setAspectRatio: (aspectRatio) => {
+    set({ aspectRatio });
+  },
 
-  removeResultByImageId: (imageId) =>
+  removeResultByImageId: (imageId) => {
     set((state) => ({
       results: state.results.filter((slot) => slot.image?.id !== imageId),
-    })),
+    }));
+  },
 
-  startNewClone: () => set({ ...INITIAL_STATE }),
+  startNewClone: () => {
+    set({ ...INITIAL_STATE });
+  },
 
   runGeneration: async (character) => {
     const { sourceImage, tweaks, aspectRatio } = get();
@@ -227,6 +240,9 @@ async function generateSingleSlot(
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
       workspaceId: useWorkspaceStore.getState().activeWorkspaceId,
+      modelProvider: result.modelProvider,
+      modelVariant: result.modelVariant,
+      effectiveModelVariant: result.effectiveModelVariant,
     });
 
     // Push into the global gallery store so the Image page picks it up

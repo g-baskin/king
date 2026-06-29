@@ -283,6 +283,9 @@ export default function ImagePage({
               prompt: data.prompt,
               aspectRatio: data.aspectRatio,
               workspaceId: activeWorkspace.id,
+              modelProvider: result.modelProvider,
+              modelVariant: result.modelVariant,
+              effectiveModelVariant: result.effectiveModelVariant,
             });
 
             addImage(savedImage);

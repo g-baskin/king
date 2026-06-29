@@ -28,6 +28,7 @@ import {
 } from '@/stores/createAdsStore';
 import type { CustomAdReferenceData, EntityData, GeneratedImageData } from '@/types/electron';
 import { useImagesStore } from '@/stores/imagesStore';
+import { useModelStore } from '@/stores/modelStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { kingApi } from '@/lib/kingApi';
 
@@ -230,8 +231,12 @@ async function bundledAssetToDataUrl(assetUrl: string): Promise<string> {
   const blob = await response.blob();
   return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error ?? new Error('Failed to read asset'));
+    reader.onload = () => {
+      resolve(reader.result as string);
+    };
+    reader.onerror = () => {
+      reject(reader.error ?? new Error('Failed to read asset'));
+    };
     reader.readAsDataURL(blob);
   });
 }
@@ -614,7 +619,9 @@ export default function CreateAdsPage() {
                 <button
                   key={preset.id}
                   type="button"
-                  onClick={() => applyPreset(preset)}
+                  onClick={() => {
+                    applyPreset(preset);
+                  }}
                   className={`rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
                     isActive
                       ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -715,15 +722,15 @@ export default function CreateAdsPage() {
                 onOpen={setSelectedImage}
                 onRetry={retrySlot}
                 compareIds={compareIds}
-                onToggleCompare={(id) =>
+                onToggleCompare={(id) => {
                   setCompareIds((prev) =>
                     prev.includes(id)
                       ? prev.filter((x) => x !== id)
                       : prev.length < 2
                         ? [...prev, id]
                         : prev,
-                  )
-                }
+                  );
+                }}
                 workspaceId={activeWorkspace.id}
               />
             )}
@@ -755,7 +762,9 @@ export default function CreateAdsPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setStep('animate')}
+                  onClick={() => {
+                    setStep('animate');
+                  }}
                   disabled={
                     results.filter((r) => r.status === 'success').length === 0 || isGenerating
                   }
@@ -808,7 +817,9 @@ export default function CreateAdsPage() {
           images={results
             .filter((slot) => slot.status === 'success' && slot.image)
             .map((slot) => slot.image as GeneratedImage)}
-          onClose={() => setSelectedImage(null)}
+          onClose={() => {
+            setSelectedImage(null);
+          }}
           onDownload={handleDownload}
           onDelete={(id) => {
             handleDelete(id);
@@ -914,7 +925,12 @@ function AdStyleStep({
 
   return (
     <div className="flex items-center gap-3">
-      <CarouselScrollButton direction="left" onClick={() => scrollBy(-1)} />
+      <CarouselScrollButton
+        direction="left"
+        onClick={() => {
+          scrollBy(-1);
+        }}
+      />
       <div
         ref={scrollerRef}
         className="hide-scrollbar min-w-0 flex-1 overflow-x-auto"
@@ -963,7 +979,9 @@ function AdStyleStep({
               >
                 <button
                   type="button"
-                  onClick={() => onSelect(ad.id)}
+                  onClick={() => {
+                    onSelect(ad.id);
+                  }}
                   title={categoryLabel}
                   className="block h-full w-full cursor-pointer"
                 >
@@ -1006,7 +1024,12 @@ function AdStyleStep({
           })}
         </div>
       </div>
-      <CarouselScrollButton direction="right" onClick={() => scrollBy(1)} />
+      <CarouselScrollButton
+        direction="right"
+        onClick={() => {
+          scrollBy(1);
+        }}
+      />
     </div>
   );
 }
@@ -1068,7 +1091,9 @@ function ProductStep({
           <button
             key={product.id}
             type="button"
-            onClick={() => onSelect(product.id)}
+            onClick={() => {
+              onSelect(product.id);
+            }}
             className={`group relative flex flex-col overflow-hidden rounded-2xl border-2 bg-[var(--base-color-brand--champagne)] text-left transition-all ${
               active
                 ? 'border-[var(--base-color-brand--bean)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]'
@@ -1148,7 +1173,9 @@ function BriefStep({
             <button
               key={chip}
               type="button"
-              onClick={() => onInsertChip(chip)}
+              onClick={() => {
+                onInsertChip(chip);
+              }}
               className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                 selected
                   ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -1173,7 +1200,9 @@ function BriefStep({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => onSelectCharacter(null)}
+                onClick={() => {
+                  onSelectCharacter(null);
+                }}
                 className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                   selectedCharacterId === null
                     ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -1189,7 +1218,9 @@ function BriefStep({
                   <button
                     key={character.id}
                     type="button"
-                    onClick={() => onSelectCharacter(character.id)}
+                    onClick={() => {
+                      onSelectCharacter(character.id);
+                    }}
                     className={`rounded-full border px-3 py-1 text-xs font-semibold ${
                       active
                         ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -1216,7 +1247,9 @@ function BriefStep({
           {selectedStyleImageUrl && (
             <button
               type="button"
-              onClick={() => onSelectStyleImage(null)}
+              onClick={() => {
+                onSelectStyleImage(null);
+              }}
               className="text-[11px] font-semibold text-[var(--base-color-brand--umber)] hover:text-[var(--base-color-brand--bean)]"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
@@ -1234,7 +1267,9 @@ function BriefStep({
                 <button
                   key={img.id}
                   type="button"
-                  onClick={() => onSelectStyleImage(img.url)}
+                  onClick={() => {
+                    onSelectStyleImage(img.url);
+                  }}
                   className={`overflow-hidden rounded-xl border-2 ${
                     active
                       ? 'border-[var(--base-color-brand--bean)]'
@@ -1260,7 +1295,9 @@ function BriefStep({
 
       <textarea
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
         placeholder="e.g. A double-walled stainless steel coffee mug that keeps drinks hot for 6 hours. Leak-proof lid, minimalist design, aimed at remote workers."
         autoFocus
         className="min-h-[180px] w-full resize-y rounded-2xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--champagne)] p-4 text-[15px] text-[var(--text-color--text-primary)] placeholder:text-[var(--base-color-brand--umber)]/60 focus:border-[var(--base-color-brand--bean)] focus:outline-none"
@@ -1291,7 +1328,9 @@ function FormatStep({
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => onOutputModeChange('still-batch')}
+          onClick={() => {
+            onOutputModeChange('still-batch');
+          }}
           className={`rounded-full border px-3 py-1 text-xs font-semibold ${
             outputMode === 'still-batch'
               ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -1303,7 +1342,9 @@ function FormatStep({
         </button>
         <button
           type="button"
-          onClick={() => onOutputModeChange('talk-to-cam')}
+          onClick={() => {
+            onOutputModeChange('talk-to-cam');
+          }}
           className={`rounded-full border px-3 py-1 text-xs font-semibold ${
             outputMode === 'talk-to-cam'
               ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -1317,7 +1358,9 @@ function FormatStep({
       {suggestedRatio && suggestedRatio !== aspectRatio && (
         <button
           type="button"
-          onClick={() => onAspectRatioChange(suggestedRatio)}
+          onClick={() => {
+            onAspectRatioChange(suggestedRatio);
+          }}
           className="rounded-full border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)]"
           style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
         >
@@ -1331,7 +1374,9 @@ function FormatStep({
             <button
               key={ratio.value}
               type="button"
-              onClick={() => onAspectRatioChange(ratio.value)}
+              onClick={() => {
+                onAspectRatioChange(ratio.value);
+              }}
               className={`group relative flex flex-col items-center gap-3 rounded-2xl border-2 bg-[var(--base-color-brand--champagne)] p-4 transition-all ${
                 active
                   ? 'border-[var(--base-color-brand--bean)] shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)]'
@@ -1436,6 +1481,7 @@ function ResultsStep({
       const productUrls = selectedProduct.referenceImages.slice(0, 4);
       const characterUrls = selectedCharacter?.referenceImages.slice(0, 2) ?? [];
 
+      const modelVariant = useModelStore.getState().selectedModel;
       let createdCount = 0;
       for (const shot of editableShots) {
         const prompt = buildTalkShotFramePrompt(
@@ -1454,6 +1500,7 @@ function ResultsStep({
             ...productUrls,
             ...characterUrls,
           ],
+          modelVariant,
         });
         const firstUrl = result.success ? result.resultUrls?.[0] : undefined;
         if (!firstUrl) continue;
@@ -1463,6 +1510,9 @@ function ResultsStep({
           prompt,
           aspectRatio,
           workspaceId,
+          modelProvider: result.modelProvider,
+          modelVariant: result.modelVariant,
+          effectiveModelVariant: result.effectiveModelVariant,
         });
         useImagesStore.getState().addImage(saved);
         createdCount += 1;
@@ -1726,9 +1776,11 @@ function AnimateStep({
           {sourceImageUrl && (
             <button
               type="button"
-              onClick={() =>
-                setPinnedSourceImageUrl((prev) => (prev === sourceImageUrl ? null : sourceImageUrl))
-              }
+              onClick={() => {
+                setPinnedSourceImageUrl((prev) =>
+                  prev === sourceImageUrl ? null : sourceImageUrl,
+                );
+              }}
               className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
                 pinnedSourceImageUrl === sourceImageUrl
                   ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -1826,7 +1878,9 @@ function AnimateStep({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setVideoPrompt(shirtUnwrapPrompt)}
+            onClick={() => {
+              setVideoPrompt(shirtUnwrapPrompt);
+            }}
             className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
@@ -1834,7 +1888,9 @@ function AnimateStep({
           </button>
           <button
             type="button"
-            onClick={() => setVideoPrompt(revealPrompt)}
+            onClick={() => {
+              setVideoPrompt(revealPrompt);
+            }}
             className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
@@ -1852,7 +1908,9 @@ function AnimateStep({
 
         <details
           open={isMotionPackOpen}
-          onToggle={(e) => setIsMotionPackOpen((e.target as HTMLDetailsElement).open)}
+          onToggle={(e) => {
+            setIsMotionPackOpen((e.target as HTMLDetailsElement).open);
+          }}
           className="rounded-xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--shell)] p-3"
         >
           <summary
@@ -1866,7 +1924,9 @@ function AnimateStep({
               <input
                 type="checkbox"
                 checked={useMultiShotGuidance}
-                onChange={(e) => setUseMultiShotGuidance(e.target.checked)}
+                onChange={(e) => {
+                  setUseMultiShotGuidance(e.target.checked);
+                }}
               />
               Use multi-shot reveal guidance (beta)
             </label>
@@ -1874,28 +1934,34 @@ function AnimateStep({
               <div className="space-y-2">
                 <textarea
                   value={shot1Prompt}
-                  onChange={(e) => setShot1Prompt(e.target.value)}
+                  onChange={(e) => {
+                    setShot1Prompt(e.target.value);
+                  }}
                   className="min-h-16 w-full resize-y rounded-lg border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-2 text-xs"
                 />
                 <textarea
                   value={shot2Prompt}
-                  onChange={(e) => setShot2Prompt(e.target.value)}
+                  onChange={(e) => {
+                    setShot2Prompt(e.target.value);
+                  }}
                   className="min-h-16 w-full resize-y rounded-lg border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-2 text-xs"
                 />
                 <textarea
                   value={shot3Prompt}
-                  onChange={(e) => setShot3Prompt(e.target.value)}
+                  onChange={(e) => {
+                    setShot3Prompt(e.target.value);
+                  }}
                   className="min-h-16 w-full resize-y rounded-lg border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)] p-2 text-xs"
                 />
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setVideoPrompt(
                       [shot1Prompt.trim(), shot2Prompt.trim(), shot3Prompt.trim()]
                         .filter((part) => part.length > 0)
                         .join('\n'),
-                    )
-                  }
+                    );
+                  }}
                   className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-3 py-1 text-xs font-semibold text-[var(--base-color-brand--bean)]"
                   style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
                 >
@@ -1908,7 +1974,9 @@ function AnimateStep({
 
         <textarea
           value={videoPrompt}
-          onChange={(e) => setVideoPrompt(e.target.value)}
+          onChange={(e) => {
+            setVideoPrompt(e.target.value);
+          }}
           className="min-h-24 w-full resize-y rounded-xl border border-[var(--base-color-brand--umber)]/40 bg-[var(--base-color-brand--shell)] p-3 text-xs leading-relaxed text-[var(--text-color--text-primary)] focus:border-[var(--base-color-brand--bean)] focus:outline-none"
         />
       </div>
@@ -1920,7 +1988,9 @@ function AnimateStep({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setVideoDuration(5)}
+            onClick={() => {
+              setVideoDuration(5);
+            }}
             className={`rounded-full border px-3 py-1 text-xs font-semibold ${
               videoDuration === 5
                 ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -1932,7 +2002,9 @@ function AnimateStep({
           </button>
           <button
             type="button"
-            onClick={() => setVideoDuration(10)}
+            onClick={() => {
+              setVideoDuration(10);
+            }}
             className={`rounded-full border px-3 py-1 text-xs font-semibold ${
               videoDuration === 10
                 ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'
@@ -2020,7 +2092,9 @@ function ResultCard({
           </p>
           <button
             type="button"
-            onClick={() => onRetry(slot.id)}
+            onClick={() => {
+              onRetry(slot.id);
+            }}
             className="rounded-full border border-[var(--base-color-brand--umber)]/50 bg-[var(--base-color-brand--shell)] px-4 py-1.5 text-xs font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--bean)] hover:bg-[var(--base-color-brand--bean)] hover:text-[var(--base-color-brand--shell)]"
             style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
           >
@@ -2046,7 +2120,9 @@ function ResultCard({
     <div className="relative">
       <button
         type="button"
-        onClick={() => onOpen(image)}
+        onClick={() => {
+          onOpen(image);
+        }}
         className={`group cursor-zoom-in transition-shadow hover:shadow-[0_8px_24px_-12px_rgba(51,32,26,0.35)] ${cardClass}`}
         style={aspectStyle}
         aria-label="Open generated ad"
@@ -2071,7 +2147,9 @@ function ResultCard({
       </button>
       <button
         type="button"
-        onClick={() => onToggleCompare(slot.id)}
+        onClick={() => {
+          onToggleCompare(slot.id);
+        }}
         className={`absolute top-2 left-2 rounded-full border px-2 py-1 text-[10px] font-bold tracking-wide ${
           compareSelected
             ? 'border-[var(--base-color-brand--bean)] bg-[var(--base-color-brand--bean)] text-[var(--base-color-brand--shell)]'

@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react';
 import type { UpdaterStatus } from '@/types/electron';
 import { CloseIcon, DownloadIcon, RefreshIcon } from '@/components/icons';
 import SelectDropdown from '@/components/ui/SelectDropdown';
-import { useModelStore, type ImageModel } from '@/stores/modelStore';
+import { IMAGE_MODEL_OPTIONS, useModelStore, type ImageModel } from '@/stores/modelStore';
 import { kingApi } from '@/lib/kingApi';
-
-const MODEL_OPTIONS: { value: ImageModel; label: string }[] = [
-  { value: 'nano_banana_pro', label: 'Nano Banana Pro' },
-  { value: 'gpt_image_2', label: 'GPT Image 2' },
-];
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -145,7 +140,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         {/* Image model — routes every generation (Image, Clone, Create Ads)
-            through the chosen fal endpoint. */}
+            through the chosen provider endpoint. */}
         <section className="mt-6 rounded-2xl border border-[var(--base-color-brand--umber)]/30 bg-[var(--base-color-brand--champagne)]/60 px-4 py-3">
           <p
             className="text-sm font-semibold text-[var(--base-color-brand--bean)]"
@@ -155,9 +150,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </p>
           <div className="mt-2">
             <SelectDropdown
-              options={MODEL_OPTIONS}
+              options={IMAGE_MODEL_OPTIONS}
               value={selectedModel}
-              onChange={(v) => setSelectedModel(v as ImageModel)}
+              onChange={(v) => {
+                setSelectedModel(v as ImageModel);
+              }}
               fullWidth
             />
           </div>

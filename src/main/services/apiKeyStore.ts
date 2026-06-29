@@ -22,6 +22,7 @@ interface ApiKeyStore {
 
 const ENV_MAP: Record<string, string> = {
   fal: 'FAL_KEY',
+  kie: 'KIE_API_KEY',
   openrouter: 'OPENROUTER_API_KEY',
   firecrawl: 'FIRECRAWL_API_KEY',
   replicate: 'REPLICATE_API_TOKEN',
@@ -158,7 +159,7 @@ export function loadApiKeysIntoEnv(): void {
   const store = readStore();
   for (const [service, envVar] of Object.entries(ENV_MAP)) {
     if (!process.env[envVar] && store.keys[service]?.encryptedKey) {
-      const plain = decrypt(store.keys[service].encryptedKey!);
+      const plain = decrypt(store.keys[service].encryptedKey);
       if (plain) process.env[envVar] = plain;
     }
   }

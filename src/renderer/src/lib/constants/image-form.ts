@@ -1,3 +1,5 @@
+import type { ImageModel } from '@/stores/modelStore';
+
 export const MAX_REFERENCE_IMAGES = 8;
 export const MAX_IMAGE_SIZE_MB = 30;
 export const MAX_IMAGES_PER_GENERATION = 4;
@@ -25,9 +27,8 @@ export const SUPPORTED_IMAGE_ACCEPT = SUPPORTED_IMAGE_MIME_TYPES.join(',');
 /** Regex used to validate File.type values from user uploads. */
 export const SUPPORTED_IMAGE_MIME_REGEX = /^image\/(jpeg|jpg|png|webp|heic|heif)$/i;
 
-// Aspect ratios supported by Nano Banana Pro (Google Gemini 3 Pro Image).
-// Full ladder; matches what fal exposes on `fal-ai/nano-banana-pro`.
-export const nanoBananaAspectRatioOptions = [
+// Broad aspect-ratio ladder used by KIE Flux Kontext and fal Nano Banana Pro.
+export const broadAspectRatioOptions = [
   { value: 'auto', label: 'Auto' },
   { value: '1:1', label: '1:1' },
   { value: '2:3', label: '2:3' },
@@ -39,6 +40,18 @@ export const nanoBananaAspectRatioOptions = [
   { value: '9:16', label: '9:16' },
   { value: '16:9', label: '16:9' },
   { value: '21:9', label: '21:9' },
+];
+
+// Aspect ratios supported by Nano Banana Pro (Google Gemini 3 Pro Image).
+// Full ladder; matches what fal exposes on `fal-ai/nano-banana-pro`.
+export const nanoBananaAspectRatioOptions = broadAspectRatioOptions;
+
+export const kieFluxAspectRatioOptions = broadAspectRatioOptions;
+
+export const kieGpt4oAspectRatioOptions = [
+  { value: '1:1', label: '1:1' },
+  { value: '3:2', label: '3:2' },
+  { value: '2:3', label: '2:3' },
 ];
 
 // Aspect ratios supported by GPT Image 2 — only the `image_size` enum
@@ -70,6 +83,11 @@ export const gptImage2QualityOptions = [
   { value: 'high', label: 'High' },
 ];
 
+export const kieQualityOptions = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'high', label: 'High' },
+];
+
 export const resolutionOptions = nanoBananaResolutionOptions;
 
 export const outputFormatOptions = [
@@ -77,3 +95,25 @@ export const outputFormatOptions = [
   { value: 'jpeg', label: 'JPG' },
   { value: 'webp', label: 'WebP' },
 ];
+
+export function getAspectRatioOptionsForModel(model: ImageModel) {
+  if (model === 'kie_gpt4o') return kieGpt4oAspectRatioOptions;
+  if (model === 'gpt_image_2') return gptImage2AspectRatioOptions;
+  return broadAspectRatioOptions;
+}
+
+export function getResolutionOptionsForModel(model: ImageModel) {
+  if (model === 'gpt_image_2') return gptImage2QualityOptions;
+  if (model.startsWith('kie_')) return kieQualityOptions;
+  return nanoBananaResolutionOptions;
+}
+
+export function getDefaultAspectRatioForModel(model: ImageModel): string {
+  return model === 'kie_gpt4o' ? '1:1' : '1:1';
+}
+
+export function getDefaultResolutionForModel(model: ImageModel): string {
+  if (model === 'gpt_image_2') return 'high';
+  if (model.startsWith('kie_')) return 'standard';
+  return '1K';
+}

@@ -14,10 +14,10 @@ import {
   EntityIcon,
 } from '@/components/icons';
 import {
-  nanoBananaAspectRatioOptions,
-  gptImage2AspectRatioOptions,
-  nanoBananaResolutionOptions,
-  gptImage2QualityOptions,
+  getAspectRatioOptionsForModel,
+  getDefaultAspectRatioForModel,
+  getDefaultResolutionForModel,
+  getResolutionOptionsForModel,
   outputFormatOptions,
   MAX_REFERENCE_IMAGES,
   MAX_IMAGE_SIZE_MB,
@@ -34,17 +34,10 @@ import {
   type CinemaSettings,
 } from '@/lib/cinema-prompt';
 import CinemaControlsModal from '@/components/ui/CinemaControlsModal';
-import { useModelStore, type ImageModel } from '@/stores/modelStore';
+import { IMAGE_MODEL_OPTIONS, useModelStore, type ImageModel } from '@/stores/modelStore';
 import { kingApi } from '@/lib/kingApi';
 import type { GeneratedImage } from '@/components/image';
 import type { EntityData } from '@/types/electron';
-
-// Same option list the Settings modal uses — kept in lockstep so the
-// labels don't drift between surfaces.
-const MODEL_OPTIONS: { value: ImageModel; label: string }[] = [
-  { value: 'nano_banana_pro', label: 'Nano Banana Pro' },
-  { value: 'gpt_image_2', label: 'GPT Image 2' },
-];
 
 interface ReferenceImage {
   id: string;
@@ -228,15 +221,22 @@ export default function ImagePromptForm({
 }: ImagePromptFormProps) {
   const selectedModel = useModelStore((s) => s.selectedModel);
   const setSelectedModel = useModelStore((s) => s.setSelectedModel);
-  const isGpt = selectedModel === 'gpt_image_2';
-  const aspectRatioOptions = isGpt ? gptImage2AspectRatioOptions : nanoBananaAspectRatioOptions;
-  const resolutionOptions = isGpt ? gptImage2QualityOptions : nanoBananaResolutionOptions;
+  const aspectRatioOptions = useMemo(
+    () => getAspectRatioOptionsForModel(selectedModel),
+    [selectedModel],
+  );
+  const resolutionOptions = useMemo(
+    () => getResolutionOptionsForModel(selectedModel),
+    [selectedModel],
+  );
+  const defaultAspectRatio = getDefaultAspectRatioForModel(selectedModel);
+  const defaultResolution = getDefaultResolutionForModel(selectedModel);
 
   const [prompt, setPrompt] = useState(initialPrompt);
   const [selectedEntity, setSelectedEntity] = useState('none');
   const [imageCount, setImageCount] = useState(1);
-  const [aspectRatio, setAspectRatio] = useState('1:1');
-  const [resolution, setResolution] = useState(isGpt ? 'high' : '1K');
+  const [aspectRatio, setAspectRatio] = useState(defaultAspectRatio);
+  const [resolution, setResolution] = useState(defaultResolution);
   const [outputFormat, setOutputFormat] = useState('png');
 
   // Reconcile selections when the user switches models from Settings.
@@ -245,13 +245,19 @@ export default function ImagePromptForm({
   // default rather than rendering a blank dropdown label.
   useEffect(() => {
     if (!aspectRatioOptions.some((o) => o.value === aspectRatio)) {
-      setAspectRatio('1:1');
+      setAspectRatio(defaultAspectRatio);
     }
     if (!resolutionOptions.some((o) => o.value === resolution)) {
-      setResolution(isGpt ? 'high' : '1K');
+      setResolution(defaultResolution);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModel]);
+  }, [
+    aspectRatio,
+    aspectRatioOptions,
+    defaultAspectRatio,
+    defaultResolution,
+    resolution,
+    resolutionOptions,
+  ]);
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [products, setProducts] = useState<EntityData[]>([]);
   const [characters, setCharacters] = useState<EntityData[]>([]);
@@ -670,13 +676,19 @@ export default function ImagePromptForm({
     }
     let resolvedPrompt = renderPrompt(prompt, selectedProductType);
 
-    if (!disableCinemaModifiers && !isGpt && cinemaModifiersEnabled) {
+    if (!disableCinemaModifiers && cinemaModifiersEnabled) {
       resolvedPrompt = buildCinemaPrompt(
         resolvedPrompt,
         cinemaSettings.camera,
         cinemaSettings.lens,
         cinemaSettings.focal,
         cinemaSettings.aperture,
+        cinemaSettings.shutter,
+        cinemaSettings.iso,
+        cinemaSettings.filmStock,
+        cinemaSettings.focusDistance,
+        cinemaSettings.filter,
+        cinemaSettings.ndStrength,
       );
     }
 
@@ -907,52 +919,61 @@ export default function ImagePromptForm({
           {/* Controls row */}
           <div className="flex min-h-9 flex-wrap items-center gap-2">
             <SelectDropdown
-              options={MODEL_OPTIONS}
+              options={IMAGE_MODEL_OPTIONS}
               value={selectedModel}
               onChange={(v) => {
-                setSelectedModel(v as ImageModel);
+                const nextModel = v as ImageModel;
+                setSelectedModel(nextModel);
+                setAspectRatio((current) =>
+                  getAspectRatioOptionsForModel(nextModel).some(
+                    (option) => option.value === current,
+                  )
+                    ? current
+                    : getDefaultAspectRatioForModel(nextModel),
+                );
+                setResolution((current) =>
+                  getResolutionOptionsForModel(nextModel).some((option) => option.value === current)
+                    ? current
+                    : getDefaultResolutionForModel(nextModel),
+                );
               }}
               icon={<SparkleIcon />}
             />
 
-            {!isGpt && (
-              <>
-                <label
-                  className={`flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[rgba(255,255,255,0.035)] px-2.5 py-1 text-xs font-medium text-[var(--base-color-brand--bean)] select-none ${
-                    disableCinemaModifiers ? 'cursor-not-allowed opacity-45' : 'cursor-pointer'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={disableCinemaModifiers ? false : cinemaModifiersEnabled}
-                    disabled={disableCinemaModifiers}
-                    onChange={(e) => {
-                      setCinemaModifiersEnabled(e.target.checked);
-                    }}
-                    className="rounded border-[var(--base-color-brand--umber)] text-[var(--base-color-brand--cinamon)] focus:ring-[var(--base-color-brand--cinamon)]"
-                  />
-                  Cinema optics
-                </label>
-                <button
-                  type="button"
-                  disabled={disableCinemaModifiers || !cinemaModifiersEnabled}
-                  onClick={() => {
-                    setCinemaModalOpen(true);
-                  }}
-                  className="flex max-w-[240px] min-w-0 flex-col items-start rounded-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)] px-3 py-1.5 text-left transition hover:border-[var(--base-color-brand--cinamon)]/50 disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  <span className="w-full truncate text-[9px] font-bold tracking-wide text-[var(--base-color-brand--umber)] uppercase">
-                    Cinema optics · {cinemaApplyConfirmed ? 'Applied' : 'Ready'}
-                  </span>
-                  <span className="w-full truncate text-[11px] font-semibold text-[var(--base-color-brand--bean)]">
-                    {cinemaSettings.camera} · {formatCinemaSummary(cinemaSettings)}
-                  </span>
-                  <span className="w-full truncate text-[9px] font-semibold text-[var(--base-color-brand--cinamon)]">
-                    {cinemaApplyConfirmed ? 'Applied to image input' : 'Open and apply to confirm'}
-                  </span>
-                </button>
-              </>
-            )}
+            <label
+              className={`flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-[rgba(255,255,255,0.035)] px-2.5 py-1 text-xs font-medium text-[var(--base-color-brand--bean)] select-none ${
+                disableCinemaModifiers ? 'cursor-not-allowed opacity-45' : 'cursor-pointer'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={disableCinemaModifiers ? false : cinemaModifiersEnabled}
+                disabled={disableCinemaModifiers}
+                onChange={(e) => {
+                  setCinemaModifiersEnabled(e.target.checked);
+                }}
+                className="rounded border-[var(--base-color-brand--umber)] text-[var(--base-color-brand--cinamon)] focus:ring-[var(--base-color-brand--cinamon)]"
+              />
+              Cinema optics
+            </label>
+            <button
+              type="button"
+              disabled={disableCinemaModifiers || !cinemaModifiersEnabled}
+              onClick={() => {
+                setCinemaModalOpen(true);
+              }}
+              className="flex max-w-[240px] min-w-0 flex-col items-start rounded-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)] px-3 py-1.5 text-left transition hover:border-[var(--base-color-brand--cinamon)]/50 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <span className="w-full truncate text-[9px] font-bold tracking-wide text-[var(--base-color-brand--umber)] uppercase">
+                Cinema optics · {cinemaApplyConfirmed ? 'Applied' : 'Ready'}
+              </span>
+              <span className="w-full truncate text-[11px] font-semibold text-[var(--base-color-brand--bean)]">
+                {cinemaSettings.camera} · {formatCinemaSummary(cinemaSettings)}
+              </span>
+              <span className="w-full truncate text-[9px] font-semibold text-[var(--base-color-brand--cinamon)]">
+                {cinemaApplyConfirmed ? 'Applied to image input' : 'Open and apply to confirm'}
+              </span>
+            </button>
 
             <SelectDropdown
               options={entityOptions}

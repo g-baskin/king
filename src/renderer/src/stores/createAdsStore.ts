@@ -52,8 +52,12 @@ async function bundledAssetToDataUrl(assetUrl: string): Promise<string> {
   const blob = await response.blob();
   return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error ?? new Error('Failed to read asset'));
+    reader.onload = () => {
+      resolve(reader.result as string);
+    };
+    reader.onerror = () => {
+      reject(reader.error ?? new Error('Failed to read asset'));
+    };
     reader.readAsDataURL(blob);
   });
 }
@@ -125,21 +129,36 @@ const INITIAL_STATE = {
 export const useCreateAdsStore = create<CreateAdsStore>()((set, get) => ({
   ...INITIAL_STATE,
 
-  setStep: (step) => set({ step }),
-  setSelectedAdId: (selectedAdId) => set({ selectedAdId }),
-  setSelectedProductId: (selectedProductId) => set({ selectedProductId }),
-  setProductBrief: (productBrief) => set({ productBrief }),
-  setAspectRatio: (aspectRatio) => set({ aspectRatio }),
-  setOutputMode: (outputMode) => set({ outputMode }),
+  setStep: (step) => {
+    set({ step });
+  },
+  setSelectedAdId: (selectedAdId) => {
+    set({ selectedAdId });
+  },
+  setSelectedProductId: (selectedProductId) => {
+    set({ selectedProductId });
+  },
+  setProductBrief: (productBrief) => {
+    set({ productBrief });
+  },
+  setAspectRatio: (aspectRatio) => {
+    set({ aspectRatio });
+  },
+  setOutputMode: (outputMode) => {
+    set({ outputMode });
+  },
 
-  removeResultByImageId: (imageId) =>
+  removeResultByImageId: (imageId) => {
     set((state) => ({
       results: state.results.filter((slot) => slot.image?.id !== imageId),
-    })),
+    }));
+  },
 
   // Clear any prior results and return to the first step — used by the
   // "Create another" button on the results screen.
-  startNewAd: () => set({ ...INITIAL_STATE }),
+  startNewAd: () => {
+    set({ ...INITIAL_STATE });
+  },
 
   runGeneration: async (ad, product, outputMode, extraReferenceImageUrls = []) => {
     const { productBrief, aspectRatio } = get();
@@ -324,13 +343,14 @@ async function generateSingleSlot(
   };
 
   try {
+    const modelVariant = useModelStore.getState().selectedModel;
     const result = await kingApi.generate.image({
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
       resolution: CREATE_ADS_RESOLUTION,
       outputFormat: CREATE_ADS_OUTPUT_FORMAT,
       imageUrls: inputs.imageUrls,
-      modelVariant: useModelStore.getState().selectedModel,
+      modelVariant,
     });
 
     const firstUrl = result.success ? result.resultUrls?.[0] : undefined;
@@ -344,6 +364,9 @@ async function generateSingleSlot(
       prompt: inputs.prompt,
       aspectRatio: inputs.aspectRatio,
       workspaceId: useWorkspaceStore.getState().activeWorkspaceId,
+      modelProvider: result.modelProvider,
+      modelVariant: result.modelVariant,
+      effectiveModelVariant: result.effectiveModelVariant,
     });
 
     // Push into the global gallery store so the Image page picks it up

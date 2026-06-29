@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { StorefrontBridgePublishPanel } from './image/StorefrontBridgePublishPanel';
+import type { GeneratedImage } from './image/types';
+import { getImageModelLabel, getImageModelProviderLabel } from '@/stores/modelStore';
 
 interface ImageDetailPanelProps {
-  image: {
-    id: string;
-    url: string;
-    prompt: string;
-    aspectRatio: string;
-    createdAt: string;
-  };
+  image: GeneratedImage;
   onClose: () => void;
   onDelete: (id: string) => void;
   onDownload: (url: string, prompt: string) => void;
@@ -172,6 +168,21 @@ export default function ImageDetailPanel({
     return `${Math.round(base * (w / h))}x${base}`;
   };
 
+  const providerLabel = image.modelProvider
+    ? getImageModelProviderLabel(image.modelProvider)
+    : 'Not recorded';
+  const modelLabel = image.effectiveModelVariant
+    ? getImageModelLabel(image.effectiveModelVariant)
+    : image.modelVariant
+      ? getImageModelLabel(image.modelVariant)
+      : 'Not recorded';
+  const requestedModelLabel =
+    image.modelVariant &&
+    image.effectiveModelVariant &&
+    image.modelVariant !== image.effectiveModelVariant
+      ? getImageModelLabel(image.modelVariant)
+      : null;
+
   return (
     <section className="grid h-full min-h-0 grid-rows-[auto_1fr] border-l border-white/[0.08] bg-[rgba(16,19,26,0.94)] shadow-[inset_1px_0_0_rgba(255,255,255,0.04)] backdrop-blur-xl">
       <header className="grid grid-cols-[1fr_auto] px-3 pt-4 pb-6">
@@ -242,12 +253,26 @@ export default function ImageDetailPanel({
                 </p>
               </div>
               <div className="border-t border-[var(--base-color-brand--umber)]/20">
-                <div className="grid grid-cols-[1fr_auto] px-4 py-3.5">
-                  <p className="text-sm text-[var(--base-color-brand--umber)]">Model</p>
+                <div className="grid grid-cols-[1fr_auto] border-b border-[var(--base-color-brand--umber)]/20 px-4 py-3.5 last:border-0">
+                  <p className="text-sm text-[var(--base-color-brand--umber)]">Provider</p>
                   <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
-                    Nano Banana Pro
+                    {providerLabel}
                   </p>
                 </div>
+                <div className="grid grid-cols-[1fr_auto] border-b border-[var(--base-color-brand--umber)]/20 px-4 py-3.5 last:border-0">
+                  <p className="text-sm text-[var(--base-color-brand--umber)]">Model</p>
+                  <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+                    {modelLabel}
+                  </p>
+                </div>
+                {requestedModelLabel && (
+                  <div className="grid grid-cols-[1fr_auto] px-4 py-3.5">
+                    <p className="text-sm text-[var(--base-color-brand--umber)]">Selected</p>
+                    <p className="text-sm font-semibold text-[var(--base-color-brand--bean)]">
+                      {requestedModelLabel}
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -255,7 +280,9 @@ export default function ImageDetailPanel({
             <section className="rounded-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.035)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <button
                 type="button"
-                onClick={() => setIsAdditionalOpen(!isAdditionalOpen)}
+                onClick={() => {
+                  setIsAdditionalOpen(!isAdditionalOpen);
+                }}
                 className="flex w-full items-center justify-between px-4 py-3"
               >
                 <div className="flex items-center gap-2">
@@ -307,8 +334,10 @@ export default function ImageDetailPanel({
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => onRecreate(image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--base-color-brand--cream)]/20 bg-[linear-gradient(135deg,var(--base-color-brand--cinamon),var(--base-color-brand--red))] text-sm font-semibold tracking-wide text-white shadow-[0_18px_38px_-22px_var(--base-color-brand--cinamon)] transition-all hover:brightness-110 active:translate-y-0.5 active:shadow-[0_8px_18px_-14px_var(--base-color-brand--cinamon)]"
+              onClick={() => {
+                onRecreate(image.prompt);
+              }}
+              className="btn-cinamon col-span-2 h-12 text-sm"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <RecreateIcon />
@@ -317,8 +346,10 @@ export default function ImageDetailPanel({
 
             <button
               type="button"
-              onClick={() => onDownload(image.url, image.prompt)}
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-[rgba(255,255,255,0.035)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--base-color-brand--cinamon)]/60 hover:bg-[rgba(47,124,255,0.12)]"
+              onClick={() => {
+                onDownload(image.url, image.prompt);
+              }}
+              className="btn-shell col-span-2 h-12 text-sm"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >
               <DownloadIcon />
@@ -327,7 +358,9 @@ export default function ImageDetailPanel({
 
             <button
               type="button"
-              onClick={() => onDelete(image.id)}
+              onClick={() => {
+                onDelete(image.id);
+              }}
               className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-[rgba(255,255,255,0.035)] text-sm font-semibold tracking-wide text-[var(--base-color-brand--bean)] transition-colors hover:border-[var(--status--error)] hover:bg-[color-mix(in_srgb,var(--status--error)_18%,transparent)] hover:text-white"
               style={{ fontFamily: 'var(--text-color--font-family--heading)' }}
             >

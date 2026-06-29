@@ -5,8 +5,27 @@ const api = {
   images: {
     list: (cursor?: string, limit?: number, workspaceId?: string) =>
       ipcRenderer.invoke('images:list', cursor, limit, workspaceId),
-    save: (data: { url: string; prompt: string; aspectRatio: string; workspaceId?: string }) =>
-      ipcRenderer.invoke('images:save', data),
+    save: (data: {
+      url: string;
+      prompt: string;
+      aspectRatio: string;
+      workspaceId?: string;
+      modelProvider?: 'kie' | 'fal';
+      modelVariant?:
+        | 'kie_auto'
+        | 'kie_gpt4o'
+        | 'kie_flux_kontext_pro'
+        | 'kie_flux_kontext_max'
+        | 'nano_banana_pro'
+        | 'gpt_image_2';
+      effectiveModelVariant?:
+        | 'kie_auto'
+        | 'kie_gpt4o'
+        | 'kie_flux_kontext_pro'
+        | 'kie_flux_kontext_max'
+        | 'nano_banana_pro'
+        | 'gpt_image_2';
+    }) => ipcRenderer.invoke('images:save', data),
     delete: (id: string) => ipcRenderer.invoke('images:delete', id),
   },
   generate: {
@@ -16,7 +35,13 @@ const api = {
       resolution: string;
       outputFormat: string;
       imageUrls: string[];
-      modelVariant?: 'nano_banana_pro' | 'gpt_image_2';
+      modelVariant?:
+        | 'kie_auto'
+        | 'kie_gpt4o'
+        | 'kie_flux_kontext_pro'
+        | 'kie_flux_kontext_max'
+        | 'nano_banana_pro'
+        | 'gpt_image_2';
     }) => ipcRenderer.invoke('generate:image', data),
     video: (data: {
       prompt: string;
@@ -52,7 +77,9 @@ const api = {
      * unsubscribe function.
      */
     onStatus: (callback: (status: unknown) => void): (() => void) => {
-      const listener = (_event: IpcRendererEvent, status: unknown) => callback(status);
+      const listener = (_event: IpcRendererEvent, status: unknown) => {
+        callback(status);
+      };
       ipcRenderer.on('updater:status', listener);
       return () => {
         ipcRenderer.removeListener('updater:status', listener);
@@ -204,7 +231,9 @@ const api = {
       entityType: string,
       data: {
         name: string;
-        files: { name: string; buffer: ArrayBuffer }[];
+        files: { name: string; buffer: ArrayBuffer; fileKey?: string }[];
+        imageUrls?: string[];
+        imageOrderKeys?: string[];
         productType?: string;
         primaryReferenceIndex?: number;
         workspaceId?: string;
@@ -216,7 +245,8 @@ const api = {
       data: {
         name: string;
         existingImages: string[];
-        newFiles: { name: string; buffer: ArrayBuffer }[];
+        newFiles: { name: string; buffer: ArrayBuffer; fileKey?: string }[];
+        imageOrderKeys?: string[];
         productType?: string;
         primaryReferenceIndex?: number;
       },

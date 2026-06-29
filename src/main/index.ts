@@ -157,14 +157,14 @@ function setContentSecurityPolicy(): void {
             // styles cannot exfiltrate data, but inline scripts can; that's
             // where the real XSS surface lives and we keep it locked down.
             `style-src 'self' 'unsafe-inline'`,
-            // fal.media / fal.ai: image generation CDNs.
+            // fal.media / fal.ai and KIE.ai / Redpanda: image generation CDNs.
             // shopify CDNs / cdn.shopify.com: product images for Store page.
             // shopee + tiktokcdn: product images for marketplace pages.
             // amazon image CDNs: product images for SP-API listings.
             // All third-party API requests run from the main process, so
             // connect-src only needs to cover renderer-side fetches (none
             // currently — left at 'self').
-            `img-src 'self' data: blob: local-file: https://*.fal.media https://*.fal.ai https://cdn.shopify.com https://*.shopifycdn.com https://*.shopify.com https://*.tiktokcdn.com https://*.tiktokcdn-us.com https://*.shopeemobile.com https://*.shopee.com https://*.amazon.com https://*.media-amazon.com https://*.ssl-images-amazon.com https://*.telegram.org`,
+            `img-src 'self' data: blob: local-file: https://*.fal.media https://*.fal.ai https://kie.ai https://*.kie.ai https://redpandaai.co https://*.redpandaai.co https://cdn.shopify.com https://*.shopifycdn.com https://*.shopify.com https://*.tiktokcdn.com https://*.tiktokcdn-us.com https://*.shopeemobile.com https://*.shopee.com https://*.amazon.com https://*.media-amazon.com https://*.ssl-images-amazon.com https://*.telegram.org`,
             `font-src 'self' data:`,
             `connect-src ${connectSrc}`,
             `worker-src ${workerSrc}`,
@@ -208,5 +208,7 @@ app.on('before-quit', (event) => {
   if (agentApiStopping) return;
   agentApiStopping = true;
   event.preventDefault();
-  void stopAgentApiServer().finally(() => app.exit(0));
+  void stopAgentApiServer().finally(() => {
+    app.exit(0);
+  });
 });

@@ -7,6 +7,9 @@ export interface GeneratedImageData {
   createdAt: string;
   filename: string;
   workspaceId?: string;
+  modelProvider?: ImageModelProvider;
+  modelVariant?: ImageModelVariant;
+  effectiveModelVariant?: ImageModelVariant;
 }
 
 export interface EntityData {
@@ -28,6 +31,16 @@ export interface CustomAdReferenceData {
   height: number;
   createdAt: string;
 }
+
+export type ImageModelVariant =
+  | 'kie_auto'
+  | 'kie_gpt4o'
+  | 'kie_flux_kontext_pro'
+  | 'kie_flux_kontext_max'
+  | 'nano_banana_pro'
+  | 'gpt_image_2';
+
+export type ImageModelProvider = 'kie' | 'fal';
 
 export interface ApiKeyEntry {
   maskedKey: string;
@@ -287,6 +300,9 @@ export interface ElectronAPI {
       prompt: string;
       aspectRatio: string;
       workspaceId?: string;
+      modelProvider?: ImageModelProvider;
+      modelVariant?: ImageModelVariant;
+      effectiveModelVariant?: ImageModelVariant;
     }) => Promise<GeneratedImageData>;
     delete: (id: string) => Promise<{ success: boolean }>;
   };
@@ -297,8 +313,14 @@ export interface ElectronAPI {
       resolution: string;
       outputFormat: string;
       imageUrls: string[];
-      modelVariant?: 'nano_banana_pro' | 'gpt_image_2';
-    }) => Promise<{ success: boolean; resultUrls: string[] }>;
+      modelVariant?: ImageModelVariant;
+    }) => Promise<{
+      success: boolean;
+      resultUrls: string[];
+      modelProvider: ImageModelProvider;
+      modelVariant: ImageModelVariant;
+      effectiveModelVariant: ImageModelVariant;
+    }>;
     video: (data: {
       prompt: string;
       imageUrl: string;
@@ -513,7 +535,9 @@ export interface ElectronAPI {
       entityType: string,
       data: {
         name: string;
-        files: { name: string; buffer: ArrayBuffer }[];
+        files: { name: string; buffer: ArrayBuffer; fileKey?: string }[];
+        imageUrls?: string[];
+        imageOrderKeys?: string[];
         productType?: string;
         primaryReferenceIndex?: number;
         workspaceId?: string;
@@ -525,7 +549,8 @@ export interface ElectronAPI {
       data: {
         name: string;
         existingImages: string[];
-        newFiles: { name: string; buffer: ArrayBuffer }[];
+        newFiles: { name: string; buffer: ArrayBuffer; fileKey?: string }[];
+        imageOrderKeys?: string[];
         productType?: string;
         primaryReferenceIndex?: number;
       },

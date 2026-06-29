@@ -25,6 +25,8 @@ import { getStorefrontBridgeCredentials } from '../services/storefrontBridgeCred
 const ALLOWED_EXTERNAL_HOSTS = new Set<string>([
   'fal.ai',
   'docs.fal.ai',
+  'kie.ai',
+  'docs.kie.ai',
   'openrouter.ai',
   'firecrawl.dev',
   'replicate.com',
